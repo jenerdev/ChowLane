@@ -1,0 +1,22 @@
+{
+  "name": "@chowlane/lib",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Shared business logic (fees, rider pay, status machine, permissions, formatting).",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "lint": "eslint .",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@chowlane/types": "workspace:*"
+  },
+  "devDependencies": {
+    "@chowlane/config": "workspace:*",
+    "eslint": "10.15.0",
+    "typescript": "5.9.3"
+  }
+}

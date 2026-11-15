@@ -1,0 +1,20 @@
+{
+  "name": "@chowlane/types",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Domain types shared by every app \u2014 mirrors docs/DATA-MODEL.md.",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "lint": "eslint .",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {},
+  "devDependencies": {
+    "@chowlane/config": "workspace:*",
+    "eslint": "10.15.0",
+    "typescript": "5.9.3"
+  }
+}

@@ -1,0 +1,8 @@
+/*
+ * @chowlane/ui theme tokens (Tailwind v4).
+ * --brand is overridden per tenant at runtime (tenant theming, Milestone 1.1).
+ */
+@theme {
+  --color-brand: var(--brand, #e4572e);
+  --color-brand-foreground: var(--brand-foreground, #ffffff);
+}

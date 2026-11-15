@@ -1,0 +1,32 @@
+{
+  "name": "@chowlane/rider",
+  "version": "0.0.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev --port 3002",
+    "build": "next build",
+    "start": "next start --port 3002",
+    "lint": "eslint .",
+    "typecheck": "next typegen && tsc --noEmit"
+  },
+  "dependencies": {
+    "@chowlane/lib": "workspace:*",
+    "@chowlane/mocks": "workspace:*",
+    "@chowlane/pwa": "workspace:*",
+    "@chowlane/types": "workspace:*",
+    "@chowlane/ui": "workspace:*",
+    "next": "16.4.6",
+    "react": "19.3.1",
+    "react-dom": "19.3.1"
+  },
+  "devDependencies": {
+    "@chowlane/config": "workspace:*",
+    "@tailwindcss/postcss": "4.3.5",
+    "@types/node": "26.6.6",
+    "@types/react": "19.3.0",
+    "@types/react-dom": "19.3.0",
+    "eslint": "10.15.0",
+    "tailwindcss": "4.3.5",
+    "typescript": "5.9.3"
+  }
+}

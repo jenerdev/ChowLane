@@ -1,0 +1,22 @@
+{
+  "name": "@chowlane/mocks",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Phase 1 mock data and seeded scenarios (shapes = docs/DATA-MODEL.md).",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "lint": "eslint .",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@chowlane/types": "workspace:*"
+  },
+  "devDependencies": {
+    "@chowlane/config": "workspace:*",
+    "eslint": "10.15.0",
+    "typescript": "5.9.3"
+  }
+}
