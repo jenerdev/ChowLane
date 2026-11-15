@@ -34,7 +34,7 @@ export function BottomNav({ items }: { items: NavItem[] }) {
                 aria-current={active ? "page" : undefined}
                 className={cn(
                   "relative flex h-16 flex-col items-center justify-center gap-1 text-[11px] font-medium [&_svg]:size-5",
-                  active ? "text-brand" : "text-muted-foreground",
+                  active ? "text-foreground [&_svg]:text-brand" : "text-zinc-400",
                 )}
               >
                 {item.icon}
@@ -57,9 +57,9 @@ export function BottomNav({ items }: { items: NavItem[] }) {
 export function SideNav({ items, header }: { items: NavItem[]; header?: ReactNode }) {
   const pathname = usePathname();
   return (
-    <aside className="sticky top-0 hidden h-dvh w-64 shrink-0 flex-col gap-2 border-r p-4 md:flex">
-      {header ? <div className="mb-4">{header}</div> : null}
-      <ul className="flex flex-col gap-1">
+    <aside className="sticky top-0 hidden h-dvh w-60 shrink-0 flex-col gap-2 border-r bg-subtle px-3 py-5 md:flex">
+      {header ? <div className="mb-5 px-2">{header}</div> : null}
+      <ul className="flex flex-col gap-0.5">
         {items.map((item) => {
           const active = isActive(pathname, item);
           return (
@@ -68,10 +68,10 @@ export function SideNav({ items, header }: { items: NavItem[]; header?: ReactNod
                 href={item.href}
                 aria-current={active ? "page" : undefined}
                 className={cn(
-                  "flex h-10 items-center gap-3 rounded-xl px-3 text-sm font-medium [&_svg]:size-4",
+                  "flex h-9 items-center gap-3 rounded-lg px-2.5 text-sm [&_svg]:size-4",
                   active
-                    ? "bg-brand-soft text-brand"
-                    : "text-muted-foreground hover:bg-muted hover:text-foreground",
+                    ? "bg-white font-medium text-foreground shadow-[0_0_0_1px_var(--color-border)] [&_svg]:text-brand"
+                    : "text-zinc-600 hover:bg-muted hover:text-foreground",
                 )}
               >
                 {item.icon}
@@ -102,12 +102,12 @@ export function TopBar({ title, leading, actions, className }: TopBarProps) {
   return (
     <header
       className={cn(
-        "sticky top-0 z-30 flex h-14 items-center gap-3 border-b bg-background/95 px-4 pt-[env(safe-area-inset-top)] backdrop-blur",
+        "sticky top-0 z-30 flex h-14 items-center gap-3 bg-background/90 px-4 pt-[env(safe-area-inset-top)] backdrop-blur",
         className,
       )}
     >
       {leading}
-      <div className="min-w-0 flex-1 truncate font-semibold">{title}</div>
+      <div className="min-w-0 flex-1 truncate text-[15px] font-semibold">{title}</div>
       {actions}
     </header>
   );
@@ -128,8 +128,8 @@ export function AppShell({ nav, topBar, sideHeader, layout = "app", children }: 
     return (
       <div className="mx-auto flex min-h-dvh w-full max-w-md flex-col bg-background md:border-x">
         {topBar}
-        <main className="flex-1 px-4 pt-4 pb-24">{children}</main>
-        <div className="md:[&>nav]:flex">
+        <main className="flex-1 px-5 pt-4 pb-28">{children}</main>
+        <div className="md:[&>nav]:block">
           <BottomNav items={nav} />
         </div>
       </div>
@@ -160,10 +160,10 @@ export function PageHeader({
   actions?: ReactNode;
 }) {
   return (
-    <div className="mb-4 flex items-start justify-between gap-3">
+    <div className="mb-6 flex items-start justify-between gap-3">
       <div>
-        <h1 className="text-xl font-bold tracking-tight">{title}</h1>
-        {description ? <p className="text-sm text-muted-foreground">{description}</p> : null}
+        <h1 className="text-[22px] font-semibold tracking-tight">{title}</h1>
+        {description ? <p className="mt-0.5 text-sm text-muted-foreground">{description}</p> : null}
       </div>
       {actions}
     </div>

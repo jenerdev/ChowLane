@@ -6,7 +6,7 @@ import { cn } from "../lib/cn";
  */
 export function ChowLaneMark({ className }: { className?: string }) {
   return (
-    <svg viewBox="0 0 32 32" aria-hidden="true" className={cn("size-8", className)}>
+    <svg viewBox="0 0 32 32" aria-hidden="true" className={cn("size-7", className)}>
       <rect width="32" height="32" rx="9" fill="#0E7C66" />
       <path d="M7 15h18a9 9 0 0 1-18 0Z" fill="#fff" />
       <path
@@ -38,7 +38,7 @@ export function ChowLaneLogo({
     <span className={cn("inline-flex items-center gap-2", className)}>
       <ChowLaneMark />
       <span className="flex flex-col leading-none">
-        <span className="text-lg font-extrabold tracking-tight text-[#1C1917]">
+        <span className="text-[17px] font-semibold tracking-tight text-foreground">
           Chow<span className="text-chowlane">Lane</span>
         </span>
         {tagline ? (

@@ -34,7 +34,7 @@ export default async function TenantLayout({ children, params }: Props & { child
           <TenantLogo
             name={tenant.businessName}
             logoUrl={tenant.logoUrl}
-            className="inline-flex size-14 items-center justify-center rounded-2xl bg-brand text-2xl font-bold text-brand-foreground"
+            className="inline-flex size-14 items-center justify-center rounded-2xl bg-brand text-2xl font-semibold text-brand-foreground"
           />
           <h1 className="text-lg font-semibold">
             {tenant.businessName} is temporarily unavailable

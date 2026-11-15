@@ -8,7 +8,7 @@ export default function Home() {
     <main className="mx-auto flex min-h-dvh max-w-md flex-col justify-center gap-6 px-4">
       <ChowLaneLogo />
       <div>
-        <h1 className="text-xl font-bold">Customer app</h1>
+        <h1 className="text-xl font-semibold tracking-tight">Customer app</h1>
         <p className="text-sm text-muted-foreground">
           Pick a tenant (dev only — real users open their tenant link).
         </p>
@@ -18,7 +18,7 @@ export default function Home() {
           <li key={t.slug}>
             <Link
               href={`/${t.slug}`}
-              className="flex items-center justify-between rounded-xl border p-4 hover:bg-muted"
+              className="flex items-center justify-between rounded-card border p-4 hover:bg-muted"
             >
               <span className="font-medium">{t.businessName}</span>
               <span className="text-xs text-muted-foreground">

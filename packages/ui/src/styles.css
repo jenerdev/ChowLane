@@ -1,52 +1,65 @@
 /*
- * @chowlane/ui theme (Tailwind v4). Light theme only in Phase 1 (D-032).
- * --brand / --brand-foreground are set per tenant at runtime by <TenantTheme>.
- * Without a tenant (landing, platform) the ChowLane brand is used.
+ * @chowlane/ui theme — simple, minimalist, modern (docs/DESIGN.md).
+ * Neutral first: zinc greys for text, borders and surfaces. Brand color only for the primary
+ * action, active state, focus and key highlights. --brand is set per tenant by <TenantTheme>;
+ * without a tenant (landing, platform) the ChowLane teal is used. Light theme only (Phase 1).
  */
 @theme inline {
   --color-background: #ffffff;
-  --color-foreground: #1c1917;
-  --color-muted: #f5f5f4;
-  --color-muted-foreground: #6b6560;
-  --color-border: #e7e5e4;
-  --color-input: #d6d3d1;
+  --color-foreground: #18181b;
+  --color-muted: #f4f4f5;
+  --color-muted-foreground: #71717a;
+  --color-subtle: #fafafa;
+  --color-border: #e4e4e7;
+  --color-input: #e4e4e7;
   --color-card: #ffffff;
-  --color-overlay: rgb(28 25 23 / 0.45);
+  --color-overlay: rgb(24 24 27 / 0.4);
 
   --color-brand: var(--brand, #0e7c66);
   --color-brand-foreground: var(--brand-foreground, #ffffff);
-  --color-brand-soft: color-mix(in oklab, var(--brand, #0e7c66) 12%, white);
-  --color-ring: color-mix(in oklab, var(--brand, #0e7c66) 55%, white);
+  --color-brand-soft: color-mix(in oklab, var(--brand, #0e7c66) 8%, white);
+  --color-ring: color-mix(in oklab, var(--brand, #0e7c66) 35%, white);
 
   --color-chowlane: #0e7c66;
   --color-chowlane-accent: #f59e0b;
 
   --color-success: #15803d;
-  --color-success-soft: #dcfce7;
+  --color-success-soft: #f0fdf4;
   --color-warning: #b45309;
-  --color-warning-soft: #fef3c7;
+  --color-warning-soft: #fffbeb;
   --color-danger: #dc2626;
-  --color-danger-soft: #fee2e2;
+  --color-danger-soft: #fef2f2;
   --color-info: #1d4ed8;
-  --color-info-soft: #dbeafe;
+  --color-info-soft: #eff6ff;
 
   --font-sans:
-    ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    var(--font-geist), ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+
+  --radius-control: 0.625rem;
   --radius-card: 1rem;
 }
 
 @layer base {
   html {
     -webkit-tap-highlight-color: transparent;
+    text-rendering: optimizeLegibility;
   }
   body {
     background-color: var(--color-background);
     color: var(--color-foreground);
     font-family: var(--font-sans);
+    font-feature-settings: "ss01", "cv11";
   }
   *,
   ::before,
   ::after {
     border-color: var(--color-border);
+  }
+  /* Lighter icons (lucide) */
+  svg.lucide {
+    stroke-width: 1.75;
+  }
+  ::selection {
+    background: color-mix(in oklab, var(--brand, #0e7c66) 18%, white);
   }
 }

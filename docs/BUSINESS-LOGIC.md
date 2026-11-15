@@ -177,6 +177,14 @@ PENDING_APPROVAL ──admin approves──▶ APPROVED ──offered (auto/manu
 - BL-12.5 **[PROPOSED]** Rider income is **not** deducted from the remittance; it is paid separately (BL-8).
 - BL-12.6 **[PROPOSED]** A rider with an unrecorded (`PENDING`) remittance can still time in again; the console highlights pending remittances.
 
+## BL-15 Owner signup & login
+
+- BL-15.1 **[PROPOSED]** Business link (slug): 3–30 chars, lowercase letters/numbers, single dashes, not at start/end; unique; reserved words blocked (admin, api, app, console, rider, customer, platform, login, signup, chowlane, …). Suggested from the business name; alternatives offered when taken.
+- BL-15.2 **[PROPOSED]** Owner password: at least 8 characters with letters and a number. Mobile must be a valid PH mobile number.
+- BL-15.3 **[PROPOSED]** Signup asks for city + delivery radius (1–15 km, default 5 km) as the starting service area; delivery fees and rider pay are set later in the console setup checklist.
+- BL-15.4 **[PROPOSED]** New tenant starts on the FREE billing plan (BL-10.7).
+- BL-15.5 **[PROPOSED]** Console login: only ACTIVE staff can log in; INVITED → "accept the invite first"; INACTIVE → "account turned off". Password reset is done by the Owner (self-service reset in Phase 2).
+
 ## BL-13 Coupons
 
 - BL-13.1 **[CONFIRMED]** Each tenant manages its own coupons (Owner, or Admin with `coupons.manage`).
@@ -247,6 +255,7 @@ PENDING_APPROVAL ──admin approves──▶ APPROVED ──offered (auto/manu
 |---|---|---|
 | 2026-11-15 | All | Initial draft (v0) |
 | 2026-11-15 | All | v1 rewrite from user requirements: Owner/Admin/Rider/Customer; merchants no longer log in; permissions; Facebook signup; location gate; first-order ID verification; order approval; time in/out; FIXED/PER_KM pricing; COMMISSION/DAILY/PER_DELIVERY rider pay |
+| 2026-11-15 | BL-15 (new) | Owner signup (link rules, password, starting service area) and console login rules |
 | 2026-11-15 | BL-13.6, BL-14.3b, BL-14.6, BL-14.9 | Confirmed (Q-26…Q-29, D-037) |
 | 2026-11-15 | BL-13 (new), BL-14 (new), BL-2 | **Coupons** (percent off / free delivery, max uses, validity) and **loyalty program** (on/off; free delivery after N orders, free gift after X orders, points earn/redeem). New permissions `coupons.manage`, `loyalty.manage`, `settings.loyalty` |
 | 2026-11-15 | BL-1.3, BL-3.2, BL-4.1, BL-5, BL-7.2, BL-8.1, BL-10.3, BL-11.5, BL-11.8, BL-12 (new) | All remaining questions answered with Claude's suggestions; new cash remittance rules; new permission `cash.manage` |

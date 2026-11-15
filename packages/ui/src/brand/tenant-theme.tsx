@@ -22,7 +22,11 @@ type TenantLogoProps = { name: string; logoUrl?: string; className?: string };
 export function TenantLogo({ name, logoUrl, className }: TenantLogoProps) {
   if (logoUrl) {
     return (
-      <img src={logoUrl} alt={name} className={className ?? "size-9 rounded-xl object-cover"} />
+      <img
+        src={logoUrl}
+        alt={name}
+        className={className ?? "size-8 shrink-0 rounded-lg object-cover"}
+      />
     );
   }
   return (
@@ -30,7 +34,7 @@ export function TenantLogo({ name, logoUrl, className }: TenantLogoProps) {
       aria-label={name}
       className={
         className ??
-        "inline-flex size-9 items-center justify-center rounded-xl bg-brand text-base font-bold text-brand-foreground"
+        "inline-flex size-8 shrink-0 items-center justify-center rounded-lg bg-brand text-sm font-semibold text-brand-foreground"
       }
     >
       {name.trim().charAt(0).toUpperCase()}

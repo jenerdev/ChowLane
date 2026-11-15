@@ -20,7 +20,7 @@ before the backend is designed.
 | Milestone | Scope | Status |
 |---|---|---|
 | 1.1 Foundation | Turborepo, `packages/ui` design system, tenant theming, `packages/types` + `packages/mocks`, `packages/lib` (fee / pay / status / permission logic), app shells under `/[tenant]`, **PWA setup for console/rider/customer** (per-tenant manifest, service worker, install prompt, offline page), dev role switcher | ✅ |
-| 1.2 Landing & Owner Signup | Landing page (what ChowLane is), Owner signup wizard, login | ⬜ |
+| 1.2 Landing & Owner Signup | Landing page with live brand builder, Owner signup wizard (account, business name, link check, brand, delivery area, review), find-your-console page, console login + sign-out | ✅ |
 | 1.3 Console — Owner Setup | Setup checklist, business & branding, service area, merchants, products & prices, delivery pricing (fixed / per km), rider pay (commission / daily / per delivery), admin users, roles & permissions, **coupons**, **loyalty program settings** | ⬜ |
 | 1.4 Console — Admin Operations | Customer verification queue, order approval, orders monitoring, manual rider assignment, riders CRUD, rider monitoring (live map, shifts), customer loyalty view & adjust | ⬜ |
 | 1.5 Customer App | Facebook login (mock), location gate, browse merchants/products, cart, checkout, first-order ID upload, pending approval state, order tracking, history, **coupon code**, **rewards** (points, free delivery, free gift) | ⬜ |

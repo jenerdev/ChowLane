@@ -3,13 +3,23 @@
 > Last updated: 2026-11-15
 > Flow status: ⬜ Draft · 🟨 Clickable in UI · ✅ Signed off by user
 
-## F-01 Owner discovers ChowLane & signs up  ⬜
-1. Visitor opens landing page → reads what ChowLane is (how it works, features) → **Start your delivery business**
-2. Create Owner account (name, email, password)
-3. Business name (e.g. "FastBite Delivery")
-4. Storefront slug `fastbite` (availability check)
-5. Logo + primary color (live preview of customer app)
-6. → Console with **Setup checklist** (F-02)
+## F-01 Owner discovers ChowLane & signs up  🟨 (clickable)
+1. Visitor opens the landing page → hero **brand builder**: types their business name, picks a color → phone preview of
+   *their* customer app re-brands live → **Start "<name>" for free** (name + color carried into signup)
+2. Signup step 1 — **Your account**: full name, email, PH mobile, password (show/hide)
+3. Step 2 — **Business name** (link is suggested from it)
+4. Step 3 — **Your link** `chowlane.app/<slug>`: live check (format, reserved words, taken) + available suggestions
+5. Step 4 — **Your brand**: logo (optional) + color; preview updates
+6. Step 5 — **Delivery area**: city + radius (fine-tuned on a map later in Settings → Service area)
+7. Step 6 — **Review** with Edit links → **Create my business**
+8. Done screen: next steps (restaurant & menu, rider, fees & rider pay, share link) → **Open my console** → console login
+   (prototype: opens the FastBite demo console — nothing is saved, D-038)
+
+## F-01b Owner / Admin logs in  🟨 (clickable)
+1. Console link `…/<slug>` while signed out → redirected to `/<slug>/login` (tenant-branded)
+2. Email + password → **Log in** → console home. Errors: unknown email, invite not accepted, account turned off
+3. From the ChowLane site: **Log in** → enter business link → taken to that console's login
+4. **Log out** (sidebar / top bar) → back to login
 
 ## F-02 Owner initial setup  ⬜
 Checklist on console home; each item links to its screen:

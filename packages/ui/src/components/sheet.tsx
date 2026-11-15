@@ -31,17 +31,19 @@ export function SheetContent({
       <DialogPrimitive.Overlay className="fixed inset-0 z-50 bg-overlay" />
       <DialogPrimitive.Content
         className={cn(
-          "fixed z-50 flex max-h-[90dvh] flex-col gap-4 overflow-y-auto bg-background p-5 shadow-xl outline-none",
+          "fixed z-50 flex max-h-[90dvh] flex-col gap-4 overflow-y-auto bg-background p-5 shadow-lg outline-none",
           side === "bottom"
-            ? "inset-x-0 bottom-0 rounded-t-3xl pb-[max(1.25rem,env(safe-area-inset-bottom))] sm:inset-x-auto sm:bottom-auto sm:top-1/2 sm:left-1/2 sm:w-full sm:max-w-md sm:-translate-1/2 sm:rounded-3xl"
-            : "top-1/2 left-1/2 w-[calc(100%-2rem)] max-w-md -translate-1/2 rounded-3xl",
+            ? "inset-x-0 bottom-0 rounded-t-2xl pb-[max(1.25rem,env(safe-area-inset-bottom))] sm:inset-x-auto sm:bottom-auto sm:top-1/2 sm:left-1/2 sm:w-full sm:max-w-md sm:-translate-1/2 sm:rounded-2xl"
+            : "top-1/2 left-1/2 w-[calc(100%-2rem)] max-w-md -translate-1/2 rounded-2xl",
           className,
         )}
         {...props}
       >
         <div className="flex items-start justify-between gap-4">
           <div className="flex flex-col gap-1">
-            <DialogPrimitive.Title className="text-lg font-semibold">{title}</DialogPrimitive.Title>
+            <DialogPrimitive.Title className="text-base font-semibold">
+              {title}
+            </DialogPrimitive.Title>
             {description ? (
               <DialogPrimitive.Description className="text-sm text-muted-foreground">
                 {description}

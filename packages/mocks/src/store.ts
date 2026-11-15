@@ -3,6 +3,10 @@
  * persisted to localStorage per app. Screens read/write it; Phase 2 swaps it for Supabase.
  *
  * Each app runs on its own origin, so stores do NOT sync across apps (D-008).
+ *
+ * ⚠ Selectors must return stable values: select a collection, then filter OUTSIDE the selector —
+ *   `useMockStore((s) => s.orders).filter(...)`. Returning a new array from the selector
+ *   (`(s) => s.orders.filter(...)`) causes an infinite render loop (React error #185).
  */
 import { create, type StoreApi, type UseBoundStore } from "zustand";
 import { createJSONStorage, persist } from "zustand/middleware";

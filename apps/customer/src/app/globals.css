@@ -1,6 +1,8 @@
 @import "tailwindcss";
 @import "@chowlane/ui/styles.css";
 @source "../../../../packages/ui/src";
+@source "../../../../packages/mocks/src";
+@source "../../../../packages/pwa/src";
 
 body {
   background: #ffffff;

@@ -23,8 +23,8 @@ import { useMockStore } from "@/lib/store";
 export default function RiderHome({ params }: { params: Promise<{ tenant: string }> }) {
   const { tenant: slug } = use(params);
   const tenant = findTenantBySlug(slug)!;
-  const riders = useMockStore((s) =>
-    s.riders.filter((r) => r.tenantId === tenant.id && r.status === "ACTIVE"),
+  const riders = useMockStore((s) => s.riders).filter(
+    (r) => r.tenantId === tenant.id && r.status === "ACTIVE",
   );
   const orders = useMockStore((s) => s.orders);
   const [personaId] = usePersona(`rider:${slug}`, riders[0]?.id ?? "");

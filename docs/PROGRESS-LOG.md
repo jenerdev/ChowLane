@@ -12,6 +12,38 @@
 
 ---
 
+## 2026-11-15 — Minimalist restyle (all apps)
+
+**Done:** User asked for a simple, minimalist, modern UI for all apps and future work → new `docs/DESIGN.md` + rule in
+CLAUDE.md (D-041). `packages/ui` tokens (zinc neutrals, brand only for primary/active/focus), Geist font in all 5 apps,
+flat Card/Stat/Badge, underline Tabs, slimmer Switch, quieter sidebar & bottom nav, lighter icons; landing/signup/login
+simplified (no teal bands, no display font, neutral links); `font-bold` removed everywhere; DEV pill moved bottom-right.
+Checked in browser: landing, console home, customer home. Build/lint/typecheck/tests pass.
+
+**Stopped at / Next:** Uncommitted (1.2 + restyle). Next: commit, phone-width pass, Milestone 1.3.
+
+---
+
+## 2026-11-15 — Milestone 1.2 Landing & Owner Signup ✅
+
+**Done:**
+- Landing page (S-001) with live brand-builder hero + phone preview, how it works, local features (COD, pabili,
+  verified customers, fees, rider pay, promos), three apps, FAQ. Archivo variable font (D-039).
+- Signup wizard (S-002): 6 steps + done screen; validation via new `@chowlane/lib` signup helpers (slugify, slug
+  rules/reserved/taken + suggestions, email, password, color) — 4 new tests (32 lib tests).
+- Find-your-console page (S-003) and console login (S-100) with mock session (`useSession` in `@chowlane/mocks/react`),
+  login guard + log out (D-040).
+- Refactor: tenant apps split into `[tenant]/layout` (branding, PWA, DEV) and `[tenant]/(app)/layout` (shell, nav).
+- Browser-tested; fixed 4 bugs (unstable Zustand selectors → React #185, install prompt re-showing, `Button block`
+  overflow, squashed phone-layout nav). New rule in CLAUDE.md about Zustand selectors.
+
+**Changed docs:** REQUIREMENTS (LND-001…004 ✅), SCREENS (S-001, S-002, S-003 new, S-100 ✅), USER-FLOWS (F-01 rewritten,
+F-01b new), BUSINESS-LOGIC (BL-15 new), DECISIONS (D-038…D-040), ROADMAP (1.2 ✅), STATUS, CLAUDE.md.
+
+**Stopped at / Next:** Uncommitted. Next: commit, phone-width pass, then Milestone 1.3.
+
+---
+
 ## 2026-11-15 — Q-26…Q-29 answered
 
 **Done:** User accepted Claude's recommendations (D-037): rider pay uses the original delivery fee (BL-13.6); one promo per

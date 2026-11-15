@@ -18,3 +18,4 @@ export * from "./color";
 export * from "./coupons";
 export * from "./loyalty";
 export * from "./pricing";
+export * from "./signup";

@@ -1,8 +1,23 @@
 @import "tailwindcss";
 @import "@chowlane/ui/styles.css";
 @source "../../../../packages/ui/src";
+@source "../../../../packages/mocks/src";
 
-body {
-  background: #ffffff;
-  color: #171717;
+/* Landing uses the shared tokens; ChowLane teal is the brand here. */
+@theme inline {
+  --color-ink: #18181b;
+  --color-mist: #fafafa;
+  --color-teal-deep: #0a5c4c;
+}
+
+:root {
+  --brand: #0e7c66;
+  --brand-foreground: #ffffff;
+}
+
+/* Headings: same family, tighter tracking — no heavy display type. */
+.display {
+  font-weight: 600;
+  letter-spacing: -0.035em;
+  line-height: 1.08;
 }

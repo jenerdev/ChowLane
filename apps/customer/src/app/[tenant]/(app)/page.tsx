@@ -11,9 +11,9 @@ import { useMockStore } from "@/lib/store";
 export default function CustomerHome({ params }: { params: Promise<{ tenant: string }> }) {
   const { tenant: slug } = use(params);
   const tenant = findTenantBySlug(slug)!;
-  const customers = useMockStore((s) => s.customers.filter((c) => c.tenantId === tenant.id));
-  const merchants = useMockStore((s) =>
-    s.merchants.filter((m) => m.tenantId === tenant.id && m.status === "ACTIVE"),
+  const customers = useMockStore((s) => s.customers).filter((c) => c.tenantId === tenant.id);
+  const merchants = useMockStore((s) => s.merchants).filter(
+    (m) => m.tenantId === tenant.id && m.status === "ACTIVE",
   );
   const [personaId] = usePersona(`customer:${slug}`, customers[0]?.id ?? "");
   const me = customers.find((c) => c.id === personaId) ?? customers[0];

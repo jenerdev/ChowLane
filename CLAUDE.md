@@ -28,12 +28,15 @@ Docs are the source of truth. Update them **in the same session** as the code ch
 | A decision was made or a question answered | `docs/DECISIONS.md` (move the question into the decision log) |
 | Entity / field added or changed | `docs/DATA-MODEL.md` |
 | Package / tool added or removed | `docs/TECH-STACK.md` |
+| Token, component or visual rule changed | `docs/DESIGN.md` |
 
 ## Rules
 
 - **Phase 1 is UI ONLY.** No Supabase, no real API, no real auth. Use typed mock data from
   `packages/mocks` and client-side state. Every mock must match `docs/DATA-MODEL.md` so Phase 2 can
   swap mocks for Supabase queries without rewriting screens.
+- **UI style: simple, minimalist, modern — follow `docs/DESIGN.md`** for every screen in every app. Use the
+  `packages/ui` components and tokens; don't invent colors, shadows or font weights per screen.
 - **Mobile-first web design** for every app (including the Owner/Admin console). Design at ~375px
   first, then scale up.
 - **Every tenant app (`console`, `rider`, `customer`) must stay installable as a PWA**, branded per
@@ -46,6 +49,8 @@ Docs are the source of truth. Update them **in the same session** as the code ch
   "ChowLane" in the customer or rider apps.
 - Admin features must be gated by **permissions** (see BUSINESS-LOGIC BL-2). The Owner always has all
   permissions.
+- Zustand selectors must return stable values: `useMockStore((s) => s.orders).filter(...)` — never `.filter()` inside
+  the selector (infinite render loop, React #185).
 - Business rules live in `packages/lib` as pure, unit-tested functions — screens call them, never re-implement them.
 - Before marking anything ✅ run: `pnpm build && pnpm lint && pnpm typecheck && pnpm test && pnpm format:check`.
 - Don't invent business rules. If something is unclear, add it to "Open Questions" in
@@ -67,3 +72,4 @@ Docs are the source of truth. Update them **in the same session** as the code ch
 | `docs/DATA-MODEL.md` | Entities & fields (mock shapes now, Supabase schema later) |
 | `docs/TECH-STACK.md` | Tech choices + monorepo layout |
 | `docs/DECISIONS.md` | Decision log + open questions |
+| `docs/DESIGN.md` | Design system: principles, tokens, components (minimalist) |

@@ -43,6 +43,10 @@
 | D-035 | 2026-11-15 | PWA via **`@serwist/turbopack`** (Next 16 builds with Turbopack); service worker disabled in `next dev` — test PWA with `build` + `start` | ✅ Done |
 | D-036 | 2026-11-15 | Phase 1 mock backend = **Zustand store per app** seeded from `@chowlane/mocks`, persisted in localStorage; "acting as" persona chosen in the DEV switcher | ✅ Done |
 | D-037 | 2026-11-15 | Q-26…Q-29 resolved with Claude's recommendations: rider pay unaffected by promos; one promo per order (points & free gift combine); free gift optionally tied to a menu item/merchant; points don't expire (MVP) | ✅ Confirmed |
+| D-038 | 2026-11-15 | Phase 1 signup creates nothing (no backend): the done screen opens the **FastBite demo console**; signup draft kept in sessionStorage (never the password or logo) | ✅ Done |
+| ~~D-039~~ | 2026-11-15 | ChowLane's own pages (landing, signup) use **Archivo** (variable width: expanded for display, normal for body) on the teal/amber placeholder brand; tenant apps keep the system font | ❌ Superseded by D-041 |
+| D-040 | 2026-11-15 | Phase 1 console login = mock: email of an ACTIVE staff member of that tenant, any password; session stored per tenant in localStorage (same store as the DEV "acting as"). Console pages redirect to login when signed out | ✅ Done |
+| D-041 | 2026-11-15 | **UI style for all apps: simple, minimalist, modern** (docs/DESIGN.md): neutral zinc palette, brand color only for primary action/active/focus, flat (borders, no shadows), **Geist** 400–600 everywhere. Supersedes the font part of D-032 and D-039 (Archivo) | ✅ Confirmed |
 | D-030 | 2026-11-15 | **Cash remittance**: at time out the rider remits net cash (collected from customers − paid at stores); Admin records amount received; business absorbs store price differences | ✅ Confirmed |
 
 ## Open questions

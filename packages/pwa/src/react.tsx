@@ -132,10 +132,11 @@ export function InstallPrompt({
   }, [key, delayMs]);
 
   useEffect(() => {
-    if (!deferred) return;
+    // Chrome may fire beforeinstallprompt again later — respect a recent "Not now" (BL-9.4).
+    if (!deferred || dismissedRecently(key)) return;
     const timer = window.setTimeout(() => setMode("native"), delayMs);
     return () => window.clearTimeout(timer);
-  }, [deferred, delayMs]);
+  }, [deferred, delayMs, key]);
 
   const dismiss = () => {
     try {
@@ -157,11 +158,11 @@ export function InstallPrompt({
   if (mode === "hidden") return null;
 
   return (
-    <div className="fixed inset-x-3 bottom-[calc(5rem+env(safe-area-inset-bottom))] z-50 mx-auto max-w-md rounded-2xl border bg-background p-4 shadow-xl md:bottom-6">
+    <div className="fixed inset-x-3 bottom-[calc(5rem+env(safe-area-inset-bottom))] z-50 mx-auto max-w-md rounded-2xl border bg-background p-4 shadow-lg md:bottom-6">
       <div className="flex items-start gap-3">
         <TenantLogo name={appName} logoUrl={logoUrl} />
         <div className="min-w-0 flex-1">
-          <p className="font-semibold">Install {appName}</p>
+          <p className="font-medium">Install {appName}</p>
           {mode === "native" ? (
             <p className="text-sm text-muted-foreground">
               Add it to your home screen — opens full-screen like an app.
@@ -191,10 +192,10 @@ export function InstallPrompt({
       </div>
       {mode === "native" ? (
         <div className="mt-3 flex gap-2">
-          <Button variant="outline" block onClick={dismiss}>
+          <Button variant="outline" className="flex-1" onClick={dismiss}>
             Not now
           </Button>
-          <Button block onClick={install}>
+          <Button className="flex-1" onClick={install}>
             <Download /> Install
           </Button>
         </div>
@@ -222,7 +223,7 @@ export function UpdateBanner() {
   return (
     <div
       role="status"
-      className="fixed inset-x-3 top-[calc(0.75rem+env(safe-area-inset-top))] z-50 mx-auto flex max-w-md items-center gap-3 rounded-2xl bg-foreground p-3 pl-4 text-sm text-background shadow-xl"
+      className="fixed inset-x-3 top-[calc(0.75rem+env(safe-area-inset-top))] z-50 mx-auto flex max-w-md items-center gap-3 rounded-2xl bg-foreground p-3 pl-4 text-sm text-background shadow-lg"
     >
       <span className="flex-1">New version available</span>
       <Button size="sm" onClick={() => window.location.reload()}>

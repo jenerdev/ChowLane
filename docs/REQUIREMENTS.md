@@ -28,10 +28,10 @@
 
 | ID | Requirement | Src | UI | BE |
 |---|---|---|---|---|
-| LND-001 | Landing page that shows what ChowLane is about (hero, how it works, features for owner/admin/rider/customer, CTA) — placeholder ChowLane brand designed by Claude | U | ⬜ | — |
-| LND-002 | Business owner can sign up (account → business name → storefront slug → logo & color) | U | ⬜ | ⬜ |
-| LND-003 | Storefront slug availability check | P | ⬜ | ⬜ |
-| LND-004 | Owner / Admin login | U | ⬜ | ⬜ |
+| LND-001 | Landing page that shows what ChowLane is about (hero, how it works, features for owner/admin/rider/customer, CTA) — placeholder ChowLane brand designed by Claude | U | ✅ | — |
+| LND-002 | Business owner can sign up (account → business name → storefront link → logo & color → delivery area → review) | U | ✅ | ⬜ |
+| LND-003 | Storefront slug availability check | P | ✅ | ⬜ |
+| LND-004 | Owner / Admin login (console `/[tenant]/login`; landing `/login` finds the console by business link) | U | ✅ | ⬜ |
 
 ## OWN — Owner (console)
 

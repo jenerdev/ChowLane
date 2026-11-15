@@ -9,8 +9,9 @@
 ## apps/landing
 | # | Screen | Route | Reqs | Status |
 |---|---|---|---|---|
-| S-001 | Landing page | `/` | LND-001 | ⬜ |
-| S-002 | Owner signup wizard | `/signup` | LND-002, LND-003 | ⬜ |
+| S-001 | Landing page | `/` | LND-001 | ✅ |
+| S-002 | Owner signup wizard (6 steps + done) | `/signup` | LND-002, LND-003 | ✅ |
+| S-003 | Find your console (business link → console login) | `/login` | LND-004 | ✅ |
 
 ## Shared PWA screens (built once in `packages/ui`, used by console, rider, customer)
 | # | Screen | Route | Reqs | Status |
@@ -22,7 +23,7 @@
 ## apps/console (Owner & Admin)
 | # | Screen | Route | Reqs | Perm | Status |
 |---|---|---|---|---|---|
-| S-100 | Login | `/[tenant]/login` | LND-004 | — | ⬜ |
+| S-100 | Login | `/[tenant]/login` | LND-004 | — | ✅ |
 | S-101 | Home: setup checklist (owner) + ops counters | `/[tenant]` | OWN-001, ADM-008 | — | ⬜ |
 | S-102 | Orders list (status filters) | `/[tenant]/orders` | ADM-003 | `orders.view` | ⬜ |
 | S-103 | Order detail: approve/reject, assign, cancel, timeline | `/[tenant]/orders/[id]` | ADM-002, ADM-003, ADM-004, ADM-007 | `orders.*` | ⬜ |
@@ -93,4 +94,4 @@
 | S-509 | Tenant — billing config + statements | `/tenants/[id]/billing` | PLT-007, PLT-008 | ⬜ |
 | S-510 | Billing overview (all tenants) | `/billing` | PLT-010 | ⬜ |
 
-**Progress: 3 / 63 screens** (landing 2 · shared PWA 3 ✅ · console 28 · rider 8 · customer 11 · platform 11)
+**Progress: 7 / 64 screens** (landing 3 ✅ · shared PWA 3 ✅ · console 28 (login ✅) · rider 8 · customer 11 · platform 11)

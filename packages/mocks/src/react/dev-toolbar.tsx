@@ -16,6 +16,11 @@ const APP_URLS: Record<AppKey, string> = {
   customer: process.env.NEXT_PUBLIC_APP_URL_CUSTOMER ?? "http://localhost:3003",
   platform: process.env.NEXT_PUBLIC_APP_URL_PLATFORM ?? "http://localhost:3004",
 };
+/** Base URL of another app (Phase 1: separate ports / preview URLs). */
+export function appUrl(app: AppKey): string {
+  return APP_URLS[app];
+}
+
 const TENANT_APPS: AppKey[] = ["console", "rider", "customer"];
 const APP_LABEL: Record<AppKey, string> = {
   landing: "Landing",
@@ -64,6 +69,42 @@ export function usePersona(scope: string, fallbackId: string): [string, (id: str
   return [id, (next) => writePersona(scope, next)];
 }
 
+function clearPersona(scope: string) {
+  try {
+    const all = readPersonas();
+    delete all[scope];
+    localStorage.setItem(PERSONA_KEY, JSON.stringify(all));
+  } catch {
+    /* ignore */
+  }
+  listeners.forEach((l) => l());
+}
+
+const noopSubscribe = () => () => {};
+
+/**
+ * Mock login session for an app + tenant (LND-004). `ready` is false during SSR / first render,
+ * so guards don't redirect before localStorage has been read. Phase 2: Supabase Auth.
+ */
+export function useSession(scope: string) {
+  const staffId = useSyncExternalStore(
+    subscribe,
+    () => readPersonas()[scope] ?? null,
+    () => null,
+  );
+  const ready = useSyncExternalStore(
+    noopSubscribe,
+    () => true,
+    () => false,
+  );
+  return {
+    staffId,
+    ready,
+    signIn: (id: string) => writePersona(scope, id),
+    signOut: () => clearPersona(scope),
+  };
+}
+
 // ------------------------------------------------------------------ toolbar
 type DevToolbarProps = {
   app: AppKey;
@@ -96,7 +137,7 @@ export function DevToolbar({
       <SheetTrigger asChild>
         <button
           aria-label="Dev tools"
-          className="fixed bottom-[calc(5.5rem+env(safe-area-inset-bottom))] left-3 z-40 inline-flex items-center gap-1 rounded-full bg-foreground/85 px-2.5 py-1.5 text-[11px] font-semibold text-background shadow-lg md:bottom-4"
+          className="fixed bottom-[calc(5.5rem+env(safe-area-inset-bottom))] right-3 z-40 inline-flex items-center gap-1 rounded-full border bg-background/90 px-2.5 py-1.5 text-[11px] font-medium text-muted-foreground backdrop-blur md:bottom-4"
         >
           <FlaskConical className="size-3.5" /> DEV
         </button>
@@ -130,7 +171,7 @@ export function DevToolbar({
                 <a
                   key={t.slug}
                   href={link(app, t.slug)}
-                  className={`rounded-full border px-3 py-1 text-sm ${t.slug === tenantSlug ? "border-brand bg-brand-soft text-brand" : ""}`}
+                  className={`rounded-full border px-3 py-1 text-sm ${t.slug === tenantSlug ? "border-zinc-900 text-foreground" : ""}`}
                 >
                   {t.businessName}
                   {t.status === "SUSPENDED" ? " (suspended)" : ""}
@@ -147,7 +188,7 @@ export function DevToolbar({
               <a
                 key={a}
                 href={link(a)}
-                className={`rounded-xl border px-3 py-2 text-sm ${a === app ? "border-brand bg-brand-soft font-medium text-brand" : "hover:bg-muted"}`}
+                className={`rounded-control border px-3 py-2 text-sm ${a === app ? "border-zinc-900 font-medium text-foreground" : "hover:bg-muted"}`}
               >
                 {APP_LABEL[a]}
               </a>

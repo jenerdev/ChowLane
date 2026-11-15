@@ -27,7 +27,8 @@
 | Zustand | 5.1.0 | Mock store per app (`@chowlane/mocks/store`) |
 | Radix UI | `radix-ui` 1.8.1 | Primitives behind `Sheet`, `Tabs`, `Switch` |
 | class-variance-authority / clsx / tailwind-merge | 0.7.1 / 2.1.1 / 3.7.0 | shadcn-style variants + `cn()` |
-| lucide-react | 1.73.0 | Icons |
+| lucide-react | 1.73.0 | Icons (stroke 1.75) |
+| Font | **Geist** via `next/font/google` (`--font-geist`) in every app | D-041, docs/DESIGN.md |
 | Serwist | `@serwist/turbopack` + `serwist` 9.5.13, `esbuild` 0.28.2 | PWA service worker (D-035) |
 
 pnpm 12 runs dependency install scripts only when allowed: see `allowBuilds` in `pnpm-workspace.yaml`.
