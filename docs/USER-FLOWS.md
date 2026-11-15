@@ -44,7 +44,7 @@ Checklist on console home; each item links to its screen:
 2. Merchant → Products → **Add product**: name, category, price, photo, description
 3. Toggle merchant **Open / Closed** and product **Available / Sold out** as needed
 
-## F-04 Add a rider  ⬜  *(Owner or Admin with `riders.manage`)*
+## F-04 Add a rider  🟨 (clickable)  *(Owner or Admin with `riders.manage`)*
 1. Riders → **Add rider**: name, phone, vehicle, plate, (optional) pay override
 2. Rider gets login (mock credentials in Phase 1)
 
@@ -71,12 +71,12 @@ Checklist on console home; each item links to its screen:
 1. Open app → (already logged in, location allowed) → browse → cart → checkout (no ID step; coupon / rewards optional) → **Place order**
 2. `PENDING_APPROVAL` → admin approves (or auto-approved if Owner enabled it) → rider → tracking → delivered
 
-## F-08 Admin daily operations  ⬜
+## F-08 Admin daily operations  🟨 (clickable)
 1. Console home: counters — customers to verify, orders to approve, active orders, riders on shift
 2. **Verify customers**: open queue → view Facebook profile + ID photo + selfie with ID side by side → **Approve** / **Reject (reason)**
 3. **Approve orders**: open order → check items, location, fee → **Approve** / **Reject (reason)**
 4. **Monitor orders**: list filtered by status; open detail → timeline
-5. **Dispatch**: switch mode **AUTO / MANUAL** anytime. In MANUAL (or for orders in "Needs rider") → **Assign rider** → choose an online rider (distance, has active order?) → rider gets offer → accepts → `ASSIGNED`
+5. **Dispatch** (Console → Dispatch): switch mode **AUTO / MANUAL** anytime. AUTO offers an approved order to the nearest free rider at approval; In MANUAL (or for orders in "Needs rider") → **Assign rider** → choose an online rider (distance, has active order?) → rider gets offer → accepts → `ASSIGNED`
 6. **Monitor riders**: map + list of timed-in riders, their current order, shift start time
 7. **Cash remittances**: rider timed out → admin counts cash → enters amount received → `RECEIVED` or `SHORT` / `OVER` (note)
 

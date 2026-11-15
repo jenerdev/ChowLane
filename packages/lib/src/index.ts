@@ -20,3 +20,4 @@ export * from "./loyalty";
 export * from "./pricing";
 export * from "./signup";
 export * from "./console";
+export * from "./order-actions";

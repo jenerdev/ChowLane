@@ -2,7 +2,15 @@
 
 import "leaflet/dist/leaflet.css";
 import { useEffect } from "react";
-import { Circle, CircleMarker, MapContainer, TileLayer, useMap, useMapEvents } from "react-leaflet";
+import {
+  Circle,
+  CircleMarker,
+  MapContainer,
+  TileLayer,
+  Tooltip,
+  useMap,
+  useMapEvents,
+} from "react-leaflet";
 import type { LatLng } from "@chowlane/types";
 
 export type MapInnerProps = {
@@ -12,7 +20,9 @@ export type MapInnerProps = {
   onPick?: (p: LatLng) => void;
   zoom?: number;
   color?: string;
-  markers?: { position: LatLng; label: string }[];
+  markers?: { position: LatLng; label: string; color?: string }[];
+  /** Hide the center pin (e.g. overview maps). */
+  hideCenter?: boolean;
 };
 
 function ClickToPick({ onPick }: { onPick?: (p: LatLng) => void }) {
@@ -51,6 +61,7 @@ export default function MapInner({
   zoom = 13,
   color = "#18181b",
   markers = [],
+  hideCenter,
 }: MapInnerProps) {
   return (
     <MapContainer
@@ -70,18 +81,29 @@ export default function MapInner({
           pathOptions={{ color, weight: 1.5, fillOpacity: 0.08 }}
         />
       ) : null}
-      <CircleMarker
-        center={[center.lat, center.lng]}
-        radius={7}
-        pathOptions={{ color: "#fff", weight: 2, fillColor: color, fillOpacity: 1 }}
-      />
+      {hideCenter ? null : (
+        <CircleMarker
+          center={[center.lat, center.lng]}
+          radius={7}
+          pathOptions={{ color: "#fff", weight: 2, fillColor: color, fillOpacity: 1 }}
+        />
+      )}
       {markers.map((m) => (
         <CircleMarker
           key={m.label}
           center={[m.position.lat, m.position.lng]}
-          radius={5}
-          pathOptions={{ color: "#fff", weight: 1.5, fillColor: "#71717a", fillOpacity: 1 }}
-        />
+          radius={7}
+          pathOptions={{
+            color: "#fff",
+            weight: 2,
+            fillColor: m.color ?? "#71717a",
+            fillOpacity: 1,
+          }}
+        >
+          <Tooltip direction="top" offset={[0, -6]}>
+            {m.label}
+          </Tooltip>
+        </CircleMarker>
       ))}
       <ClickToPick onPick={onPick} />
       <FollowCenter center={center} radiusKm={radiusKm} />

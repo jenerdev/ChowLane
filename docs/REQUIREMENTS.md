@@ -61,19 +61,19 @@
 
 | ID | Requirement | Src | UI | BE |
 |---|---|---|---|---|
-| ADM-001 | Customer verification queue: view ID + **selfie with ID** side by side (+ Facebook photo, previous submissions), **approve / reject** first-time customers (reject needs reason) | U | ⬜ | ⬜ |
-| ADM-002 | **Approve / reject orders** (reject needs reason) | U | ⬜ | ⬜ |
-| ADM-003 | **Monitor orders**: list with status filters, order detail with timeline | U | ⬜ | ⬜ |
-| ADM-004 | **Manually assign / reassign** an order to an online rider; "Needs rider" list of rejected/unassigned orders | U | ⬜ | ⬜ |
-| ADM-010 | **Dispatch mode** switch AUTO / MANUAL (Owner or Admin) | U | ⬜ | ⬜ |
-| ADM-011 | Order assignment history (offers, accepts, rejects + reasons) on order detail | P | ⬜ | ⬜ |
-| ADM-013 | Customer loyalty: balances, progress, history; manual points adjustment (reason) | P | ⬜ | ⬜ |
-| ADM-012 | **Cash remittances**: list of shifts with expected cash; record amount received; flag short / over | U | ⬜ | ⬜ |
-| ADM-005 | **Monitor riders**: timed-in/out status, current order, location on map | U | ⬜ | ⬜ |
-| ADM-006 | **Riders CRUD** (name, phone, vehicle, plate, pay override, active/inactive) | U | ⬜ | ⬜ |
-| ADM-007 | Cancel an order with reason | P | ⬜ | ⬜ |
-| ADM-008 | Dashboard overview (pending approvals, active orders, riders on shift) | P | ⬜ | ⬜ |
-| ADM-009 | Customers list & detail | P | ⬜ | ⬜ |
+| ADM-001 | Customer verification queue: view ID + **selfie with ID** side by side (+ Facebook photo, previous submissions), **approve / reject** first-time customers (reject needs reason) | U | ✅ | ⬜ |
+| ADM-002 | **Approve / reject orders** (reject needs reason) | U | ✅ | ⬜ |
+| ADM-003 | **Monitor orders**: list with status filters, order detail with timeline | U | ✅ | ⬜ |
+| ADM-004 | **Manually assign / reassign** an order to an online rider; "Needs rider" list of rejected/unassigned orders | U | ✅ | ⬜ |
+| ADM-010 | **Dispatch mode** switch AUTO / MANUAL (Owner or Admin) | U | ✅ | ⬜ |
+| ADM-011 | Order assignment history (offers, accepts, rejects + reasons) on order detail | P | ✅ | ⬜ |
+| ADM-013 | Customer loyalty: balances, progress, history; manual points adjustment (reason) | P | ✅ | ⬜ |
+| ADM-012 | **Cash remittances**: list of shifts with expected cash; record amount received; flag short / over | U | ✅ | ⬜ |
+| ADM-005 | **Monitor riders**: timed-in/out status, current order, location on map | U | ✅ | ⬜ |
+| ADM-006 | **Riders CRUD** (name, phone, vehicle, plate, pay override, active/inactive) | U | ✅ | ⬜ |
+| ADM-007 | Cancel an order with reason | P | ✅ | ⬜ |
+| ADM-008 | Dashboard overview (pending approvals, active orders, riders on shift) | P | ✅ | ⬜ |
+| ADM-009 | Customers list & detail | P | ✅ | ⬜ |
 
 ## RID — Rider app
 

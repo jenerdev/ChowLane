@@ -104,6 +104,9 @@ PENDING_APPROVAL ──admin approves──▶ APPROVED ──offered (auto/manu
 - BL-5.9 **[PROPOSED]** Even in AUTO mode, Owner/Admin (`orders.assign`) can manually assign or reassign any order until `PICKED_UP`.
 - BL-5.10 **[CONFIRMED]** A rider holds **one active order** at a time, so only riders without an active order get offers.
 - BL-5.11 **[PROPOSED]** Order is `ASSIGNED` only after the rider **accepts**; while waiting for a response the order stays `APPROVED` with a pending offer.
+- BL-5.12 **[PROPOSED]** A rider who holds an open offer can't get a second one (counts as busy for auto and manual assign). A new offer on the same order withdraws the previous one.
+- BL-5.13 **[PROPOSED]** Reassigning an `ASSIGNED` / `AT_MERCHANT` order puts it back to `APPROVED` until the new rider accepts; the previous rider is freed.
+- BL-5.14 **[PROPOSED]** Offer expiry (BL-5.6) runs on the server from Phase 2/3. In the Phase 1 prototype an expired offer is labelled and an admin marks it "no response", which triggers the next auto offer.
 
 ## BL-6 Rider shifts (time in / time out)
 
@@ -258,6 +261,7 @@ PENDING_APPROVAL ──admin approves──▶ APPROVED ──offered (auto/manu
 |---|---|---|
 | 2026-11-15 | All | Initial draft (v0) |
 | 2026-11-15 | All | v1 rewrite from user requirements: Owner/Admin/Rider/Customer; merchants no longer log in; permissions; Facebook signup; location gate; first-order ID verification; order approval; time in/out; FIXED/PER_KM pricing; COMMISSION/DAILY/PER_DELIVERY rider pay |
+| 2026-11-15 | BL-5.12…5.14 (new) | Open offers count as busy; reassignment rules; prototype handling of offer expiry |
 | 2026-11-15 | BL-2.5, BL-2.6, BL-13.10, BL-13.11 | Role/admin rules and coupon editing/status rules from Milestone 1.3 |
 | 2026-11-15 | BL-15 (new) | Owner signup (link rules, password, starting service area) and console login rules |
 | 2026-11-15 | BL-13.6, BL-14.3b, BL-14.6, BL-14.9 | Confirmed (Q-26…Q-29, D-037) |

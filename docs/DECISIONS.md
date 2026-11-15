@@ -49,6 +49,8 @@
 | D-041 | 2026-11-15 | **UI style for all apps: simple, minimalist, modern** (docs/DESIGN.md): neutral zinc palette, brand color only for primary action/active/focus, flat (borders, no shadows), **Geist** 400–600 everywhere. Supersedes the font part of D-032 and D-039 (Archivo) | ✅ Confirmed |
 | D-042 | 2026-11-15 | Console navigation: items hidden when the role lacks the permission; on phones, >5 items → 4 tabs + **More** sheet. All settings live under `/[tenant]/settings/*` (incl. admins & roles) | ✅ Done |
 | D-043 | 2026-11-15 | Phase 1 logo upload is resized to a 256 px PNG data URL so it survives reloads in the mock store (Phase 2: Supabase Storage) | ✅ Done |
+| D-044 | 2026-11-15 | Order/customer state changes are **pure functions** in `packages/lib/order-actions.ts`; the console's `useOrderActions` applies side effects (rider availability, coupon uses, loyalty refunds, auto-assign). Phase 2 moves the same rules into server functions | ✅ Done |
+| D-045 | 2026-11-15 | Console prototype shows **"Simulate: rider accepts / declines"** and **"Mark as no response"** buttons, because the rider app is a separate app with no shared backend in Phase 1. Remove in Phase 2 | ✅ Done |
 | D-030 | 2026-11-15 | **Cash remittance**: at time out the rider remits net cash (collected from customers − paid at stores); Admin records amount received; business absorbs store price differences | ✅ Confirmed |
 
 ## Open questions

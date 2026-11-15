@@ -69,4 +69,11 @@ describe("mock data integrity", () => {
     expect(mockDb.orders.some((o) => o.pointsRedeemed > 0)).toBe(true);
     expect(mockDb.orders.some((o) => (o.pointsEarned ?? 0) > 0)).toBe(true);
   });
+
+  it("coupon orders meet the coupon's minimum order", () => {
+    for (const o of mockDb.orders.filter((x) => x.couponId)) {
+      const c = mockDb.coupons.find((x) => x.id === o.couponId)!;
+      expect(o.subtotal).toBeGreaterThanOrEqual(c.minOrderSubtotal ?? 0);
+    }
+  });
 });

@@ -246,6 +246,7 @@ const SPECS: Spec[] = [
     lines: [
       ["p-6", 1],
       ["p-8", 1],
+      ["p-9", 1],
     ],
     couponCode: "WELCOME20",
     status: "PENDING_APPROVAL",

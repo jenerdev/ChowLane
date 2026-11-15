@@ -12,6 +12,25 @@
 
 ---
 
+## 2026-11-15 — Milestone 1.4 Console — Admin Operations ✅
+
+**Done:** 11 console screens — orders list & detail, customer verification queue & review, customers list & detail
+(loyalty adjust), riders list / add-edit / detail, live map, dispatch, cash remittances. New `@chowlane/lib`
+order-actions (pure state changes) + console `useOrderActions` (side effects: auto-assign, rider availability, coupon
+use given back, points/rewards refunded, first order auto-rejected when the ID is rejected). Reason sheet, assign-rider
+sheet, ID image placeholder, map marker labels/colors, `useNow()`.
+
+**Verified:** build ✅ lint ✅ typecheck ✅ tests ✅ (51); browser walk-through of approve/auto-assign/decline/assign,
+ID verification → approval, dispatch, cash short. Fixed: riders with an open offer got a second offer, hard-coded
+timeout text, mock coupon below minimum (+ integrity test), offer expiry shown in UI (BL-5.14).
+
+**Changed docs:** REQUIREMENTS (ADM-001…013 ✅), SCREENS (11 ✅), USER-FLOWS (F-04, F-08 clickable), BUSINESS-LOGIC
+(BL-5.12…5.14), DECISIONS (D-044, D-045), ROADMAP (1.4 ✅), STATUS.
+
+**Stopped at / Next:** Uncommitted. Next: commit, then Milestone 1.5 Customer App.
+
+---
+
 ## 2026-11-15 — Milestone 1.3 Console — Owner Setup ✅
 
 **Done:** 15 console screens — home + setup checklist, merchants (list, add/edit with map), menu, settings index,
