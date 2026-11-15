@@ -2,15 +2,21 @@
  * Console helpers for Owner setup (Milestone 1.3): permission labels, coupon status, setup checklist.
  */
 import type {
+  Centavos,
   Coupon,
+  Order,
   DeliveryFeeMode,
   Merchant,
   PermissionKey,
   Product,
   Rider,
   RiderPayMode,
+  RiderPayRule,
+  Shift,
   StaffUser,
 } from "@chowlane/types";
+import { computeRiderPay, effectiveRiderPayRule } from "./rider-pay";
+import { manilaDateKey } from "./time";
 
 // ------------------------------------------------------------------ permissions (BL-2)
 export const PERMISSION_GROUPS: {
@@ -275,4 +281,63 @@ export function checklistProgress(steps: SetupStep[]): {
   const required = steps.filter((s) => !s.optional);
   const done = required.filter((s) => s.done).length;
   return { done, total: required.length, complete: done === required.length };
+}
+
+// ------------------------------------------------------------------ rider pay report (OWN-012, S-120)
+export type RiderPayRow = {
+  riderId: string;
+  name: string;
+  rule: RiderPayRule;
+  hasOverride: boolean;
+  deliveries: number;
+  deliveryFees: Centavos;
+  daysWorked: number;
+  earnings: Centavos;
+  /** Cash handed over is still to be recorded (PENDING shifts in the period). */
+  cashPending: Centavos;
+};
+
+/** Earnings per rider for a period (BL-8). Payouts happen outside the app in the MVP. */
+export function riderPayReport(args: {
+  riders: Rider[];
+  orders: Order[];
+  shifts: Shift[];
+  tenantRule: RiderPayRule;
+  period: { start: string; end: string };
+}): RiderPayRow[] {
+  const inP = (iso?: string) =>
+    Boolean(iso) &&
+    Date.parse(iso!) >= Date.parse(args.period.start) &&
+    Date.parse(iso!) <= Date.parse(args.period.end);
+  return args.riders
+    .map((r) => {
+      const rule = effectiveRiderPayRule(args.tenantRule, r.payOverride);
+      const delivered = args.orders.filter(
+        (o) =>
+          o.riderId === r.id &&
+          o.status === "DELIVERED" &&
+          inP(o.cashCollectedAt ?? o.timeline.at(-1)?.at),
+      );
+      const shifts = args.shifts.filter((s) => s.riderId === r.id && inP(s.timeIn));
+      const fees = delivered.map((o) => o.deliveryFee);
+      return {
+        riderId: r.id,
+        name: r.name,
+        rule,
+        hasOverride: Boolean(r.payOverride),
+        deliveries: delivered.length,
+        deliveryFees: fees.reduce((a, b) => a + b, 0),
+        daysWorked: new Set(shifts.map((s) => manilaDateKey(s.timeIn))).size,
+        earnings: computeRiderPay({
+          rule,
+          deliveredOrderFees: fees,
+          shiftTimeIns: shifts.map((s) => s.timeIn),
+        }),
+        cashPending: shifts
+          .filter((s) => s.remitStatus === "PENDING")
+          .reduce((a, s) => a + s.expectedRemit, 0),
+      };
+    })
+    .filter((row) => row.deliveries > 0 || row.daysWorked > 0)
+    .sort((a, b) => b.earnings - a.earnings);
 }

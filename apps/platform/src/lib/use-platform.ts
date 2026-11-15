@@ -18,4 +18,4 @@ export function usePlatform() {
   return { db, me, now };
 }
 
-export const newId = (prefix: string) => `${prefix}-${crypto.randomUUID().slice(0, 8)}`;
+export { newId } from "@chowlane/mocks/store";

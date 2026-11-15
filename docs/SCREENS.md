@@ -20,6 +20,11 @@
 | S-011 | Offline screen | `/~offline` | FND-010 | ✅ |
 | S-012 | "New version available" banner | overlay | FND-012 | ✅ |
 
+## Dev tools (Phase 1 only)
+| # | Screen | Route | Reqs | Status |
+|---|---|---|---|---|
+| S-900 | Phone preview — every app side by side at 360/390/430 px | landing `/preview` | FND-002 | ✅ |
+
 ## apps/console (Owner & Admin)
 | # | Screen | Route | Reqs | Perm | Status |
 |---|---|---|---|---|---|
@@ -41,7 +46,7 @@
 | S-115 | Settings — Service area | `/[tenant]/settings/area` | OWN-010 | `settings.business` | ✅ |
 | S-116 | Settings — Delivery fee (PER_KM / FIXED / PER_BARANGAY + calculator) | `/[tenant]/settings/pricing` | OWN-005, OWN-011 | `settings.pricing` | ✅ |
 | S-122 | Settings — Barangay price list | `/[tenant]/settings/pricing/barangays` | OWN-014 | `settings.pricing` | ✅ |
-| S-123 | Settings — ChowLane billing (plan + statements, read-only) | `/[tenant]/settings/billing` | OWN-016 | Owner | ⬜ |
+| S-123 | Settings — ChowLane billing (plan + statements, read-only) | `/[tenant]/settings/billing` | OWN-016 | Owner | ✅ |
 | S-124 | Cash remittances (record received cash per shift) | `/[tenant]/cash` | ADM-012 | `cash.manage` | ✅ |
 | S-125 | Coupons list (status, uses left, validity) | `/[tenant]/coupons` | OWN-017, OWN-018 | `coupons.manage` | ✅ |
 | S-126 | Coupon add / edit + usage history | `/[tenant]/coupons/new`, `/[tenant]/coupons/[id]` | OWN-017, OWN-018 | `coupons.manage` | ✅ |
@@ -51,7 +56,7 @@
 | S-121 | Dispatch: mode switch (AUTO / MANUAL) + "Needs rider" list | `/[tenant]/dispatch` | ADM-004, ADM-010 | `settings.dispatch`, `orders.assign` | ✅ |
 | S-118 | Admin users list + invite / edit | `/[tenant]/settings/admins` | OWN-007 | Owner | ✅ |
 | S-119 | Roles & permissions editor | `/[tenant]/settings/roles` | OWN-008, OWN-009 | Owner | ✅ |
-| S-120 | Rider pay report | `/[tenant]/reports/rider-pay` | OWN-012 | `reports.view` | ⬜ |
+| S-120 | Rider pay report | `/[tenant]/reports/rider-pay` | OWN-012 | `reports.view` | ✅ |
 
 ## apps/rider
 | # | Screen | Route | Reqs | Status |
@@ -95,4 +100,4 @@
 | S-509 | Tenant — billing config + statements | `/tenants/[id]/billing` | PLT-007, PLT-008 | ✅ |
 | S-510 | Billing overview (all tenants) | `/billing` | PLT-010 | ✅ |
 
-**Progress: 63 / 65 screens** (landing 3 ✅ · shared PWA 3 ✅ · console 30 (28 ✅ — S-120, S-123 open) · rider 8 ✅ · customer 11 ✅ · platform 11 ✅)
+**Progress: 65 / 65 screens ✅** (+ dev tool S-900) — landing 3 · shared PWA 3 · console 30 · rider 8 · customer 11 · platform 11

@@ -95,3 +95,38 @@ describe("open offers", () => {
     expect(isOfferExpired(o3, "2030-01-01T00:00:00Z")).toBe(true);
   });
 });
+
+describe("coupon release", () => {
+  it("gives back one use and marks the redemption released", async () => {
+    const { couponRelease } = await import("@chowlane/lib");
+    const o = order("o-fb-2"); // uses WELCOME20 (37 used)
+    const r = couponRelease(o, mockDb.coupons, mockDb.couponRedemptions);
+    expect(r).toMatchObject({ couponId: "cp-1", usedCount: 36 });
+    expect(r?.redemptionId).toBeDefined();
+    expect(couponRelease(order("o-fb-1"), mockDb.coupons, mockDb.couponRedemptions)).toBeNull();
+  });
+});
+
+describe("rider pay report", () => {
+  it("sums deliveries and earnings per rider in a period", async () => {
+    const { riderPayReport } = await import("@chowlane/lib");
+    const rows = riderPayReport({
+      riders: mockDb.riders.filter((r) => r.tenantId === "t-fastbite"),
+      orders: mockDb.orders,
+      shifts: mockDb.shifts,
+      tenantRule: { mode: "COMMISSION", percent: 80 },
+      period: { start: "2026-11-01T00:00:00Z", end: "2026-11-30T23:59:59Z" },
+    });
+    const jomar = rows.find((r) => r.riderId === "rd-fb-1")!;
+    expect(jomar.deliveries).toBe(1);
+    expect(jomar.earnings).toBe(Math.round(jomar.deliveryFees * 0.8));
+    const dennis = rows.find((r) => r.riderId === "rd-fb-4")!; // own rate ₱45 / delivery, 0 deliveries, 1 day
+    expect(dennis).toMatchObject({
+      hasOverride: true,
+      deliveries: 0,
+      daysWorked: 1,
+      earnings: 0,
+      cashPending: 43400,
+    });
+  });
+});

@@ -7,3 +7,4 @@ export {
   type AppKey,
   type Persona,
 } from "./dev-toolbar";
+export { useStoreHydrated } from "./hydration";

@@ -1,6 +1,5 @@
 "use client";
 
-import { useState } from "react";
 import { useParams } from "next/navigation";
 import type { PermissionKey } from "@chowlane/types";
 import { permissionsOf } from "@chowlane/lib";
@@ -27,11 +26,6 @@ export function useConsole() {
   return { slug, base: `/${slug}`, db, tenant, settings, me, role, perms, can, isOwner };
 }
 
-/** New id for mock rows. */
-export const newId = (prefix: string) => `${prefix}-${crypto.randomUUID().slice(0, 8)}`;
+export { newId } from "@chowlane/mocks/store";
 
-/** Current time, captured once when the screen mounts (keeps render pure). */
-export function useNow(): number {
-  const [now] = useState(() => Date.now());
-  return now;
-}
+export { useNow } from "@chowlane/ui";

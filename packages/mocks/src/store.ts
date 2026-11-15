@@ -72,3 +72,6 @@ export function createMockStore(appKey: string): UseBoundStore<StoreApi<MockStor
     ),
   );
 }
+
+/** New id for a mock row, e.g. newId("o") → "o-1a2b3c4d". Phase 2: database ids. */
+export const newId = (prefix: string) => `${prefix}-${crypto.randomUUID().slice(0, 8)}`;

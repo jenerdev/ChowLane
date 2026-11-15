@@ -1,6 +1,5 @@
 "use client";
 
-import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import type { RiderPayRule } from "@chowlane/types";
 import { effectiveRiderPayRule, formatPeso, offerFor } from "@chowlane/lib";
@@ -25,23 +24,8 @@ export function useRider() {
   return { slug, base: `/${slug}`, db, tenant, settings, me, rule, offer, active, shift, session };
 }
 
-/** Current time captured once on mount (keeps render pure). */
-export function useNow(): number {
-  const [now] = useState(() => Date.now());
-  return now;
-}
-
-/** Current time that updates every `ms` (offer countdown). */
-export function useTicker(ms = 1000): number {
-  const [now, setNow] = useState(() => Date.now());
-  useEffect(() => {
-    const id = window.setInterval(() => setNow(Date.now()), ms);
-    return () => window.clearInterval(id);
-  }, [ms]);
-  return now;
-}
-
-export const newId = (prefix: string) => `${prefix}-${crypto.randomUUID().slice(0, 8)}`;
+export { useNow, useTicker } from "@chowlane/ui";
+export { newId } from "@chowlane/mocks/store";
 
 /** "₱500 per day", "80% of the delivery fee", "₱40 per delivery". */
 export function payRuleLabel(rule: RiderPayRule): string {

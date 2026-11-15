@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { Bike, ChevronRight, Map, Plus } from "lucide-react";
+import { Bike, ChevronRight, Map, Plus, Wallet } from "lucide-react";
 import { formatDateTime } from "@chowlane/lib";
 import {
   Avatar,
@@ -46,6 +46,13 @@ function Riders() {
         title="Riders"
         actions={
           <>
+            {can("reports.view") ? (
+              <Button variant="outline" asChild>
+                <Link href={`${base}/reports/rider-pay`}>
+                  <Wallet /> Pay
+                </Link>
+              </Button>
+            ) : null}
             <Button variant="outline" asChild>
               <Link href={`${base}/map`}>
                 <Map /> Live map

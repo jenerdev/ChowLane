@@ -12,6 +12,20 @@
 
 ---
 
+## 2026-11-15 — Milestone 1.8 build (walkthrough pending)
+
+**Done:** S-120 rider pay report + S-123 tenant plan & billing (all 65 screens / 88 UI requirements now built);
+shared clean-ups (D-051); phone preview dev page + first phone-width check (D-050); Next dev badge off;
+`docs/WALKTHROUGH.md` sign-off checklist; couponRelease + riderPayReport tests (74 tests).
+
+**Verified:** build ✅ lint ✅ typecheck ✅ tests ✅ format ✅; browser: phone preview of all apps, rider pay report,
+plan & billing.
+
+**Stopped at / Next:** Uncommitted. Next: commit → user walkthrough (docs/WALKTHROUGH.md) → HTTPS preview for
+phone install (D-052) → changes → sign-off → freeze DATA-MODEL v1 → Phase 2.
+
+---
+
 ## 2026-11-15 — Milestones 1.5 Customer, 1.6 Rider, 1.7 Platform ✅
 
 **Done:** Built in parallel (D-046) and integrated. Customer app S-300…S-310, rider app S-200…S-207, platform admin

@@ -253,3 +253,20 @@ export function ridersWithOpenOffers(orders: Order[], exceptOrderId?: ID): ID[] 
 export function isOfferExpired(order: Order, now: string): boolean {
   return Boolean(order.pendingOffer && Date.parse(order.pendingOffer.expiresAt) < Date.parse(now));
 }
+
+/** Give back a coupon use when an order is rejected / cancelled (BL-13.7). null = nothing to release. */
+export function couponRelease(
+  order: Order,
+  coupons: { id: ID; usedCount: number }[],
+  redemptions: { id: ID; orderId: ID; released: boolean }[],
+): { couponId: ID; usedCount: number; redemptionId?: ID } | null {
+  if (!order.couponId) return null;
+  const coupon = coupons.find((c) => c.id === order.couponId);
+  if (!coupon) return null;
+  const red = redemptions.find((r) => r.orderId === order.id && !r.released);
+  return {
+    couponId: coupon.id,
+    usedCount: Math.max(0, coupon.usedCount - 1),
+    redemptionId: red?.id,
+  };
+}

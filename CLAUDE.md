@@ -51,6 +51,7 @@ Docs are the source of truth. Update them **in the same session** as the code ch
   permissions.
 - Zustand selectors must return stable values: `useMockStore((s) => s.orders).filter(...)` — never `.filter()` inside
   the selector (infinite render loop, React #185).
+- Shared helpers: `useNow`/`useTicker`/`ReasonSheet`/`PhotoInput` from `@chowlane/ui`, `newId` from `@chowlane/mocks/store` — don't re-create them per app.
 - Business rules live in `packages/lib` as pure, unit-tested functions — screens call them, never re-implement them.
 - Before marking anything ✅ run: `pnpm build && pnpm lint && pnpm typecheck && pnpm test && pnpm format:check`.
 - Don't invent business rules. If something is unclear, add it to "Open Questions" in
@@ -73,3 +74,4 @@ Docs are the source of truth. Update them **in the same session** as the code ch
 | `docs/TECH-STACK.md` | Tech choices + monorepo layout |
 | `docs/DECISIONS.md` | Decision log + open questions |
 | `docs/DESIGN.md` | Design system: principles, tokens, components (minimalist) |
+| `docs/WALKTHROUGH.md` | Phase 1 walkthrough checklist + sign-off (demo logins, URLs) |

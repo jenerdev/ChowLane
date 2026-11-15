@@ -55,6 +55,9 @@
 | D-047 | 2026-11-15 | More prototype-only helpers (removed in Phase 2): rider app **"Simulate a new offer"**, customer **"use a sample location"**, mock Facebook account picker, rider any-6-digit login code | ✅ Done |
 | D-048 | 2026-11-15 | `TenantTheme global` mirrors the tenant color onto `<html>` so sheets/dialogs (portals) use it; only the tenant apps' outer frame sets `global` — logo tiles don't | ✅ Done |
 | D-049 | 2026-11-15 | Phase 1 limitation accepted: each app keeps its own copy of demo data, so a platform suspend, a customer order or a rider action is not seen by the other apps until Phase 2 (D-008) | ✅ Confirmed |
+| D-050 | 2026-11-15 | Phone-width review via a dev **phone preview** page (landing `/preview`, iframes at 360/390/430 px) because the review browser can't be resized; Next.js dev badge turned off in all apps | ✅ Done |
+| D-051 | 2026-11-15 | Shared helpers consolidated: `useNow`, `useTicker`, `PhotoInput`, `photoToDataUrl`, `ReasonSheet` in `@chowlane/ui`; `newId` in `@chowlane/mocks/store`; `useStoreHydrated` in `@chowlane/mocks/react`; `couponRelease` + `promoRefunds` in lib (console & rider no longer copy the give-back logic) | ✅ Done |
+| D-052 | 2026-11-15 | Installing the PWAs on real phones (F-10) needs HTTPS → a preview deployment (e.g. Vercel) or a tunnel; scheduled as part of the walkthrough | 🟨 Proposed |
 | D-030 | 2026-11-15 | **Cash remittance**: at time out the rider remits net cash (collected from customers − paid at stores); Admin records amount received; business absorbs store price differences | ✅ Confirmed |
 
 ## Open questions

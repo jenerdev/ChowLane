@@ -26,7 +26,7 @@ before the backend is designed.
 | 1.5 Customer App | Facebook login (mock), location gate, browse merchants/products, cart, checkout, first-order ID upload, pending approval state, order tracking, history, **coupon code**, **rewards** (points, free delivery, free gift) | ✅ |
 | 1.6 Rider App | Login, time in / out, available orders + accept, delivery steps, proof of delivery, shift & earnings history | ✅ |
 | 1.7 Platform Admin Console | Platform login, overview stats across tenants, tenants list, tenant detail (stats, riders, orders, customers, merchants, admins — read-only), per-tenant billing config + monthly statements, suspend / reactivate | ✅ |
-| 1.8 Walkthrough & Sign-off | Walk every flow in USER-FLOWS.md, **install each tenant app on a real Android + iPhone**, fix gaps, user sign-off, freeze DATA-MODEL v1 | ⬜ |
+| 1.8 Walkthrough & Sign-off | Walk every flow in USER-FLOWS.md, **install each tenant app on a real Android + iPhone**, fix gaps, user sign-off, freeze DATA-MODEL v1 | 🟨 build done — waiting for the user walkthrough (docs/WALKTHROUGH.md) |
 
 **Exit:** user signs off all flows; DATA-MODEL.md frozen as v1.
 

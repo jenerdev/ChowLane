@@ -4,10 +4,12 @@ import type { Customer, Order, RiderRejectReason } from "@chowlane/types";
 import {
   approveCustomer,
   approveOrder,
+  couponRelease,
   cancelOrder,
   declinedRiderIds,
   offerOrder,
   pickAutoRider,
+  promoRefunds,
   rejectCustomer,
   rejectOrder,
   respondToOffer,
@@ -65,44 +67,16 @@ export function useOrderActions() {
 
   /** Give back coupon use, points and rewards of a rejected/cancelled order (BL-13.7, BL-14.7). */
   const releasePromos = (order: Order) => {
-    const at = now();
-    if (order.couponId) {
-      const red = db.couponRedemptions.find((r) => r.orderId === order.id && !r.released);
-      if (red) patch("couponRedemptions", red.id, { released: true });
-      const c = db.coupons.find((x) => x.id === order.couponId);
-      if (c) patch("coupons", c.id, { usedCount: Math.max(0, c.usedCount - 1) });
+    const rel = couponRelease(order, db.coupons, db.couponRedemptions);
+    if (rel) {
+      patch("coupons", rel.couponId, { usedCount: rel.usedCount });
+      if (rel.redemptionId) patch("couponRedemptions", rel.redemptionId, { released: true });
     }
     const customer = db.customers.find((c) => c.id === order.customerId);
     if (!customer) return;
-    const l = { ...customer.loyalty };
-    const add = (
-      kind: "POINTS_REFUNDED" | "FREE_DELIVERY_REFUNDED" | "FREE_GIFT_REFUNDED",
-      points: number,
-      rewards: number,
-    ) =>
-      insert("loyaltyTransactions", {
-        id: newId("lt"),
-        tenantId: order.tenantId,
-        customerId: customer.id,
-        orderId: order.id,
-        kind,
-        points,
-        rewards,
-        at,
-      });
-    if (order.pointsRedeemed > 0) {
-      l.points += order.pointsRedeemed;
-      add("POINTS_REFUNDED", order.pointsRedeemed, 0);
-    }
-    if (order.usedFreeDeliveryReward) {
-      l.freeDeliveryRewards += 1;
-      add("FREE_DELIVERY_REFUNDED", 0, 1);
-    }
-    if (order.usedFreeGiftReward) {
-      l.freeGiftRewards += 1;
-      add("FREE_GIFT_REFUNDED", 0, 1);
-    }
-    patch("customers", customer.id, { loyalty: l });
+    const refund = promoRefunds(order, customer, now());
+    for (const t of refund.transactions) insert("loyaltyTransactions", { id: newId("lt"), ...t });
+    patch("customers", customer.id, { loyalty: refund.loyalty });
   };
 
   return {

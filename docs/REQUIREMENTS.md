@@ -51,11 +51,11 @@
 | OWN-011 | Order approval setting: auto-approve orders from verified customers (on/off) | P | ✅ | ⬜ |
 | OWN-013 | Setting: maximum order subtotal (rider cash limit) | P | ✅ | ⬜ |
 | OWN-015 | Setting: accepted ID types (on/off per type) | P | ✅ | ⬜ |
-| OWN-016 | Owner sees own ChowLane billing plan & statements (read-only) | P | ⬜ | ⬜ |
+| OWN-016 | Owner sees own ChowLane billing plan & statements (read-only) | P | ✅ | ⬜ |
 | OWN-017 | **Coupons**: create / edit / deactivate — code, type **% off** or **free delivery**, **max usage**, **validity period** (+ optional cap, minimum order, uses per customer) | U | ✅ | ⬜ |
 | OWN-018 | Coupon list with status (active / scheduled / expired / used up) and usage history | P | ✅ | ⬜ |
 | OWN-019 | **Loyalty program settings**: master on/off; rules each on/off + config — free delivery after N orders, **free gift after X orders**, points (earn mode, point value, min redeem, max %) | U | ✅ | ⬜ |
-| OWN-012 | Rider pay summary / payroll report per rider per period | P | ⬜ | ⬜ |
+| OWN-012 | Rider pay summary / payroll report per rider per period | P | ✅ | ⬜ |
 
 ## ADM — Admin (console; each gated by a permission)
 
