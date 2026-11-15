@@ -37,6 +37,12 @@
 | D-028 | 2026-11-15 | Platform Admin sees tenant records **read-only** (except billing config + suspend/reactivate) | ✅ Confirmed |
 | D-029 | 2026-11-15 | All remaining open questions (Q-07, Q-11, Q-13…Q-18, Q-20…Q-25) resolved by accepting Claude's suggestions | ✅ Confirmed |
 | D-031 | 2026-11-15 | Use **TypeScript 5.9** (not 7.0) — TS 7 is the new native compiler and Next.js build-time type checking relies on the TS 5 JS API; revisit when Next.js officially supports TS 7 | ✅ Done |
+| D-032 | 2026-11-15 | **Light theme only** in Phase 1 (dark mode later); system font stack (no web-font download) | ✅ Done |
+| D-033 | 2026-11-15 | **Coupons per tenant**: % off or free delivery, max usage, validity period | ✅ Confirmed |
+| D-034 | 2026-11-15 | **Loyalty program per tenant**, on/off; tenant picks rules: free delivery after N orders, free gift after X orders, points earned per successful order and redeemable for food | ✅ Confirmed |
+| D-035 | 2026-11-15 | PWA via **`@serwist/turbopack`** (Next 16 builds with Turbopack); service worker disabled in `next dev` — test PWA with `build` + `start` | ✅ Done |
+| D-036 | 2026-11-15 | Phase 1 mock backend = **Zustand store per app** seeded from `@chowlane/mocks`, persisted in localStorage; "acting as" persona chosen in the DEV switcher | ✅ Done |
+| D-037 | 2026-11-15 | Q-26…Q-29 resolved with Claude's recommendations: rider pay unaffected by promos; one promo per order (points & free gift combine); free gift optionally tied to a menu item/merchant; points don't expire (MVP) | ✅ Confirmed |
 | D-030 | 2026-11-15 | **Cash remittance**: at time out the rider remits net cash (collected from customers − paid at stores); Admin records amount received; business absorbs store price differences | ✅ Confirmed |
 
 ## Open questions
@@ -69,4 +75,8 @@
 | Q-23 | Rider response time limit for an assigned order before it counts as rejected? And what happens in AUTO mode when no online rider accepts? | BL-5.6, BL-5.8 | ✅ **60 seconds**, then next rider; nobody left → "Needs rider" + admin alert |
 | Q-24 | Per-barangay fee: does the fee depend only on the **customer's barangay**, or on **store barangay → customer barangay** (a from/to table)? | BL-7.2, DATA-MODEL | ✅ **Customer's barangay only** |
 | Q-25 | Per-barangay fee: how is the customer's barangay found — **customer picks it** from the list at checkout, or **auto-detected** from their location pin? | CUS-005 | ✅ **Customer picks** from the list (auto-detect maybe later) |
+| Q-26 | Coupons / free-delivery rewards: rider pay based on the **original** delivery fee (rider not affected by promos)? | BL-13.6 | ✅ **Yes** — rider pay uses the original delivery fee (D-037) |
+| Q-27 | Can a coupon be combined with points / a free gift? | BL-14.6 | ✅ **One promo per order** (coupon OR free-delivery reward); points and free gift combine with either (D-037) |
+| Q-28 | Free gift: is it tied to one menu item/merchant (claimable only on orders from that merchant), or a generic gift the rider buys at any store? | BL-14.3b | ✅ **Optional link to a menu item**; if linked, claimable only on that merchant's orders (D-037) |
+| Q-29 | Do loyalty points expire? | BL-14.9 | ✅ **No expiry** in MVP (D-037) |
 | Q-19 | Rider location only updates while the rider app is open (PWA limit). OK, or is background tracking a must (would need a native rider app later)? | D-016, BL-9.5 | ✅ Accepted — location only while app open (D-016) |

@@ -1,11 +1,14 @@
 /**
- * @chowlane/types — domain types.
- * Source of truth: docs/DATA-MODEL.md. Full types are added in Milestone 1.1.
+ * @chowlane/types — domain types shared by every app.
+ * Source of truth: docs/DATA-MODEL.md (keep the two in sync).
  */
-
-/** Money is always stored as integer centavos (₱1.00 = 100). */
-export type Centavos = number;
-
-export type LatLng = { lat: number; lng: number };
-
-export type TenantSlug = string;
+export * from "./common";
+export * from "./platform";
+export * from "./tenant";
+export * from "./staff";
+export * from "./catalog";
+export * from "./rider";
+export * from "./customer";
+export * from "./order";
+export * from "./coupon";
+export * from "./loyalty";

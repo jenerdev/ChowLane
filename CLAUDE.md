@@ -46,6 +46,8 @@ Docs are the source of truth. Update them **in the same session** as the code ch
   "ChowLane" in the customer or rider apps.
 - Admin features must be gated by **permissions** (see BUSINESS-LOGIC BL-2). The Owner always has all
   permissions.
+- Business rules live in `packages/lib` as pure, unit-tested functions — screens call them, never re-implement them.
+- Before marking anything ✅ run: `pnpm build && pnpm lint && pnpm typecheck && pnpm test && pnpm format:check`.
 - Don't invent business rules. If something is unclear, add it to "Open Questions" in
   `docs/DECISIONS.md` and ask the user.
 - Status legend used across all docs: ⬜ Not started · 🟨 In progress · ✅ Done · ⏸️ Blocked · ❌ Dropped

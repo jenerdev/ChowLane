@@ -1,0 +1,171 @@
+"use client";
+
+import type { ReactNode } from "react";
+import Link from "next/link";
+import { usePathname } from "next/navigation";
+import { cn } from "../lib/cn";
+
+export type NavItem = {
+  href: string;
+  label: string;
+  icon: ReactNode;
+  badge?: number;
+  exact?: boolean;
+};
+
+function isActive(pathname: string, item: NavItem) {
+  return item.exact
+    ? pathname === item.href
+    : pathname === item.href || pathname.startsWith(`${item.href}/`);
+}
+
+/** Fixed bottom tab bar for phones (≤5 items), respects the iOS home indicator. */
+export function BottomNav({ items }: { items: NavItem[] }) {
+  const pathname = usePathname();
+  return (
+    <nav className="fixed inset-x-0 bottom-0 z-40 border-t bg-background/95 pb-[env(safe-area-inset-bottom)] backdrop-blur md:hidden">
+      <ul className="mx-auto flex max-w-md">
+        {items.map((item) => {
+          const active = isActive(pathname, item);
+          return (
+            <li key={item.href} className="flex-1">
+              <Link
+                href={item.href}
+                aria-current={active ? "page" : undefined}
+                className={cn(
+                  "relative flex h-16 flex-col items-center justify-center gap-1 text-[11px] font-medium [&_svg]:size-5",
+                  active ? "text-brand" : "text-muted-foreground",
+                )}
+              >
+                {item.icon}
+                {item.label}
+                {item.badge ? (
+                  <span className="absolute top-2 left-1/2 ml-2 min-w-4 rounded-full bg-danger px-1 text-center text-[10px] leading-4 text-white">
+                    {item.badge}
+                  </span>
+                ) : null}
+              </Link>
+            </li>
+          );
+        })}
+      </ul>
+    </nav>
+  );
+}
+
+/** Sidebar for tablet/desktop (md+). */
+export function SideNav({ items, header }: { items: NavItem[]; header?: ReactNode }) {
+  const pathname = usePathname();
+  return (
+    <aside className="sticky top-0 hidden h-dvh w-64 shrink-0 flex-col gap-2 border-r p-4 md:flex">
+      {header ? <div className="mb-4">{header}</div> : null}
+      <ul className="flex flex-col gap-1">
+        {items.map((item) => {
+          const active = isActive(pathname, item);
+          return (
+            <li key={item.href}>
+              <Link
+                href={item.href}
+                aria-current={active ? "page" : undefined}
+                className={cn(
+                  "flex h-10 items-center gap-3 rounded-xl px-3 text-sm font-medium [&_svg]:size-4",
+                  active
+                    ? "bg-brand-soft text-brand"
+                    : "text-muted-foreground hover:bg-muted hover:text-foreground",
+                )}
+              >
+                {item.icon}
+                <span className="flex-1">{item.label}</span>
+                {item.badge ? (
+                  <span className="rounded-full bg-danger px-1.5 text-[10px] leading-4 text-white">
+                    {item.badge}
+                  </span>
+                ) : null}
+              </Link>
+            </li>
+          );
+        })}
+      </ul>
+    </aside>
+  );
+}
+
+type TopBarProps = {
+  title: ReactNode;
+  leading?: ReactNode;
+  actions?: ReactNode;
+  className?: string;
+};
+
+/** Sticky top bar with safe-area padding (installed PWA, notch). */
+export function TopBar({ title, leading, actions, className }: TopBarProps) {
+  return (
+    <header
+      className={cn(
+        "sticky top-0 z-30 flex h-14 items-center gap-3 border-b bg-background/95 px-4 pt-[env(safe-area-inset-top)] backdrop-blur",
+        className,
+      )}
+    >
+      {leading}
+      <div className="min-w-0 flex-1 truncate font-semibold">{title}</div>
+      {actions}
+    </header>
+  );
+}
+
+type AppShellProps = {
+  nav: NavItem[];
+  topBar?: ReactNode;
+  sideHeader?: ReactNode;
+  /** "app" = bottom nav on phone + sidebar on desktop; "phone" = always phone-width (rider/customer). */
+  layout?: "app" | "phone";
+  children: ReactNode;
+};
+
+/** Mobile-first app frame used by console, rider, customer and platform. */
+export function AppShell({ nav, topBar, sideHeader, layout = "app", children }: AppShellProps) {
+  if (layout === "phone") {
+    return (
+      <div className="mx-auto flex min-h-dvh w-full max-w-md flex-col bg-background md:border-x">
+        {topBar}
+        <main className="flex-1 px-4 pt-4 pb-24">{children}</main>
+        <div className="md:[&>nav]:flex">
+          <BottomNav items={nav} />
+        </div>
+      </div>
+    );
+  }
+  return (
+    <div className="flex min-h-dvh">
+      <SideNav items={nav} header={sideHeader} />
+      <div className="flex min-w-0 flex-1 flex-col">
+        {topBar}
+        <main className="mx-auto w-full max-w-5xl flex-1 px-4 pt-4 pb-24 md:px-8 md:pb-8">
+          {children}
+        </main>
+      </div>
+      <BottomNav items={nav.slice(0, 5)} />
+    </div>
+  );
+}
+
+/** Page heading row: title + optional actions. */
+export function PageHeader({
+  title,
+  description,
+  actions,
+}: {
+  title: string;
+  description?: string;
+  actions?: ReactNode;
+}) {
+  return (
+    <div className="mb-4 flex items-start justify-between gap-3">
+      <div>
+        <h1 className="text-xl font-bold tracking-tight">{title}</h1>
+        {description ? <p className="text-sm text-muted-foreground">{description}</p> : null}
+      </div>
+      {actions}
+    </div>
+  );
+}

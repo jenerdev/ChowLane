@@ -51,14 +51,14 @@ Checklist on console home; each item links to its screen:
 1. Customer opens tenant link → branded splash → **Continue with Facebook**
 2. **Allow location** prompt → denied = blocked screen with "how to enable"; allowed → continue
 3. Home → (optional) **Install "<Business>" app** banner (F-10) → pick merchant → add products → cart
-4. Checkout: delivery pin (current location), barangay (picked from list if PER_BARANGAY), notes, fee breakdown (subtotal + delivery fee), payment **Cash on Delivery**, optional "change for ₱___"
+4. Checkout: delivery pin (current location), barangay (picked from list if PER_BARANGAY), notes, fee breakdown (subtotal + delivery fee), optional **coupon code** / **rewards** (free delivery, free gift, points), payment **Cash on Delivery**, optional "change for ₱___"
 5. **First order → ID required**: select ID type (valid PH ID, e.g. school ID, driver's license, passport, UMID) → photo of the ID → **selfie holding the ID** → **Place order**
 6. Status screen: "We're verifying your account" (customer `PENDING`, order `PENDING_APPROVAL`)
 7. Admin approves customer (F-08) → admin approves order → order `APPROVED`
 8. Order assigned to an online rider (auto or manual) → rider accepts → tracking shows rider, status timeline, map → `DELIVERED`
 
 ## F-07 Verified customer orders  ⬜
-1. Open app → (already logged in, location allowed) → browse → cart → checkout (no ID step) → **Place order**
+1. Open app → (already logged in, location allowed) → browse → cart → checkout (no ID step; coupon / rewards optional) → **Place order**
 2. `PENDING_APPROVAL` → admin approves (or auto-approved if Owner enabled it) → rider → tracking → delivered
 
 ## F-08 Admin daily operations  ⬜
@@ -103,3 +103,26 @@ Checklist on console home; each item links to its screen:
 2. Monthly statement is computed (delivered orders × per-order fee + monthly fee)
 3. After the tenant pays (outside the app) → **Mark as paid** (note)
 4. Tenant Owner sees plan & statements in console → Settings → Billing
+
+## F-13 Owner / Admin creates a coupon  ⬜  *(`coupons.manage`)*
+1. Console → **Coupons** → **New coupon**
+2. Code (e.g. `WELCOME20`), description, type **% off** (percent, optional max discount) or **Free delivery**
+3. **Max usage**, uses per customer, optional minimum order, **valid from → valid until**, Active on
+4. Save → list shows status: *Scheduled · Active · Expired · Used up · Inactive* and uses left
+5. Later: open coupon → see usage history → **Deactivate** (used coupons can't be deleted)
+
+## F-14 Owner sets up the loyalty program  ⬜  *(`settings.loyalty`)*
+1. Console → Settings → **Loyalty program** → switch **On**
+2. Turn on the rules wanted, each with its settings:
+   - **Free delivery** every **N** successful orders
+   - **Free gift** every **X** successful orders — gift name (+ optional menu item)
+   - **Points** — earn per order or per ₱ spent, point value, min points to redeem, max % of food
+3. Save → customers see their progress in **Rewards**; turning a rule off hides it but keeps balances
+
+## F-15 Customer earns & uses rewards  ⬜
+1. Order **DELIVERED** → points credited, progress counters move (e.g. "3 more orders for free delivery")
+2. Reward reached → customer notified (Phase 3) and sees it in **Rewards**
+3. Next checkout → **Use free delivery** / **Claim free gift** / **Pay with points** (slider up to the allowed max)
+4. Totals update; one promo per order (coupon **or** free-delivery reward); points and a free gift can combine
+5. Order rejected / cancelled → used points & rewards are refunded
+

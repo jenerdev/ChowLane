@@ -11,17 +11,17 @@
 | ID | Requirement | Src | UI | BE |
 |---|---|---|---|---|
 | FND-001 | Turborepo with apps `landing`, `console`, `rider`, `customer`, `platform` + shared packages | U | ✅ | — |
-| FND-002 | **Mobile-first** responsive design across all apps | U | ⬜ | — |
-| FND-003 | Shared design system in `packages/ui` | P | ⬜ | — |
-| FND-004 | Tenant theming (business name, logo, primary color) in customer & rider apps | P | ⬜ | ⬜ |
-| FND-005 | Typed mock data + seeded scenarios matching DATA-MODEL.md | P | ⬜ | — |
-| FND-006 | Shared business logic in `packages/lib` (fee calc, rider pay calc, order status machine, permission check) | P | ⬜ | ⬜ |
-| FND-007 | Dev-only role/scenario switcher for walkthroughs | P | ⬜ | — |
-| FND-008 | **Every tenant app (console, rider, customer) is installable as a PWA** | U | ⬜ | — |
-| FND-009 | Per-tenant manifest: tenant name, icon, theme color, scope `/[tenant]/` | P | ⬜ | ⬜ |
-| FND-010 | Service worker: cached app shell + offline fallback page | P | ⬜ | — |
-| FND-011 | Install prompt: "Install app" button (Android/desktop) + "Add to Home Screen" guide (iOS) | P | ⬜ | — |
-| FND-012 | "New version available" update banner | P | ⬜ | — |
+| FND-002 | **Mobile-first** responsive design across all apps | U | ✅ | — |
+| FND-003 | Shared design system in `packages/ui` | P | ✅ | — |
+| FND-004 | Tenant theming (business name, logo, primary color) in customer & rider apps | P | ✅ | ⬜ |
+| FND-005 | Typed mock data + seeded scenarios matching DATA-MODEL.md | P | ✅ | — |
+| FND-006 | Shared business logic in `packages/lib` (fee calc, rider pay calc, order status machine, permission check) | P | ✅ | ⬜ |
+| FND-007 | Dev-only role/scenario switcher for walkthroughs | P | ✅ | — |
+| FND-008 | **Every tenant app (console, rider, customer) is installable as a PWA** | U | ✅ | — |
+| FND-009 | Per-tenant manifest: tenant name, icon, theme color, scope `/[tenant]/` | P | ✅ | ⬜ |
+| FND-010 | Service worker: cached app shell + offline fallback page | P | ✅ | — |
+| FND-011 | Install prompt: "Install app" button (Android/desktop) + "Add to Home Screen" guide (iOS) | P | ✅ | — |
+| FND-012 | "New version available" update banner | P | ✅ | — |
 | FND-013 | PWA icons generated from tenant's uploaded logo | P | — | ⬜ |
 
 ## LND — Landing & Owner Signup
@@ -52,6 +52,9 @@
 | OWN-013 | Setting: maximum order subtotal (rider cash limit) | P | ⬜ | ⬜ |
 | OWN-015 | Setting: accepted ID types (on/off per type) | P | ⬜ | ⬜ |
 | OWN-016 | Owner sees own ChowLane billing plan & statements (read-only) | P | ⬜ | ⬜ |
+| OWN-017 | **Coupons**: create / edit / deactivate — code, type **% off** or **free delivery**, **max usage**, **validity period** (+ optional cap, minimum order, uses per customer) | U | ⬜ | ⬜ |
+| OWN-018 | Coupon list with status (active / scheduled / expired / used up) and usage history | P | ⬜ | ⬜ |
+| OWN-019 | **Loyalty program settings**: master on/off; rules each on/off + config — free delivery after N orders, **free gift after X orders**, points (earn mode, point value, min redeem, max %) | U | ⬜ | ⬜ |
 | OWN-012 | Rider pay summary / payroll report per rider per period | P | ⬜ | ⬜ |
 
 ## ADM — Admin (console; each gated by a permission)
@@ -64,6 +67,7 @@
 | ADM-004 | **Manually assign / reassign** an order to an online rider; "Needs rider" list of rejected/unassigned orders | U | ⬜ | ⬜ |
 | ADM-010 | **Dispatch mode** switch AUTO / MANUAL (Owner or Admin) | U | ⬜ | ⬜ |
 | ADM-011 | Order assignment history (offers, accepts, rejects + reasons) on order detail | P | ⬜ | ⬜ |
+| ADM-013 | Customer loyalty: balances, progress, history; manual points adjustment (reason) | P | ⬜ | ⬜ |
 | ADM-012 | **Cash remittances**: list of shifts with expected cash; record amount received; flag short / over | U | ⬜ | ⬜ |
 | ADM-005 | **Monitor riders**: timed-in/out status, current order, location on map | U | ⬜ | ⬜ |
 | ADM-006 | **Riders CRUD** (name, phone, vehicle, plate, pay override, active/inactive) | U | ⬜ | ⬜ |
@@ -83,6 +87,7 @@
 | RID-006 | Map + "open in navigation" link; call customer | P | ⬜ | ⬜ |
 | RID-007 | Proof of delivery (photo and/or note) | P | ⬜ | ⬜ |
 | RID-008 | Shift history & earnings (by pay mode) | P | ⬜ | ⬜ |
+| RID-015 | Order shows discounts (amount to collect = discounted total) and any **free gift** item to buy | P | ⬜ | ⬜ |
 | RID-014 | **Time out cash summary**: collected, paid at stores, amount to remit; remittance status per shift | U | ⬜ | ⬜ |
 | RID-009 | Profile | P | ⬜ | ⬜ |
 | RID-011 | Order card shows **"Cash needed at store ₱X"** before accepting | P | ⬜ | ⬜ |
@@ -104,6 +109,9 @@
 | CUS-008 | **Track order status** (timeline + rider on map) | U | ⬜ | ⬜ |
 | CUS-009 | Order history | P | ⬜ | ⬜ |
 | CUS-011 | Tracking shows updated total if rider marks items unavailable | P | ⬜ | ⬜ |
+| CUS-013 | Checkout: enter **coupon code** → validation message or discount line | U | ⬜ | ⬜ |
+| CUS-014 | **Rewards**: see points, progress to free delivery / free gift; use free-delivery reward, claim free gift, pay with points at checkout | U | ⬜ | ⬜ |
+| CUS-015 | Order details & tracking show discount lines and points earned | P | ⬜ | ⬜ |
 | CUS-012 | Rejected customer sees reason and can **re-submit a new ID** | U | ⬜ | ⬜ |
 | CUS-010 | Profile (name/photo from Facebook, phone, saved addresses) | P | ⬜ | ⬜ |
 
@@ -122,4 +130,4 @@
 | PLT-009 | Suspend / reactivate a tenant (reason required) | P | ⬜ | ⬜ |
 | PLT-010 | Billing overview: all tenants' amounts due / paid this month | P | ⬜ | ⬜ |
 
-**Totals:** 81 requirements (FND 13 · LND 4 · OWN 16 · ADM 12 · RID 14 · CUS 12 · PLT 10) — 80 have a Phase 1 UI part (FND-013 is backend only)
+**Totals:** 89 requirements (FND 13 · LND 4 · OWN 19 · ADM 13 · RID 15 · CUS 15 · PLT 10) — 88 have a Phase 1 UI part (FND-013 is backend only)

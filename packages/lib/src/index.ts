@@ -1,12 +1,20 @@
 /**
  * @chowlane/lib — pure business logic shared by all apps (and later Supabase functions).
- * Rules: docs/BUSINESS-LOGIC.md. Calculators are added in Milestone 1.1.
+ * Rules: docs/BUSINESS-LOGIC.md. Every function here must stay framework-free and side-effect-free.
  */
-import type { Centavos } from "@chowlane/types";
-
-const peso = new Intl.NumberFormat("en-PH", { style: "currency", currency: "PHP" });
-
-/** Format integer centavos as Philippine pesos, e.g. 123450 → "₱1,234.50". */
-export function formatPeso(amount: Centavos): string {
-  return peso.format(amount / 100);
-}
+export * from "./money";
+export * from "./geo";
+export * from "./time";
+export * from "./phone";
+export * from "./delivery-fee";
+export * from "./order-totals";
+export * from "./order-status";
+export * from "./permissions";
+export * from "./rider-pay";
+export * from "./remittance";
+export * from "./billing";
+export * from "./dispatch";
+export * from "./color";
+export * from "./coupons";
+export * from "./loyalty";
+export * from "./pricing";

@@ -15,9 +15,9 @@
 ## Shared PWA screens (built once in `packages/ui`, used by console, rider, customer)
 | # | Screen | Route | Reqs | Status |
 |---|---|---|---|---|
-| S-010 | Install app sheet (Android install button / iOS "Add to Home Screen" steps) | overlay | FND-011 | ⬜ |
-| S-011 | Offline screen | `/[tenant]/~offline` | FND-010 | ⬜ |
-| S-012 | "New version available" banner | overlay | FND-012 | ⬜ |
+| S-010 | Install app sheet (Android install button / iOS "Add to Home Screen" steps) | overlay | FND-011 | ✅ |
+| S-011 | Offline screen | `/~offline` | FND-010 | ✅ |
+| S-012 | "New version available" banner | overlay | FND-012 | ✅ |
 
 ## apps/console (Owner & Admin)
 | # | Screen | Route | Reqs | Perm | Status |
@@ -28,7 +28,7 @@
 | S-103 | Order detail: approve/reject, assign, cancel, timeline | `/[tenant]/orders/[id]` | ADM-002, ADM-003, ADM-004, ADM-007 | `orders.*` | ⬜ |
 | S-104 | Customer verification queue | `/[tenant]/customers/verify` | ADM-001 | `customers.verify` | ⬜ |
 | S-105 | Customer verification detail (ID + selfie side by side) | `/[tenant]/customers/verify/[id]` | ADM-001 | `customers.verify` | ⬜ |
-| S-106 | Customers list & detail | `/[tenant]/customers`, `/[tenant]/customers/[id]` | ADM-009 | `customers.view` | ⬜ |
+| S-106 | Customers list & detail (incl. loyalty balance + adjust) | `/[tenant]/customers`, `/[tenant]/customers/[id]` | ADM-009, ADM-013 | `customers.view` | ⬜ |
 | S-107 | Riders list (on shift / off) | `/[tenant]/riders` | ADM-005, ADM-006 | `riders.view` | ⬜ |
 | S-108 | Rider add / edit | `/[tenant]/riders/new`, `/[tenant]/riders/[id]/edit` | ADM-006 | `riders.manage` | ⬜ |
 | S-109 | Rider detail (shifts, orders, earnings) | `/[tenant]/riders/[id]` | ADM-005, OWN-012 | `riders.view` | ⬜ |
@@ -42,6 +42,9 @@
 | S-122 | Settings — Barangay price list | `/[tenant]/settings/pricing/barangays` | OWN-014 | `settings.pricing` | ⬜ |
 | S-123 | Settings — ChowLane billing (plan + statements, read-only) | `/[tenant]/settings/billing` | OWN-016 | Owner | ⬜ |
 | S-124 | Cash remittances (record received cash per shift) | `/[tenant]/cash` | ADM-012 | `cash.manage` | ⬜ |
+| S-125 | Coupons list (status, uses left, validity) | `/[tenant]/coupons` | OWN-017, OWN-018 | `coupons.manage` | ⬜ |
+| S-126 | Coupon add / edit + usage history | `/[tenant]/coupons/new`, `/[tenant]/coupons/[id]` | OWN-017, OWN-018 | `coupons.manage` | ⬜ |
+| S-127 | Settings — Loyalty program (on/off, rules) | `/[tenant]/settings/loyalty` | OWN-019 | `settings.loyalty` | ⬜ |
 | S-117 | Settings — Rider income (DAILY / % of delivery fee / PER_DELIVERY) | `/[tenant]/settings/rider-pay` | OWN-006 | `settings.riderPay` | ⬜ |
 | S-121 | Dispatch: mode switch (AUTO / MANUAL) + "Needs rider" list | `/[tenant]/dispatch` | ADM-004, ADM-010 | `settings.dispatch`, `orders.assign` | ⬜ |
 | S-118 | Admin users list + invite / edit | `/[tenant]/admins` | OWN-007 | Owner | ⬜ |
@@ -68,11 +71,12 @@
 | S-302 | Home (merchants) | `/[tenant]` | CUS-003 | ⬜ |
 | S-303 | Merchant products | `/[tenant]/m/[merchantId]` | CUS-004 | ⬜ |
 | S-304 | Cart | `/[tenant]/cart` | CUS-004 | ⬜ |
-| S-305 | Checkout | `/[tenant]/checkout` | CUS-005 | ⬜ |
+| S-305 | Checkout (+ coupon code, rewards, points) | `/[tenant]/checkout` | CUS-005, CUS-013, CUS-014 | ⬜ |
 | S-306 | ID verification: ID type, ID photo, selfie holding ID (first order / re-submit) | `/[tenant]/checkout/verify-id` | CUS-006, CUS-012 | ⬜ |
 | S-307 | Order status / tracking (incl. waiting-for-approval & rejected states) | `/[tenant]/orders/[id]` | CUS-007, CUS-008 | ⬜ |
 | S-308 | My orders | `/[tenant]/orders` | CUS-009 | ⬜ |
 | S-309 | Profile & addresses | `/[tenant]/profile` | CUS-010 | ⬜ |
+| S-310 | Rewards (points, progress, free delivery / free gift) | `/[tenant]/rewards` | CUS-014 | ⬜ |
 
 ## apps/platform (Platform Admin — ChowLane-branded, not a tenant PWA)
 | # | Screen | Route | Reqs | Status |
@@ -89,4 +93,4 @@
 | S-509 | Tenant — billing config + statements | `/tenants/[id]/billing` | PLT-007, PLT-008 | ⬜ |
 | S-510 | Billing overview (all tenants) | `/billing` | PLT-010 | ⬜ |
 
-**Progress: 0 / 59 screens** (landing 2 · shared PWA 3 · console 25 · rider 8 · customer 10 · platform 11)
+**Progress: 3 / 63 screens** (landing 2 · shared PWA 3 ✅ · console 28 · rider 8 · customer 11 · platform 11)

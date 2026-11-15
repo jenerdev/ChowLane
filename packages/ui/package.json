@@ -2,7 +2,7 @@
   "name": "@chowlane/ui",
   "version": "0.0.0",
   "private": true,
-  "description": "Shared UI components and Tailwind theme (mobile-first).",
+  "description": "Shared UI components, Tailwind theme and app shells (mobile-first).",
   "type": "module",
   "exports": {
     ".": "./src/index.ts",
@@ -12,14 +12,28 @@
     "lint": "eslint .",
     "typecheck": "tsc --noEmit"
   },
+  "dependencies": {
+    "@chowlane/lib": "workspace:*",
+    "@chowlane/types": "workspace:*",
+    "class-variance-authority": "0.7.1",
+    "clsx": "2.1.1",
+    "lucide-react": "1.73.0",
+    "radix-ui": "1.8.1",
+    "tailwind-merge": "3.7.0"
+  },
   "peerDependencies": {
-    "react": "^19.0.0"
+    "next": ">=16.0.0",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0"
   },
   "devDependencies": {
     "@chowlane/config": "workspace:*",
     "@types/react": "19.3.0",
+    "@types/react-dom": "19.3.0",
     "eslint": "10.15.0",
+    "next": "16.4.6",
     "react": "19.3.1",
+    "react-dom": "19.3.1",
     "typescript": "5.9.3"
   }
 }

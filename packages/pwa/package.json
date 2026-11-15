@@ -2,19 +2,37 @@
   "name": "@chowlane/pwa",
   "version": "0.0.0",
   "private": true,
-  "description": "Per-tenant PWA manifest + service worker helpers for console, rider and customer.",
+  "description": "Per-tenant PWA: manifest, icons, service worker, install / update / offline UI (D-013, D-014).",
   "type": "module",
   "exports": {
-    ".": "./src/index.ts"
+    ".": "./src/index.ts",
+    "./icon": "./src/icon.tsx",
+    "./react": "./src/react.tsx",
+    "./worker": "./src/worker.ts"
   },
   "scripts": {
     "lint": "eslint .",
     "typecheck": "tsc --noEmit"
   },
-  "dependencies": {},
+  "dependencies": {
+    "@chowlane/ui": "workspace:*",
+    "lucide-react": "1.73.0"
+  },
+  "peerDependencies": {
+    "@serwist/turbopack": "9.5.13",
+    "next": ">=16.0.0",
+    "react": "^19.0.0",
+    "serwist": "9.5.13"
+  },
   "devDependencies": {
     "@chowlane/config": "workspace:*",
+    "@serwist/turbopack": "9.5.13",
+    "@types/react": "19.3.0",
     "eslint": "10.15.0",
+    "next": "16.4.6",
+    "react": "19.3.1",
+    "react-dom": "19.3.1",
+    "serwist": "9.5.13",
     "typescript": "5.9.3"
   }
 }

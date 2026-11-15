@@ -16,13 +16,21 @@
 |---|---|---|
 | Node.js | ≥ 20.9 (dev machine: 24.x) | Next.js requirement |
 | pnpm | 12.5.1 | `packageManager` in root `package.json` |
-| Turborepo | 2.11.11 | tasks: `dev`, `build`, `lint`, `typecheck` |
+| Turborepo | 2.11.11 | tasks: `dev`, `build`, `lint`, `typecheck`, `test` |
 | Next.js | 16.4.6 (App Router, Turbopack) | `params` are Promises (`await params`) |
 | React | 19.3.1 | |
 | TypeScript | **5.9.3** | Not 7.x yet — D-031 |
 | Tailwind CSS | 4.3.5 (`@tailwindcss/postcss`) | Theme tokens in `packages/ui/src/styles.css` (`@theme`) |
 | ESLint | 10.15.0 (flat config) + `eslint-config-next` 16.4.6, `typescript-eslint` 8.72.2 | Shared in `packages/config/eslint` |
 | Prettier | 3.10.1 | `pnpm format` / `pnpm format:check` |
+| Vitest | 5.1.0 | `pnpm test` — `packages/lib` (business rules) + `packages/mocks` (data integrity) |
+| Zustand | 5.1.0 | Mock store per app (`@chowlane/mocks/store`) |
+| Radix UI | `radix-ui` 1.8.1 | Primitives behind `Sheet`, `Tabs`, `Switch` |
+| class-variance-authority / clsx / tailwind-merge | 0.7.1 / 2.1.1 / 3.7.0 | shadcn-style variants + `cn()` |
+| lucide-react | 1.73.0 | Icons |
+| Serwist | `@serwist/turbopack` + `serwist` 9.5.13, `esbuild` 0.28.2 | PWA service worker (D-035) |
+
+pnpm 12 runs dependency install scripts only when allowed: see `allowBuilds` in `pnpm-workspace.yaml`.
 
 Internal packages are **source-only** (`exports` → `./src/index.ts`, no build step); apps compile them via
 `transpilePackages` in each `next.config.ts`.
@@ -78,7 +86,7 @@ functions so the same code runs in the UI now and in Supabase Edge Functions / s
 | Piece | How |
 |---|---|
 | Manifest per tenant | Route handler `app/[tenant]/manifest.webmanifest/route.ts` returns `name`/`short_name` = tenant business name, `theme_color`/`background_color` = tenant color, `icons` = tenant icons, `start_url` & `scope` = `/[tenant]/`, `display: standalone`, unique `id` per tenant+app. Linked from `app/[tenant]/layout.tsx`. |
-| Service worker | **Serwist** (`@serwist/next`) — precache app shell & static assets, offline fallback page, no caching of private API data |
+| Service worker | **Serwist** (`@serwist/turbopack`; route `app/serwist/[path]`, source `packages/pwa/src/worker.ts`; disabled in `next dev`) — precache app shell & static assets, offline fallback page, no caching of private API data |
 | Icons | Phase 1: mock tenants ship pre-made 192 / 512 / maskable PNGs + Apple touch icon. Phase 2: generated from the uploaded logo (Supabase Storage + Edge Function / `sharp`). |
 | iOS | `apple-touch-icon`, `apple-mobile-web-app-capable`, status-bar style meta tags; iOS has no install prompt → show "Share → Add to Home Screen" instructions |
 | Android / desktop Chrome | Capture `beforeinstallprompt` → custom **Install app** button / sheet |

@@ -41,6 +41,9 @@
 | `admins.manage` | Manage admins & roles | Owner only |
 | `reports.view` | Reports & payroll summaries | ⬜ |
 | `cash.manage` | Record rider cash remittances | ✅ |
+| `coupons.manage` | Create / edit / deactivate coupons | ✅ |
+| `loyalty.manage` | View & adjust customer loyalty points | ✅ |
+| `settings.loyalty` | Turn the loyalty program & rules on/off, configure them | ⬜ |
 
 ## BL-3 Customer sign-up & verification
 
@@ -174,6 +177,40 @@ PENDING_APPROVAL ──admin approves──▶ APPROVED ──offered (auto/manu
 - BL-12.5 **[PROPOSED]** Rider income is **not** deducted from the remittance; it is paid separately (BL-8).
 - BL-12.6 **[PROPOSED]** A rider with an unrecorded (`PENDING`) remittance can still time in again; the console highlights pending remittances.
 
+## BL-13 Coupons
+
+- BL-13.1 **[CONFIRMED]** Each tenant manages its own coupons (Owner, or Admin with `coupons.manage`).
+- BL-13.2 **[CONFIRMED]** Coupon type is either:
+  - **PERCENT_OFF** — a percentage off. **[PROPOSED]** applies to the **food subtotal only** (not the delivery fee), optional **max discount** cap, rounded **down** to the whole peso.
+  - **FREE_DELIVERY** — the delivery fee is waived.
+- BL-13.3 **[CONFIRMED]** **Max usage** (total times the coupon can be used) and a **validity period** (valid from → valid until, Asia/Manila). A coupon is usable only when: active · inside the validity period · uses left · customer limit not reached · minimum order met.
+- BL-13.4 **[PROPOSED]** Extra optional settings: **minimum order subtotal**, **uses per customer** (default 1), **active on/off** switch, description shown to customers.
+- BL-13.5 **[PROPOSED]** Code: 3–20 letters/digits, unique per tenant, case-insensitive (stored uppercase). Customer types the code at checkout and sees the discount line before placing the order.
+- BL-13.6 **[CONFIRMED]** The order keeps the original `deliveryFee`; discounts are separate lines. **Rider pay is based on the original delivery fee** — promos never reduce rider income.
+- BL-13.7 **[PROPOSED]** A use is counted when the order is placed and **given back** if the order is REJECTED or CANCELLED.
+- BL-13.8 **[PROPOSED]** The customer pays the discounted total in cash; the rider still pays the store's full price → the business absorbs the discount (remittance BL-12 handles it automatically).
+- BL-13.9 **[PROPOSED]** If the rider marks items unavailable, a percent coupon is recalculated on the new subtotal; the coupon stays applied even if the subtotal drops below its minimum.
+- BL-13.10 **[PROPOSED]** Coupons can't be deleted once used — only deactivated (keeps order history correct).
+
+## BL-14 Loyalty program
+
+- BL-14.1 **[CONFIRMED]** The tenant can turn the loyalty program **on/off**, and **chooses which rules to enable** and how they are configured.
+- BL-14.2 **[CONFIRMED]** Available rules (each with its own on/off switch):
+  | Rule | Setting | Reward |
+  |---|---|---|
+  | **Free delivery** | every **N** successful orders (e.g. 10) | 1 free-delivery reward |
+  | **Free gift** | every **X** successful orders + gift name (e.g. "Free Halo-Halo") | 1 free gift |
+  | **Points** | earn per order **or** per ₱ spent; point value; min points to redeem; max % of food payable with points | points to spend on food |
+- BL-14.3 **[CONFIRMED]** Only **successful (DELIVERED)** orders count. **[PROPOSED]** Progress counters reset after each reward; unused rewards stay on the account.
+  - BL-14.3a **[PROPOSED]** Free-delivery reward: the customer chooses to use it at checkout → the delivery fee is waived on that order.
+  - BL-14.3b **[CONFIRMED]** Free gift: claimed at checkout → added to the order as a ₱0 item; the rider buys it at the store and the business absorbs the cost. The gift may be linked to a menu item; then it can only be claimed on orders from **that item's merchant**.
+- BL-14.4 **[CONFIRMED]** Points are earned on each successful order. **[PROPOSED]** earn modes: **PER_ORDER** (fixed points per order) or **PER_PESO** (1 point per ₱X of food actually paid, after discounts). Points are credited when the order is DELIVERED.
+- BL-14.5 **[CONFIRMED]** Points can be used to pay for food. **[PROPOSED]** 1 point = tenant-set value (default ₱1); minimum points per redemption (default 50); max % of the food subtotal payable with points (default 50%); points never pay the delivery fee.
+- BL-14.6 **[CONFIRMED]** **One promo per order**: a coupon **or** a free-delivery reward. Points and a free gift can be combined with either.
+- BL-14.7 **[PROPOSED]** Every change is a **loyalty transaction** (earned / redeemed / used / refunded / adjusted). If an order using points or rewards is REJECTED or CANCELLED, they are **refunded**.
+- BL-14.8 **[PROPOSED]** Owner/Admin with `loyalty.manage` can manually adjust a customer's points (reason required). Program settings need `settings.loyalty` (Owner by default).
+- BL-14.9 **[CONFIRMED]** Points don't expire in the MVP. Turning the program or a rule off hides it from customers but keeps balances; turning it back on restores them.
+
 ## BL-9 Installable apps (PWA)
 
 - BL-9.1 **[CONFIRMED]** Every tenant app (console, rider, customer) can be installed as a PWA.
@@ -210,6 +247,8 @@ PENDING_APPROVAL ──admin approves──▶ APPROVED ──offered (auto/manu
 |---|---|---|
 | 2026-11-15 | All | Initial draft (v0) |
 | 2026-11-15 | All | v1 rewrite from user requirements: Owner/Admin/Rider/Customer; merchants no longer log in; permissions; Facebook signup; location gate; first-order ID verification; order approval; time in/out; FIXED/PER_KM pricing; COMMISSION/DAILY/PER_DELIVERY rider pay |
+| 2026-11-15 | BL-13.6, BL-14.3b, BL-14.6, BL-14.9 | Confirmed (Q-26…Q-29, D-037) |
+| 2026-11-15 | BL-13 (new), BL-14 (new), BL-2 | **Coupons** (percent off / free delivery, max uses, validity) and **loyalty program** (on/off; free delivery after N orders, free gift after X orders, points earn/redeem). New permissions `coupons.manage`, `loyalty.manage`, `settings.loyalty` |
 | 2026-11-15 | BL-1.3, BL-3.2, BL-4.1, BL-5, BL-7.2, BL-8.1, BL-10.3, BL-11.5, BL-11.8, BL-12 (new) | All remaining questions answered with Claude's suggestions; new cash remittance rules; new permission `cash.manage` |
 | 2026-11-15 | BL-10 (rewritten) | Platform Admin console in scope; monitor all tenant records; billing configurable per tenant (Q-10) |
 | 2026-11-15 | BL-3.3a–d | Valid PH IDs (incl. school ID) + selfie holding the ID required (Q-09) |

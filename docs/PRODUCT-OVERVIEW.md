@@ -20,8 +20,8 @@ adds admins and riders, and customers order through an app branded as the owner'
 | # | User | Logs in with | What they do |
 |---|---|---|---|
 | U0 | **Platform Admin** (ChowLane owner — you) | Email / password | Monitors **all tenants**: stats, riders and all tenant records. Sets each tenant's **billing** (free / monthly / per order…). Suspends / reactivates tenants. |
-| U1 | **Owner** | Email / password | Signs up the business. Creates and sets up the app: initial settings, branding, merchants, products & prices, delivery fee (per km / fixed / per barangay), rider income (fixed daily / % of delivery fee / fixed per delivery). Manages admin users and **decides what each admin can do**. Can do everything. |
-| U2 | **Admin** | Email / password (invited by Owner) | Sets up merchants & products. Sets delivery fees. Approves/rejects **first-time customers**. Approves orders. Monitors orders. Manually assigns orders to riders. Monitors riders. Riders CRUD. *Only what the Owner allows.* |
+| U1 | **Owner** | Email / password | Signs up the business. Creates and sets up the app: initial settings, branding, merchants, products & prices, delivery fee (per km / fixed / per barangay), rider income (fixed daily / % of delivery fee / fixed per delivery). Creates **coupons** and sets up the **loyalty program** (free delivery / free gift after N orders, points). Manages admin users and **decides what each admin can do**. Can do everything. |
+| U2 | **Admin** | Email / password (invited by Owner) | Sets up merchants & products. Sets delivery fees. Manages coupons & customer points. Approves/rejects **first-time customers**. Approves orders. Monitors orders. Manually assigns orders to riders. Monitors riders. Riders CRUD. *Only what the Owner allows.* |
 | U3 | **Rider** | Email or phone / password (added by Owner/Admin) | Time in / time out. Accepts orders and delivers them. |
 | U4 | **Customer** | **Facebook** | Orders from the owner's branded app. Must allow **current-location tracking** to order. **First order requires an ID.** Tracks order status. |
 
@@ -64,6 +64,8 @@ FastBite gets a "FastBite" icon on their phone, not "ChowLane".
 | Time in / time out | Rider starting / ending a shift; only timed-in riders get orders |
 | Delivery fee mode | `PER_KM` (store → customer distance), `FIXED` amount, or `PER_BARANGAY` (price list) |
 | Barangay | Smallest PH local government unit; used for the per-barangay delivery price list |
+| Coupon | Tenant promo code: % off food or free delivery, limited uses, validity period |
+| Loyalty program | Optional tenant rewards: free delivery or free gift after N successful orders, points to pay for food |
 | Rider pay mode | `DAILY` (fixed daily), `COMMISSION` (% of delivery fee), or `PER_DELIVERY` (fixed per delivery) |
 | PWA | Progressive Web App — a website that can be installed on the phone home screen and runs like an app |
 | Manifest | File that tells the phone the installed app's name, icon and color (one per tenant) |

@@ -15,9 +15,13 @@
     "@chowlane/pwa": "workspace:*",
     "@chowlane/types": "workspace:*",
     "@chowlane/ui": "workspace:*",
+    "@serwist/turbopack": "9.5.13",
+    "lucide-react": "1.73.0",
     "next": "16.4.6",
     "react": "19.3.1",
-    "react-dom": "19.3.1"
+    "react-dom": "19.3.1",
+    "serwist": "9.5.13",
+    "zustand": "5.1.0"
   },
   "devDependencies": {
     "@chowlane/config": "workspace:*",
@@ -25,6 +29,7 @@
     "@types/node": "26.6.6",
     "@types/react": "19.3.0",
     "@types/react-dom": "19.3.0",
+    "esbuild": "0.28.2",
     "eslint": "10.15.0",
     "tailwindcss": "4.3.5",
     "typescript": "5.9.3"

@@ -9,7 +9,8 @@
   },
   "scripts": {
     "lint": "eslint .",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run"
   },
   "dependencies": {
     "@chowlane/types": "workspace:*"
@@ -17,6 +18,7 @@
   "devDependencies": {
     "@chowlane/config": "workspace:*",
     "eslint": "10.15.0",
-    "typescript": "5.9.3"
+    "typescript": "5.9.3",
+    "vitest": "5.1.0"
   }
 }

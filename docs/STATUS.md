@@ -3,29 +3,32 @@
 > **Read this first every session.** Last updated: 2026-11-15
 
 ## Current phase
-**Phase 1 — UI Prototype** 🟨 · Next milestone: **1.1 Foundation**
-(Phase 0 ✅ done 2026-11-15)
+**Phase 1 — UI Prototype** 🟨 · Milestone **1.1 Foundation ✅ done** · Next: **1.2 Landing & Owner Signup**
 
 ## Current state
-- All docs agreed; all 25 open questions answered; 31 decisions logged.
-- **Turborepo scaffolded** (git initialised, nothing committed yet):
-  - Apps: `landing` :3000, `console` :3001, `rider` :3002, `customer` :3003, `platform` :3004
-  - Tenant apps (`console`, `rider`, `customer`) have a working `/[tenant]` route: unknown slug → 404,
-    tenant brand color applied via `--brand` CSS variable (mock tenants `fastbite`, `kainexpress`).
-  - Packages: `ui` (theme tokens + `AppPlaceholder`), `types` (Centavos, LatLng), `lib` (`formatPeso`),
-    `mocks` (2 mock tenants), `pwa` (`buildTenantManifest` — not wired yet), `config` (tsconfig + eslint).
-  - `pnpm build`, `pnpm lint`, `pnpm typecheck`, `pnpm format:check` all pass.
+- Turborepo with 5 apps + 7 packages. `pnpm build`, `lint`, `typecheck`, `test` (34 tests), `format:check` all pass.
+- **Foundation built (1.1):**
+  - `packages/types` — every entity in DATA-MODEL.md (incl. coupons & loyalty).
+  - `packages/lib` — delivery fee, order totals, status machine, permissions, rider pay, remittance, billing,
+    dispatch (auto-assign), phone/peso/time helpers, color contrast, **coupons, loyalty, order pricing** — unit-tested.
+  - `packages/mocks` — 3 tenants (FastBite: PER_KM/COMMISSION/AUTO; Kain Express: PER_BARANGAY/DAILY/MANUAL;
+    Pasabuy QC: suspended), staff/roles, merchants & products, riders & shifts (every remittance state),
+    customers (every verification state), orders in **every status**, coupons in every state, loyalty balances.
+    `@chowlane/mocks/store` = Zustand mock backend per app; `@chowlane/mocks/react` = DEV switcher + hydrator.
+  - `packages/ui` — design system (Button, Card, Badge, Input/Select/Textarea/Field, Switch, Sheet, Tabs, Avatar,
+    Stat, EmptyState, Money, status badges), `AppShell` (bottom nav on phone, sidebar on desktop), placeholder
+    **ChowLane brand** (logo + teal/amber), `TenantTheme`.
+  - `packages/pwa` — per-tenant manifest, generated PNG icons, Serwist service worker, install sheet (Android + iOS),
+    offline page + banner, update banner. Verified on production build (manifest, icons, `/serwist/sw.js`, `/~offline`).
+  - Apps: tenant apps under `/[tenant]` with branding, PWA, shell + nav, foundation preview home, "coming soon"
+    for unbuilt screens; suspended tenant → "temporarily unavailable" (customer, rider). Platform + landing placeholders.
+- **New features added to the plan (2026-11-15): coupons and loyalty program** (docs, types, logic, mocks done; screens in 1.3 / 1.4 / 1.5).
+- Not yet: real-device PWA install test (planned in 1.8); git commit.
 
-## Next up (in order) — Milestone 1.1 Foundation
-1. `packages/types`: all entities from DATA-MODEL.md.
-2. `packages/mocks`: full mock data + seeded scenarios (order in every status, pending verification, shifts, remittances).
-3. `packages/lib`: delivery fee calc (PER_KM / FIXED / PER_BARANGAY), rider pay calc, order status machine,
-   permission check, phone helper — with unit tests.
-4. `packages/ui`: design system (shadcn/ui on Tailwind v4), mobile-first app shells, placeholder ChowLane brand.
-5. Tenant theming (name, logo, color) + PWA wiring: per-tenant `manifest.webmanifest` route, Serwist service worker,
-   install sheet, offline page, update banner.
-6. Dev role/scenario switcher.
-7. Then Milestone **1.2 Landing & Owner Signup**.
+## Next up (in order)
+1. **Milestone 1.2 Landing & Owner Signup**: S-001 landing page, S-002 signup wizard (account → business name →
+   slug check → logo & color with live preview → service area), S-100 login.
+2. Then 1.3 Console — Owner Setup.
 
 ## Blockers
 - None.
@@ -33,8 +36,8 @@
 ## Progress snapshot
 | Area | Done / Total |
 |---|---|
-| Phase 1 screens (SCREENS.md) | 0 / 59 |
-| Requirements — UI (REQUIREMENTS.md) | 1 / 80 |
-| Flows signed off (USER-FLOWS.md) | 0 / 13 |
-| Decisions logged (DECISIONS.md) | 31 (D-011 superseded) |
-| Open questions answered | 25 / 25 ✅ |
+| Phase 1 screens (SCREENS.md) | 3 / 63 |
+| Requirements — UI (REQUIREMENTS.md) | 12 / 88 |
+| Flows signed off (USER-FLOWS.md) | 0 / 16 |
+| Decisions logged (DECISIONS.md) | 38 (D-000…D-037; D-011 superseded) |
+| Open questions answered | 29 / 29 ✅ |

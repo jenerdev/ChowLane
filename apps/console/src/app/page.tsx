@@ -1,20 +1,34 @@
 import Link from "next/link";
-import { mockTenants } from "@chowlane/mocks";
-import { AppPlaceholder } from "@chowlane/ui";
+import { tenants } from "@chowlane/mocks";
+import { ChowLaneLogo } from "@chowlane/ui";
 
 /** Dev index: tenant apps are always opened per tenant (/[tenant]). */
 export default function Home() {
   return (
-    <AppPlaceholder title="Console" subtitle="Pick a tenant (dev only)">
+    <main className="mx-auto flex min-h-dvh max-w-md flex-col justify-center gap-6 px-4">
+      <ChowLaneLogo />
+      <div>
+        <h1 className="text-xl font-bold">Console app</h1>
+        <p className="text-sm text-muted-foreground">
+          Pick a tenant (dev only — real users open their tenant link).
+        </p>
+      </div>
       <ul className="flex flex-col gap-2">
-        {mockTenants.map((t) => (
+        {tenants.map((t) => (
           <li key={t.slug}>
-            <Link className="text-brand underline" href={`/${t.slug}`}>
-              {t.businessName}
+            <Link
+              href={`/${t.slug}`}
+              className="flex items-center justify-between rounded-xl border p-4 hover:bg-muted"
+            >
+              <span className="font-medium">{t.businessName}</span>
+              <span className="text-xs text-muted-foreground">
+                /{t.slug}
+                {t.status === "SUSPENDED" ? " · suspended" : ""}
+              </span>
             </Link>
           </li>
         ))}
       </ul>
-    </AppPlaceholder>
+    </main>
   );
 }

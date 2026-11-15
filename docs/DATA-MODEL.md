@@ -1,6 +1,6 @@
 # ChowLane — Data Model
 
-> Last updated: 2026-11-15 · Version **v0.3 (draft)** — frozen as v1 at end of Phase 1.
+> Last updated: 2026-11-15 · Version **v0.4 (draft)** — frozen as v1 at end of Phase 1.
 > Phase 1: TypeScript types in `packages/types` + mocks in `packages/mocks`.
 > Phase 2: Supabase tables (snake_case), every tenant table has `tenant_id` + RLS.
 > Money = **integer centavos** (PHP; ₱1.00 = 100). Phones = E.164 `+639XXXXXXXXX`. Timestamps = ISO-8601 UTC. Rules for fields → BUSINESS-LOGIC.md.
@@ -44,6 +44,7 @@ TenantSettings { tenantId,
   acceptedIdTypes: IdType[],                   // default: all (BL-3.3a)
   maxOrderSubtotal,                            // rider cash limit, default ₱2,000
   pinAdjustRadiusM,                            // default 200
+  loyalty: LoyaltySettings,                    // BL-14
 }
 ```
 
@@ -62,7 +63,7 @@ Role { id, tenantId, name, permissions: PermissionKey[], isDefault }
 PermissionKey = 'customers.view' | 'customers.verify' | 'orders.view' | 'orders.approve'
   | 'orders.assign' | 'orders.cancel' | 'riders.view' | 'riders.manage' | 'merchants.manage'
   | 'products.manage' | 'settings.pricing' | 'settings.riderPay' | 'settings.dispatch' | 'settings.business'
-  | 'admins.manage' | 'reports.view' | 'cash.manage'
+  | 'admins.manage' | 'reports.view' | 'cash.manage' | 'coupons.manage' | 'loyalty.manage' | 'settings.loyalty'
 ```
 
 ## Catalog
@@ -101,7 +102,7 @@ Customer { id, tenantId, facebookId, name, email?, phone?, avatarUrl,
            verification?: Verification,              // latest submission
            verificationHistory: Verification[],       // all submissions incl. rejected (re-submit allowed — D-024)
            locationPermission: 'GRANTED' | 'DENIED' | 'UNKNOWN',
-           addresses: Address[], createdAt }
+           addresses: Address[], loyalty: CustomerLoyalty, createdAt }
 
 Verification { id, idType: IdType, idFrontUrl, idBackUrl?, selfieWithIdUrl, submittedAt, orderId?,   // orderId = order it was submitted with, if any
                result?: 'APPROVED' | 'REJECTED', reviewedBy?, reviewedAt?, rejectReason? }
@@ -112,6 +113,35 @@ IdType = 'PHILSYS' | 'DRIVERS_LICENSE' | 'PASSPORT' | 'UMID' | 'SSS' | 'GSIS' | 
 Address { id, label, line1, barangay, cityMunicipality, province, barangayFeeId?, location: LatLng, notes }
 ```
 
+## Coupons & loyalty
+
+```ts
+Coupon { id, tenantId, code,                       // unique per tenant, uppercase
+         description?, type: 'PERCENT_OFF' | 'FREE_DELIVERY',
+         percentOff?, maxDiscount?, minOrderSubtotal?,
+         maxUses, usedCount, perCustomerLimit,       // perCustomerLimit default 1
+         validFrom, validUntil, isActive, createdBy, createdAt }
+
+CouponRedemption { id, tenantId, couponId, orderId, customerId, discount, redeemedAt,
+                   released }                        // true when order rejected/cancelled (use given back)
+
+LoyaltySettings { enabled,                           // master switch
+  freeDelivery: { enabled, ordersRequired },         // every N delivered orders → 1 free delivery
+  freeGift:     { enabled, ordersRequired, giftName, productId? },
+  points:       { enabled, earnMode: 'PER_ORDER' | 'PER_PESO', pointsPerOrder,
+                  centavosPerPoint, pointValue, minRedeemPoints, maxRedeemPercent } }
+
+CustomerLoyalty { deliveredOrders, ordersTowardFreeDelivery, freeDeliveryRewards,
+                  ordersTowardFreeGift, freeGiftRewards, points }
+
+LoyaltyTransaction { id, tenantId, customerId, orderId?,
+  kind: 'POINTS_EARNED' | 'POINTS_REDEEMED' | 'POINTS_REFUNDED' | 'POINTS_ADJUSTED'
+      | 'FREE_DELIVERY_EARNED' | 'FREE_DELIVERY_USED' | 'FREE_DELIVERY_REFUNDED'
+      | 'FREE_GIFT_EARNED' | 'FREE_GIFT_USED' | 'FREE_GIFT_REFUNDED',
+  points, rewards,                                   // signed changes
+  at, staffId?, note? }
+```
+
 ## Orders
 
 ```ts
@@ -120,7 +150,13 @@ Order { id, tenantId, orderNumber, customerId, merchantId, riderId?,
               | 'PICKED_UP' | 'DELIVERED' | 'REJECTED' | 'CANCELLED',
         items: OrderItem[],
         deliveryLocation: LatLng, deliveryAddressText, notes,
-        distanceKm, deliveryBarangayFeeId?, subtotal, deliveryFee, total,
+        distanceKm, deliveryBarangayFeeId?, subtotal, deliveryFee,
+        couponId?, couponCode?, couponDiscount,                // BL-13
+        usedFreeDeliveryReward, freeDeliveryDiscount,          // BL-14.3a
+        usedFreeGiftReward,                                    // BL-14.3b (gift = ₱0 OrderItem)
+        pointsRedeemed, pointsDiscount, discountTotal,         // BL-14.5
+        total,                                                 // subtotal + deliveryFee − discountTotal (cash to collect)
+        pointsEarned?,                                         // set when DELIVERED
         deliveryFeeSnapshot: TenantSettings['deliveryFee'],   // rule used at checkout
         riderEarning?,                                         // computed on DELIVERED
         paymentMethod: 'COD',                                  // only COD for MVP (D-019)
@@ -135,7 +171,9 @@ Order { id, tenantId, orderNumber, customerId, merchantId, riderId?,
         proofOfDelivery?: { photoUrl, note },
         timeline: OrderEvent[], createdAt }
 
-OrderItem  { productId, name, unitPrice, qty, lineTotal, isUnavailable?: boolean }   // marked by rider at store
+OrderItem  { productId, name, unitPrice, storeUnitPrice?, qty, lineTotal,
+             isUnavailable?: boolean,   // marked by rider at store
+             isFreeGift?: boolean }     // loyalty gift, unitPrice 0
 AssignmentAttempt { riderId, by: 'AUTO' | 'ADMIN', staffId?, offeredAt, respondedAt?,
                     response: 'ACCEPTED' | 'REJECTED' | 'TIMED_OUT' | 'WITHDRAWN', rejectReason? }
 OrderEvent { status, actorType: 'CUSTOMER' | 'OWNER' | 'ADMIN' | 'RIDER' | 'SYSTEM', actorId?, at, note? }

@@ -12,6 +12,38 @@
 
 ---
 
+## 2026-11-15 — Q-26…Q-29 answered
+
+**Done:** User accepted Claude's recommendations (D-037): rider pay uses the original delivery fee (BL-13.6); one promo per
+order — coupon OR free-delivery reward, points & free gift combine (BL-14.6); free gift optionally tied to a menu item and
+then only on that merchant's orders (BL-14.3b); points don't expire in MVP (BL-14.9). All 29 questions answered.
+
+**Stopped at / Next:** Milestone 1.2 Landing & Owner Signup. Nothing committed yet.
+
+---
+
+## 2026-11-15 — Milestone 1.1 Foundation ✅ + coupons & loyalty added
+
+**Done:**
+- `packages/types`: all DATA-MODEL entities. `packages/lib`: all business rules as pure functions + Vitest (28 tests).
+  `packages/mocks`: 3 tenants with contrasting settings, orders in every status, every verification/remittance state,
+  coupons & loyalty data; Zustand mock store per app; DEV switcher (apps, tenants, "acting as", reset) — 6 integrity tests.
+- `packages/ui`: shadcn-style design system on Tailwind v4 + Radix, mobile-first `AppShell`, placeholder ChowLane brand, `TenantTheme`.
+- `packages/pwa` + app wiring: per-tenant manifest & generated icons, Serwist (`@serwist/turbopack`) service worker,
+  install sheet (Android/iOS), offline page/banner, update banner. Verified on `next start`.
+- User asked for **coupons** (% off or free delivery, max uses, validity) and a **loyalty program** (on/off; free delivery
+  after N orders, free gift after X orders, points to pay for food; tenant picks rules) → BL-13, BL-14, DATA-MODEL v0.4,
+  OWN-017…019, ADM-013, RID-015, CUS-013…015, screens S-125…127 & S-310, flows F-13…F-15, D-033/D-034, Q-26…Q-29.
+- Tooling: pnpm `allowBuilds`, ESLint `_`-prefixed unused vars allowed, `test` task in Turbo.
+
+**Verified:** build ✅ lint ✅ typecheck ✅ test ✅ (34) format ✅.
+
+**Decisions:** D-032 light theme only, D-033 coupons, D-034 loyalty, D-035 Serwist Turbopack, D-036 Zustand mock store.
+
+**Stopped at / Next:** Nothing committed yet. Next: Milestone 1.2 Landing & Owner Signup (after Q-26…Q-29 or with the proposed defaults).
+
+---
+
 ## 2026-11-15 — Turborepo scaffold (Phase 0 complete)
 
 **Done:**
