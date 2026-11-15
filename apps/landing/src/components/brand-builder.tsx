@@ -3,9 +3,8 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { buttonVariants, cn } from "@chowlane/ui";
+import { buttonVariants, cn, ColorPicker } from "@chowlane/ui";
 import { DEFAULT_BRAND } from "@/lib/presets";
-import { ColorPicker } from "./color-picker";
 import { PhonePreview } from "./phone-preview";
 
 /** Hero: type your business name, pick a color, watch your app re-brand. Carries both into signup. */

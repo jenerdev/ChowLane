@@ -12,6 +12,25 @@
 
 ---
 
+## 2026-11-15 — Milestone 1.3 Console — Owner Setup ✅
+
+**Done:** 15 console screens — home + setup checklist, merchants (list, add/edit with map), menu, settings index,
+business & branding, delivery area, delivery fee & order rules, barangay prices, rider income, loyalty program,
+admins, roles & permissions, coupons (list, create/edit + usage). New shared UI: form controls (MoneyInput,
+NumberInput, RadioCards, Checkbox, FormSection, SwitchRow, SaveBar), toast, ConfirmSheet, Progress, ColorPicker (moved
+from landing), Leaflet MapPicker, BottomNav "More" sheet, PageHeader back link. New lib: permission catalog/labels,
+coupon status & form validation, setup checklist, Manila date helpers (37 lib tests).
+
+**Verified:** build ✅ lint ✅ typecheck ✅ tests ✅ (43); browser walk-through incl. permission gating as Dispatcher.
+
+**Changed docs:** REQUIREMENTS (17 OWN ✅), SCREENS (14 ✅ + S-128 new, admin/role routes moved under /settings),
+USER-FLOWS (F-02, F-03, F-03b, F-13, F-14 clickable), BUSINESS-LOGIC (BL-2.5, BL-2.6, BL-13.10/11), DECISIONS
+(D-042, D-043), ROADMAP (1.3 ✅), STATUS.
+
+**Stopped at / Next:** Uncommitted. Next: commit, then Milestone 1.4 Admin Operations.
+
+---
+
 ## 2026-11-15 — Minimalist restyle (all apps)
 
 **Done:** User asked for a simple, minimalist, modern UI for all apps and future work → new `docs/DESIGN.md` + rule in

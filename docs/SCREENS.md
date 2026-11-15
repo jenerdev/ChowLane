@@ -24,7 +24,7 @@
 | # | Screen | Route | Reqs | Perm | Status |
 |---|---|---|---|---|---|
 | S-100 | Login | `/[tenant]/login` | LND-004 | — | ✅ |
-| S-101 | Home: setup checklist (owner) + ops counters | `/[tenant]` | OWN-001, ADM-008 | — | ⬜ |
+| S-101 | Home: setup checklist (owner) + ops counters | `/[tenant]` | OWN-001, ADM-008 | — | ✅ |
 | S-102 | Orders list (status filters) | `/[tenant]/orders` | ADM-003 | `orders.view` | ⬜ |
 | S-103 | Order detail: approve/reject, assign, cancel, timeline | `/[tenant]/orders/[id]` | ADM-002, ADM-003, ADM-004, ADM-007 | `orders.*` | ⬜ |
 | S-104 | Customer verification queue | `/[tenant]/customers/verify` | ADM-001 | `customers.verify` | ⬜ |
@@ -34,22 +34,23 @@
 | S-108 | Rider add / edit | `/[tenant]/riders/new`, `/[tenant]/riders/[id]/edit` | ADM-006 | `riders.manage` | ⬜ |
 | S-109 | Rider detail (shifts, orders, earnings) | `/[tenant]/riders/[id]` | ADM-005, OWN-012 | `riders.view` | ⬜ |
 | S-110 | Live map (riders + active orders) | `/[tenant]/map` | ADM-005 | `riders.view` | ⬜ |
-| S-111 | Merchants list (Owner/Admin set up merchants — no merchant portal) | `/[tenant]/merchants` | OWN-003 | `merchants.manage` | ⬜ |
-| S-112 | Merchant add / edit | `/[tenant]/merchants/new`, `/[tenant]/merchants/[id]` | OWN-003 | `merchants.manage` | ⬜ |
-| S-113 | Products of a merchant + add / edit product | `/[tenant]/merchants/[id]/products` | OWN-004 | `products.manage` | ⬜ |
-| S-114 | Settings — Business & branding (+ accepted ID types) | `/[tenant]/settings/business` | OWN-002, OWN-015 | `settings.business` | ⬜ |
-| S-115 | Settings — Service area | `/[tenant]/settings/area` | OWN-010 | `settings.business` | ⬜ |
-| S-116 | Settings — Delivery fee (PER_KM / FIXED / PER_BARANGAY + calculator) | `/[tenant]/settings/pricing` | OWN-005, OWN-011 | `settings.pricing` | ⬜ |
-| S-122 | Settings — Barangay price list | `/[tenant]/settings/pricing/barangays` | OWN-014 | `settings.pricing` | ⬜ |
+| S-111 | Merchants list (Owner/Admin set up merchants — no merchant portal) | `/[tenant]/merchants` | OWN-003 | `merchants.manage` | ✅ |
+| S-112 | Merchant add / edit | `/[tenant]/merchants/new`, `/[tenant]/merchants/[id]` | OWN-003 | `merchants.manage` | ✅ |
+| S-113 | Products of a merchant + add / edit product | `/[tenant]/merchants/[id]/products` | OWN-004 | `products.manage` | ✅ |
+| S-114 | Settings — Business & branding (+ accepted ID types) | `/[tenant]/settings/business` | OWN-002, OWN-015 | `settings.business` | ✅ |
+| S-115 | Settings — Service area | `/[tenant]/settings/area` | OWN-010 | `settings.business` | ✅ |
+| S-116 | Settings — Delivery fee (PER_KM / FIXED / PER_BARANGAY + calculator) | `/[tenant]/settings/pricing` | OWN-005, OWN-011 | `settings.pricing` | ✅ |
+| S-122 | Settings — Barangay price list | `/[tenant]/settings/pricing/barangays` | OWN-014 | `settings.pricing` | ✅ |
 | S-123 | Settings — ChowLane billing (plan + statements, read-only) | `/[tenant]/settings/billing` | OWN-016 | Owner | ⬜ |
 | S-124 | Cash remittances (record received cash per shift) | `/[tenant]/cash` | ADM-012 | `cash.manage` | ⬜ |
-| S-125 | Coupons list (status, uses left, validity) | `/[tenant]/coupons` | OWN-017, OWN-018 | `coupons.manage` | ⬜ |
-| S-126 | Coupon add / edit + usage history | `/[tenant]/coupons/new`, `/[tenant]/coupons/[id]` | OWN-017, OWN-018 | `coupons.manage` | ⬜ |
-| S-127 | Settings — Loyalty program (on/off, rules) | `/[tenant]/settings/loyalty` | OWN-019 | `settings.loyalty` | ⬜ |
-| S-117 | Settings — Rider income (DAILY / % of delivery fee / PER_DELIVERY) | `/[tenant]/settings/rider-pay` | OWN-006 | `settings.riderPay` | ⬜ |
+| S-125 | Coupons list (status, uses left, validity) | `/[tenant]/coupons` | OWN-017, OWN-018 | `coupons.manage` | ✅ |
+| S-126 | Coupon add / edit + usage history | `/[tenant]/coupons/new`, `/[tenant]/coupons/[id]` | OWN-017, OWN-018 | `coupons.manage` | ✅ |
+| S-128 | Settings index (grouped, filtered by permission) | `/[tenant]/settings` | — | any settings perm | ✅ |
+| S-127 | Settings — Loyalty program (on/off, rules) | `/[tenant]/settings/loyalty` | OWN-019 | `settings.loyalty` | ✅ |
+| S-117 | Settings — Rider income (DAILY / % of delivery fee / PER_DELIVERY) | `/[tenant]/settings/rider-pay` | OWN-006 | `settings.riderPay` | ✅ |
 | S-121 | Dispatch: mode switch (AUTO / MANUAL) + "Needs rider" list | `/[tenant]/dispatch` | ADM-004, ADM-010 | `settings.dispatch`, `orders.assign` | ⬜ |
-| S-118 | Admin users list + invite / edit | `/[tenant]/admins` | OWN-007 | Owner | ⬜ |
-| S-119 | Roles & permissions editor | `/[tenant]/admins/roles` | OWN-008, OWN-009 | Owner | ⬜ |
+| S-118 | Admin users list + invite / edit | `/[tenant]/settings/admins` | OWN-007 | Owner | ✅ |
+| S-119 | Roles & permissions editor | `/[tenant]/settings/roles` | OWN-008, OWN-009 | Owner | ✅ |
 | S-120 | Rider pay report | `/[tenant]/reports/rider-pay` | OWN-012 | `reports.view` | ⬜ |
 
 ## apps/rider
@@ -94,4 +95,4 @@
 | S-509 | Tenant — billing config + statements | `/tenants/[id]/billing` | PLT-007, PLT-008 | ⬜ |
 | S-510 | Billing overview (all tenants) | `/billing` | PLT-010 | ⬜ |
 
-**Progress: 7 / 64 screens** (landing 3 ✅ · shared PWA 3 ✅ · console 28 (login ✅) · rider 8 · customer 11 · platform 11)
+**Progress: 22 / 65 screens** (landing 3 ✅ · shared PWA 3 ✅ · console 30 (16 ✅) · rider 8 · customer 11 · platform 11)

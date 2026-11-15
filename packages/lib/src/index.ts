@@ -19,3 +19,4 @@ export * from "./coupons";
 export * from "./loyalty";
 export * from "./pricing";
 export * from "./signup";
+export * from "./console";

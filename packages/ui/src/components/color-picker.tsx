@@ -2,8 +2,17 @@
 
 import { Check } from "lucide-react";
 import { isHexColor } from "@chowlane/lib";
-import { cn } from "@chowlane/ui";
-import { BRAND_COLORS } from "@/lib/presets";
+import { cn } from "../lib/cn";
+
+/** Starter brand colors — all keep white text readable (3:1+). */
+export const BRAND_COLORS = [
+  { name: "Sili red", hex: "#D9412B" },
+  { name: "Mango", hex: "#C2410C" },
+  { name: "Calamansi", hex: "#4D7C0F" },
+  { name: "Ube", hex: "#6D3FA0" },
+  { name: "Dagat blue", hex: "#1D5FA8" },
+  { name: "Gabi", hex: "#374151" },
+];
 
 type ColorPickerProps = { value: string; onChange: (hex: string) => void; idPrefix: string };
 

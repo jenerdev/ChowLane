@@ -17,8 +17,10 @@
     "@chowlane/types": "workspace:*",
     "class-variance-authority": "0.7.1",
     "clsx": "2.1.1",
+    "leaflet": "1.9.4",
     "lucide-react": "1.73.0",
     "radix-ui": "1.8.1",
+    "react-leaflet": "5.0.0",
     "tailwind-merge": "3.7.0"
   },
   "peerDependencies": {
@@ -28,6 +30,7 @@
   },
   "devDependencies": {
     "@chowlane/config": "workspace:*",
+    "@types/leaflet": "1.9.22",
     "@types/react": "19.3.0",
     "@types/react-dom": "19.3.0",
     "eslint": "10.15.0",

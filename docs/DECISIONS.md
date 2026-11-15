@@ -47,6 +47,8 @@
 | ~~D-039~~ | 2026-11-15 | ChowLane's own pages (landing, signup) use **Archivo** (variable width: expanded for display, normal for body) on the teal/amber placeholder brand; tenant apps keep the system font | ❌ Superseded by D-041 |
 | D-040 | 2026-11-15 | Phase 1 console login = mock: email of an ACTIVE staff member of that tenant, any password; session stored per tenant in localStorage (same store as the DEV "acting as"). Console pages redirect to login when signed out | ✅ Done |
 | D-041 | 2026-11-15 | **UI style for all apps: simple, minimalist, modern** (docs/DESIGN.md): neutral zinc palette, brand color only for primary action/active/focus, flat (borders, no shadows), **Geist** 400–600 everywhere. Supersedes the font part of D-032 and D-039 (Archivo) | ✅ Confirmed |
+| D-042 | 2026-11-15 | Console navigation: items hidden when the role lacks the permission; on phones, >5 items → 4 tabs + **More** sheet. All settings live under `/[tenant]/settings/*` (incl. admins & roles) | ✅ Done |
+| D-043 | 2026-11-15 | Phase 1 logo upload is resized to a 256 px PNG data URL so it survives reloads in the mock store (Phase 2: Supabase Storage) | ✅ Done |
 | D-030 | 2026-11-15 | **Cash remittance**: at time out the rider remits net cash (collected from customers − paid at stores); Admin records amount received; business absorbs store price differences | ✅ Confirmed |
 
 ## Open questions

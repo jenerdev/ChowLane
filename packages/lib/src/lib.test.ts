@@ -270,3 +270,12 @@ describe("color", () => {
     expect(readableTextColor("#FACC15")).toBe("#1c1917");
   });
 });
+
+describe("manila date inputs", () => {
+  it("round-trips datetime-local values in Asia/Manila", async () => {
+    const { toManilaInput, fromManilaInput, formatDate } = await import("./index");
+    expect(toManilaInput("2026-11-15T04:00:00.000Z")).toBe("2026-11-15T12:00");
+    expect(fromManilaInput("2026-11-15T12:00")).toBe("2026-11-15T04:00:00.000Z");
+    expect(formatDate("2026-11-15T17:00:00.000Z")).toContain("16");
+  });
+});

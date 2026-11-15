@@ -21,7 +21,7 @@
 3. From the ChowLane site: **Log in** → enter business link → taken to that console's login
 4. **Log out** (sidebar / top bar) → back to login
 
-## F-02 Owner initial setup  ⬜
+## F-02 Owner initial setup  🟨 (clickable)
 Checklist on console home; each item links to its screen:
 1. Business & branding ✔ (from signup)
 2. Service area — set center + radius on map
@@ -33,13 +33,13 @@ Checklist on console home; each item links to its screen:
 8. (Optional) **Admins** — create a role & invite an admin (F-03)
 9. Share customer app link `…/fastbite`
 
-## F-03 Owner manages admins & permissions  ⬜
-1. Console → Admins → Roles → **New role** "Dispatcher" → tick permissions (e.g. `orders.view`, `orders.assign`, `riders.view`)
-2. Admins → **Invite admin** (name, email, role)
+## F-03 Owner manages admins & permissions  🟨 (clickable)
+1. Console → Settings → **Roles & permissions** → **New role** "Dispatcher" → tick permissions (e.g. `orders.view`, `orders.assign`, `riders.view`)
+2. Settings → **Admins** → **Invite** (name, email, role) → status *Invited* (resend / remove possible)
 3. Admin logs in → sees only menus allowed by their role
 4. Owner can change role, deactivate or delete the admin anytime
 
-## F-03b Owner or Admin sets up a merchant  ⬜  *(no merchant portal — `merchants.manage`, `products.manage`)*
+## F-03b Owner or Admin sets up a merchant  🟨 (clickable)  *(no merchant portal — `merchants.manage`, `products.manage`)*
 1. Console → Merchants → **Add merchant**: name, category, address + map pin, photo, contact
 2. Merchant → Products → **Add product**: name, category, price, photo, description
 3. Toggle merchant **Open / Closed** and product **Available / Sold out** as needed
@@ -114,14 +114,14 @@ Checklist on console home; each item links to its screen:
 3. After the tenant pays (outside the app) → **Mark as paid** (note)
 4. Tenant Owner sees plan & statements in console → Settings → Billing
 
-## F-13 Owner / Admin creates a coupon  ⬜  *(`coupons.manage`)*
+## F-13 Owner / Admin creates a coupon  🟨 (clickable)  *(`coupons.manage`)*
 1. Console → **Coupons** → **New coupon**
 2. Code (e.g. `WELCOME20`), description, type **% off** (percent, optional max discount) or **Free delivery**
 3. **Max usage**, uses per customer, optional minimum order, **valid from → valid until**, Active on
 4. Save → list shows status: *Scheduled · Active · Expired · Used up · Inactive* and uses left
 5. Later: open coupon → see usage history → **Deactivate** (used coupons can't be deleted)
 
-## F-14 Owner sets up the loyalty program  ⬜  *(`settings.loyalty`)*
+## F-14 Owner sets up the loyalty program  🟨 (clickable)  *(`settings.loyalty`)*
 1. Console → Settings → **Loyalty program** → switch **On**
 2. Turn on the rules wanted, each with its settings:
    - **Free delivery** every **N** successful orders

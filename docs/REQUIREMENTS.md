@@ -37,24 +37,24 @@
 
 | ID | Requirement | Src | UI | BE |
 |---|---|---|---|---|
-| OWN-001 | Initial setup checklist after signup (branding, service area, pricing, rider pay, merchants, products, riders) | U | ⬜ | ⬜ |
-| OWN-002 | Business profile & branding settings | U | ⬜ | ⬜ |
-| OWN-003 | Merchants CRUD (name, address + map pin, photo, contact, open/closed) — **Owner or Admin** (`merchants.manage`); no merchant portal | U | ⬜ | ⬜ |
-| OWN-004 | Products CRUD per merchant (name, category, price, photo, description, available toggle) — **Owner or Admin** (`products.manage`) | U | ⬜ | ⬜ |
-| OWN-005 | Delivery fee (Owner **or Admin**): choose **PER_KM** (store → customer distance; base fee, rate/km, included km, min fee), **FIXED** (amount), or **PER_BARANGAY** | U | ⬜ | ⬜ |
-| OWN-014 | Barangay price list: add / edit / deactivate barangays with a delivery fee each | U | ⬜ | ⬜ |
-| OWN-006 | Rider income (Owner): **fixed DAILY** rate, **% of delivery fee**, or **fixed amount PER_DELIVERY** | U | ⬜ | ⬜ |
-| OWN-007 | Admin users: invite, edit, deactivate, delete | U | ⬜ | ⬜ |
-| OWN-008 | Roles & permissions: create roles, toggle permissions per role, assign role to admin | U | ⬜ | ⬜ |
-| OWN-009 | Owner has every permission; owner's access can't be restricted | U | ⬜ | ⬜ |
-| OWN-010 | Service area (center + radius) — orders outside are blocked | P | ⬜ | ⬜ |
-| OWN-011 | Order approval setting: auto-approve orders from verified customers (on/off) | P | ⬜ | ⬜ |
-| OWN-013 | Setting: maximum order subtotal (rider cash limit) | P | ⬜ | ⬜ |
-| OWN-015 | Setting: accepted ID types (on/off per type) | P | ⬜ | ⬜ |
+| OWN-001 | Initial setup checklist after signup (branding, service area, pricing, rider pay, merchants, products, riders) | U | ✅ | ⬜ |
+| OWN-002 | Business profile & branding settings | U | ✅ | ⬜ |
+| OWN-003 | Merchants CRUD (name, address + map pin, photo, contact, open/closed) — **Owner or Admin** (`merchants.manage`); no merchant portal | U | ✅ | ⬜ |
+| OWN-004 | Products CRUD per merchant (name, category, price, photo, description, available toggle) — **Owner or Admin** (`products.manage`) | U | ✅ | ⬜ |
+| OWN-005 | Delivery fee (Owner **or Admin**): choose **PER_KM** (store → customer distance; base fee, rate/km, included km, min fee), **FIXED** (amount), or **PER_BARANGAY** | U | ✅ | ⬜ |
+| OWN-014 | Barangay price list: add / edit / deactivate barangays with a delivery fee each | U | ✅ | ⬜ |
+| OWN-006 | Rider income (Owner): **fixed DAILY** rate, **% of delivery fee**, or **fixed amount PER_DELIVERY** | U | ✅ | ⬜ |
+| OWN-007 | Admin users: invite, edit, deactivate, delete | U | ✅ | ⬜ |
+| OWN-008 | Roles & permissions: create roles, toggle permissions per role, assign role to admin | U | ✅ | ⬜ |
+| OWN-009 | Owner has every permission; owner's access can't be restricted | U | ✅ | ⬜ |
+| OWN-010 | Service area (center + radius) — orders outside are blocked | P | ✅ | ⬜ |
+| OWN-011 | Order approval setting: auto-approve orders from verified customers (on/off) | P | ✅ | ⬜ |
+| OWN-013 | Setting: maximum order subtotal (rider cash limit) | P | ✅ | ⬜ |
+| OWN-015 | Setting: accepted ID types (on/off per type) | P | ✅ | ⬜ |
 | OWN-016 | Owner sees own ChowLane billing plan & statements (read-only) | P | ⬜ | ⬜ |
-| OWN-017 | **Coupons**: create / edit / deactivate — code, type **% off** or **free delivery**, **max usage**, **validity period** (+ optional cap, minimum order, uses per customer) | U | ⬜ | ⬜ |
-| OWN-018 | Coupon list with status (active / scheduled / expired / used up) and usage history | P | ⬜ | ⬜ |
-| OWN-019 | **Loyalty program settings**: master on/off; rules each on/off + config — free delivery after N orders, **free gift after X orders**, points (earn mode, point value, min redeem, max %) | U | ⬜ | ⬜ |
+| OWN-017 | **Coupons**: create / edit / deactivate — code, type **% off** or **free delivery**, **max usage**, **validity period** (+ optional cap, minimum order, uses per customer) | U | ✅ | ⬜ |
+| OWN-018 | Coupon list with status (active / scheduled / expired / used up) and usage history | P | ✅ | ⬜ |
+| OWN-019 | **Loyalty program settings**: master on/off; rules each on/off + config — free delivery after N orders, **free gift after X orders**, points (earn mode, point value, min redeem, max %) | U | ✅ | ⬜ |
 | OWN-012 | Rider pay summary / payroll report per rider per period | P | ⬜ | ⬜ |
 
 ## ADM — Admin (console; each gated by a permission)

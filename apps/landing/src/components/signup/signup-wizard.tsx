@@ -13,9 +13,8 @@ import {
   suggestSlugs,
 } from "@chowlane/lib";
 import { tenants } from "@chowlane/mocks";
-import { Button, ChowLaneLogo, Field, Input, Select, cn } from "@chowlane/ui";
+import { Button, ChowLaneLogo, Field, Input, Select, cn, ColorPicker } from "@chowlane/ui";
 import { CITIES, DEFAULT_BRAND } from "@/lib/presets";
-import { ColorPicker } from "../color-picker";
 import { PhonePreview } from "../phone-preview";
 import { SignupDone } from "./signup-done";
 

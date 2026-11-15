@@ -1,9 +1,11 @@
 "use client";
 
-import type { ReactNode } from "react";
+import { useState, type ReactNode } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { ChevronLeft, Ellipsis } from "lucide-react";
 import { cn } from "../lib/cn";
+import { Sheet, SheetContent } from "../components/sheet";
 
 export type NavItem = {
   href: string;
@@ -19,35 +21,94 @@ function isActive(pathname: string, item: NavItem) {
     : pathname === item.href || pathname.startsWith(`${item.href}/`);
 }
 
-/** Fixed bottom tab bar for phones (≤5 items), respects the iOS home indicator. */
+const tabClass = (active: boolean) =>
+  cn(
+    "relative flex h-16 w-full flex-col items-center justify-center gap-1 text-[11px] font-medium [&_svg]:size-5",
+    active ? "text-foreground [&_svg]:text-brand" : "text-zinc-400",
+  );
+
+function Badge({ n }: { n?: number }) {
+  return n ? (
+    <span className="absolute top-2 left-1/2 ml-2 min-w-4 rounded-full bg-danger px-1 text-center text-[10px] leading-4 text-white">
+      {n}
+    </span>
+  ) : null;
+}
+
+/**
+ * Fixed bottom tab bar for phones. Up to 5 tabs; with more destinations the 5th tab is
+ * "More", which opens a sheet with the rest. Respects the iOS home indicator.
+ */
 export function BottomNav({ items }: { items: NavItem[] }) {
   const pathname = usePathname();
+  const [moreOpen, setMoreOpen] = useState(false);
+  const overflow = items.length > 5;
+  const tabs = overflow ? items.slice(0, 4) : items;
+  const rest = overflow ? items.slice(4) : [];
+  const restActive = rest.some((i) => isActive(pathname, i));
+
   return (
     <nav className="fixed inset-x-0 bottom-0 z-40 border-t bg-background/95 pb-[env(safe-area-inset-bottom)] backdrop-blur md:hidden">
       <ul className="mx-auto flex max-w-md">
-        {items.map((item) => {
+        {tabs.map((item) => {
           const active = isActive(pathname, item);
           return (
             <li key={item.href} className="flex-1">
               <Link
                 href={item.href}
                 aria-current={active ? "page" : undefined}
-                className={cn(
-                  "relative flex h-16 flex-col items-center justify-center gap-1 text-[11px] font-medium [&_svg]:size-5",
-                  active ? "text-foreground [&_svg]:text-brand" : "text-zinc-400",
-                )}
+                className={tabClass(active)}
               >
                 {item.icon}
                 {item.label}
-                {item.badge ? (
-                  <span className="absolute top-2 left-1/2 ml-2 min-w-4 rounded-full bg-danger px-1 text-center text-[10px] leading-4 text-white">
-                    {item.badge}
-                  </span>
-                ) : null}
+                <Badge n={item.badge} />
               </Link>
             </li>
           );
         })}
+        {overflow ? (
+          <li className="flex-1">
+            <Sheet open={moreOpen} onOpenChange={setMoreOpen}>
+              <button
+                type="button"
+                className={tabClass(restActive)}
+                onClick={() => setMoreOpen(true)}
+              >
+                <Ellipsis />
+                More
+                <Badge n={rest.reduce((s, i) => s + (i.badge ?? 0), 0)} />
+              </button>
+              <SheetContent title="More">
+                <ul className="-mx-2 flex flex-col">
+                  {rest.map((item) => {
+                    const active = isActive(pathname, item);
+                    return (
+                      <li key={item.href}>
+                        <Link
+                          href={item.href}
+                          onClick={() => setMoreOpen(false)}
+                          aria-current={active ? "page" : undefined}
+                          className={cn(
+                            "flex h-12 items-center gap-3 rounded-control px-2 text-[15px] [&_svg]:size-5",
+                            active ? "bg-muted font-medium [&_svg]:text-brand" : "hover:bg-muted",
+                          )}
+                        >
+                          {item.icon}
+                          <span className="flex-1">{item.label}</span>
+                          {item.badge ? (
+                            <span className="rounded-full bg-danger px-1.5 text-[11px] leading-5 text-white">
+                              {item.badge}
+                            </span>
+                          ) : null}
+                        </Link>
+                      </li>
+                    );
+                  })}
+                </ul>
+              </SheetContent>
+            </Sheet>
+          </li>
+        ) : null}
       </ul>
     </nav>
   );
@@ -140,32 +201,45 @@ export function AppShell({ nav, topBar, sideHeader, layout = "app", children }: 
       <SideNav items={nav} header={sideHeader} />
       <div className="flex min-w-0 flex-1 flex-col">
         {topBar}
-        <main className="mx-auto w-full max-w-5xl flex-1 px-4 pt-4 pb-24 md:px-8 md:pb-8">
+        <main className="mx-auto w-full max-w-4xl flex-1 px-5 pt-4 pb-28 md:px-10 md:pt-10 md:pb-12">
           {children}
         </main>
       </div>
-      <BottomNav items={nav.slice(0, 5)} />
+      <BottomNav items={nav} />
     </div>
   );
 }
 
-/** Page heading row: title + optional actions. */
-export function PageHeader({
-  title,
-  description,
-  actions,
-}: {
+type PageHeaderProps = {
   title: string;
   description?: string;
   actions?: ReactNode;
-}) {
+  /** Optional back link shown above the title (sub-pages). */
+  back?: { href: string; label: string };
+};
+
+/** Page heading row: optional back link, title + description, actions on the right. */
+export function PageHeader({ title, description, actions, back }: PageHeaderProps) {
   return (
-    <div className="mb-6 flex items-start justify-between gap-3">
-      <div>
-        <h1 className="text-[22px] font-semibold tracking-tight">{title}</h1>
-        {description ? <p className="mt-0.5 text-sm text-muted-foreground">{description}</p> : null}
+    <div className="mb-6">
+      {back ? (
+        <Link
+          href={back.href}
+          className="-ml-1 mb-3 inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground"
+        >
+          <ChevronLeft className="size-4" />
+          {back.label}
+        </Link>
+      ) : null}
+      <div className="flex items-start justify-between gap-3">
+        <div className="min-w-0">
+          <h1 className="text-[22px] font-semibold tracking-tight">{title}</h1>
+          {description ? (
+            <p className="mt-0.5 text-sm text-muted-foreground">{description}</p>
+          ) : null}
+        </div>
+        {actions ? <div className="flex shrink-0 items-center gap-2">{actions}</div> : null}
       </div>
-      {actions}
     </div>
   );
 }

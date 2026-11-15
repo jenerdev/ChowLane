@@ -6,6 +6,7 @@ import { customers, forTenant } from "@chowlane/mocks";
 import { DevToolbar, MockStoreHydrator } from "@chowlane/mocks/react";
 import { tenantAppName } from "@chowlane/pwa";
 import { InstallPrompt, OfflineBanner, UpdateBanner } from "@chowlane/pwa/react";
+import { Toaster } from "@chowlane/ui";
 import { useMockStore } from "@/lib/store";
 
 /** Tenant-wide chrome (every page incl. login): PWA prompts, mock store, DEV switcher. Shell + nav live in (app)/. */
@@ -27,6 +28,7 @@ export function TenantChrome({ tenant, children }: { tenant: Tenant; children: R
         logoUrl={tenant.logoUrl}
       />
       <UpdateBanner />
+      <Toaster />
       <MockStoreHydrator store={useMockStore} />
       <DevToolbar
         app="customer"

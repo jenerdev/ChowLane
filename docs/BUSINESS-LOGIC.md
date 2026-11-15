@@ -19,6 +19,8 @@
 - BL-2.2 **[CONFIRMED]** Owner manages admin users and decides what each admin can do.
 - BL-2.3 **[CONFIRMED]** Owner creates **roles** (e.g. "Dispatcher", "Verifier"), each a set of permissions, and assigns one role per admin. A default role **"Admin"** is pre-created with the user's listed admin abilities.
 - BL-2.4 **[PROPOSED]** Permissions are checked in UI (hide/disable) now, and enforced server-side (RLS / functions) in Phase 2.
+- BL-2.5 **[PROPOSED]** Role rules: role names are unique per tenant; the default **Admin** role can be edited but not deleted; a role with admins assigned can't be deleted; `admins.manage` can't be given to a role (owner-only).
+- BL-2.6 **[PROPOSED]** Admin rules: email unique within the tenant; new admins start as INVITED (invite can be resent); the Owner can't be edited or removed from the admins screen; turning an admin off blocks login but keeps history.
 
 ### Permission keys
 
@@ -198,7 +200,8 @@ PENDING_APPROVAL ──admin approves──▶ APPROVED ──offered (auto/manu
 - BL-13.7 **[PROPOSED]** A use is counted when the order is placed and **given back** if the order is REJECTED or CANCELLED.
 - BL-13.8 **[PROPOSED]** The customer pays the discounted total in cash; the rider still pays the store's full price → the business absorbs the discount (remittance BL-12 handles it automatically).
 - BL-13.9 **[PROPOSED]** If the rider marks items unavailable, a percent coupon is recalculated on the new subtotal; the coupon stays applied even if the subtotal drops below its minimum.
-- BL-13.10 **[PROPOSED]** Coupons can't be deleted once used — only deactivated (keeps order history correct).
+- BL-13.10 **[PROPOSED]** Coupons can't be deleted once used — only turned off. Code and discount can't change after first use; limits, dates and description can.
+- BL-13.11 **[PROPOSED]** Coupon status shown to staff: *Active · Scheduled* (not started) · *Expired* · *Used up* · *Turned off*.
 
 ## BL-14 Loyalty program
 
@@ -255,6 +258,7 @@ PENDING_APPROVAL ──admin approves──▶ APPROVED ──offered (auto/manu
 |---|---|---|
 | 2026-11-15 | All | Initial draft (v0) |
 | 2026-11-15 | All | v1 rewrite from user requirements: Owner/Admin/Rider/Customer; merchants no longer log in; permissions; Facebook signup; location gate; first-order ID verification; order approval; time in/out; FIXED/PER_KM pricing; COMMISSION/DAILY/PER_DELIVERY rider pay |
+| 2026-11-15 | BL-2.5, BL-2.6, BL-13.10, BL-13.11 | Role/admin rules and coupon editing/status rules from Milestone 1.3 |
 | 2026-11-15 | BL-15 (new) | Owner signup (link rules, password, starting service area) and console login rules |
 | 2026-11-15 | BL-13.6, BL-14.3b, BL-14.6, BL-14.9 | Confirmed (Q-26…Q-29, D-037) |
 | 2026-11-15 | BL-13 (new), BL-14 (new), BL-2 | **Coupons** (percent off / free delivery, max uses, validity) and **loyalty program** (on/off; free delivery after N orders, free gift after X orders, points earn/redeem). New permissions `coupons.manage`, `loyalty.manage`, `settings.loyalty` |
