@@ -12,6 +12,23 @@
 
 ---
 
+## 2026-11-15 — Milestones 1.5 Customer, 1.6 Rider, 1.7 Platform ✅
+
+**Done:** Built in parallel (D-046) and integrated. Customer app S-300…S-310, rider app S-200…S-207, platform admin
+S-500…S-510 — see STATUS for details. New lib modules `customer-app`, `rider-app`, `platform-admin` (26 tests).
+Integration fixes: `TenantTheme global` for portals (D-048), install prompt hidden on login/location, rider
+amount-paid follows unavailable items, availability label.
+
+**Verified:** build ✅ lint ✅ typecheck ✅ tests ✅ (72); browser walk-through of the main path in each app.
+
+**Changed docs:** REQUIREMENTS (CUS, RID, PLT ✅ — 86/88), SCREENS (63/65), USER-FLOWS (16 clickable), BUSINESS-LOGIC
+(new BL-3.9 … BL-14.12, renumbered where proposals clashed), DECISIONS (D-046…D-049), ROADMAP (1.5–1.7 ✅), STATUS.
+
+**Stopped at / Next:** Uncommitted. Next: commit, then Milestone 1.8 (phone pass, S-120, S-123, shared clean-ups,
+walkthrough & sign-off).
+
+---
+
 ## 2026-11-15 — Milestone 1.4 Console — Admin Operations ✅
 
 **Done:** 11 console screens — orders list & detail, customer verification queue & review, customers list & detail

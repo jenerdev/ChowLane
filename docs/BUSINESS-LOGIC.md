@@ -72,6 +72,8 @@
   - **[PROPOSED]** They see the reject reason + **"Upload new ID"** button (status screen and profile). Re-submitting can be done at the next checkout (order waits, like the first order) or from the profile without an order.
   - **[PROPOSED]** While REJECTED (not yet re-submitted) they cannot place orders.
   - **[PROPOSED]** No limit on re-submissions; every submission is kept in history so admins can compare.
+- BL-3.9 **[PROPOSED]** Signed-in customer pages need a session **and** allowed location; otherwise the customer is sent to login or the location gate.
+- BL-3.10 **[PROPOSED]** Prototype only: the location gate offers "use a sample location" when the browser blocks location. Removed in Phase 2.
 - BL-3.7 **[PROPOSED]** ID images and selfies are visible only to users with `customers.verify` and the Owner.
 
 ## BL-4 Order lifecycle **[PROPOSED]**
@@ -89,6 +91,8 @@ PENDING_APPROVAL ──admin approves──▶ APPROVED ──offered (auto/manu
 - BL-4.1 **[CONFIRMED]** Admin approves orders. **Every order** starts at `PENDING_APPROVAL`. Owner can enable *auto-approve for verified customers* (default OFF).
 - BL-4.2 **[PROPOSED]** Customer can cancel only while `PENDING_APPROVAL`.
 - BL-4.3 **[PROPOSED]** Every status change is added to the order timeline (status, who, when, note).
+- BL-4.5 **[PROPOSED]** An order from a verified customer when auto-approve is on starts `APPROVED` (timeline: "Verified customer — auto-approved"); in AUTO dispatch it is offered to the nearest free rider right away.
+- BL-4.6 **[PROPOSED]** Order numbers continue the tenant's sequence (e.g. FB-10233); a tenant's first order uses the first two letters of the slug + 1001.
 - BL-4.4 **[CONFIRMED]** The merchant learns about the order when the **rider orders at the counter**, and the **rider pays the store** (see BL-11). `AT_MERCHANT` = rider has arrived and ordered; `PICKED_UP` = rider has paid and has the food.
 
 ## BL-5 Assigning orders to riders
@@ -104,6 +108,7 @@ PENDING_APPROVAL ──admin approves──▶ APPROVED ──offered (auto/manu
 - BL-5.9 **[PROPOSED]** Even in AUTO mode, Owner/Admin (`orders.assign`) can manually assign or reassign any order until `PICKED_UP`.
 - BL-5.10 **[CONFIRMED]** A rider holds **one active order** at a time, so only riders without an active order get offers.
 - BL-5.11 **[PROPOSED]** Order is `ASSIGNED` only after the rider **accepts**; while waiting for a response the order stays `APPROVED` with a pending offer.
+- BL-5.15 **[PROPOSED]** Before accepting, the offer shows only the drop-off area (barangay, city) — full address and customer phone appear after accepting.
 - BL-5.12 **[PROPOSED]** A rider who holds an open offer can't get a second one (counts as busy for auto and manual assign). A new offer on the same order withdraws the previous one.
 - BL-5.13 **[PROPOSED]** Reassigning an `ASSIGNED` / `AT_MERCHANT` order puts it back to `APPROVED` until the new rider accepts; the previous rider is freed.
 - BL-5.14 **[PROPOSED]** Offer expiry (BL-5.6) runs on the server from Phase 2/3. In the Phase 1 prototype an expired offer is labelled and an admin marks it "no response", which triggers the next auto offer.
@@ -113,6 +118,7 @@ PENDING_APPROVAL ──admin approves──▶ APPROVED ──offered (auto/manu
 - BL-6.1 **[CONFIRMED]** Riders time in and time out.
 - BL-6.2 **[PROPOSED]** Only timed-in, ACTIVE riders can see, accept or be assigned orders.
 - BL-6.3 **[PROPOSED]** A rider cannot time out while holding an active order.
+- BL-6.5 **[PROPOSED]** A rider can't log out while on shift. Time in records the location if the phone allows it; without it the shift still starts with a reminder to turn location on.
 - BL-6.4 **[PROPOSED]** Each time-in/out creates a **Shift** record (start, end, location at both). Shifts feed DAILY pay and admin monitoring.
 
 ## BL-7 Pricing
@@ -134,6 +140,8 @@ PENDING_APPROVAL ──admin approves──▶ APPROVED ──offered (auto/manu
   total       = subtotal + deliveryFee
   ```
 - BL-7.5 **[PROPOSED]** Fee is calculated at checkout and frozen on the order.
+- BL-7.9 **[PROPOSED]** Checkout delivery fee uses the distance store → delivery pin; the service area is checked against the pin (in PER_BARANGAY mode only the chosen active barangay counts).
+- BL-7.10 **[PROPOSED]** Checkout lists every blocking problem: empty cart, store closed, item sold out, outside area / barangay not listed, over the maximum order, "change for" below the total.
 - BL-7.6 **[PROPOSED]** Delivery blocked if the customer is outside the tenant's service area (PER_KM / FIXED) or their barangay isn't listed (PER_BARANGAY).
 - BL-7.8 **[CONFIRMED]** Country **Philippines**, currency **Philippine Peso (PHP)**.
   - Display: `₱1,234.50` (`Intl.NumberFormat('en-PH', { style: 'currency', currency: 'PHP' })`).
@@ -170,6 +178,9 @@ PENDING_APPROVAL ──admin approves──▶ APPROVED ──offered (auto/manu
 - BL-11.5 **[CONFIRMED]** Owner sets a **maximum order subtotal** (default ₱2,000) to limit how much cash a rider must front. Checkout is blocked above it.
 - BL-11.6 **[PROPOSED]** At pickup the rider records **amount paid at store** + **receipt photo** before marking `PICKED_UP`.
 - BL-11.7 **[PROPOSED]** If an item is unavailable at the store, the rider marks it unavailable; the order subtotal/total is recalculated and the customer sees the updated total in tracking. If **all** items are unavailable → order `CANCELLED` (reason "Items unavailable").
+- BL-11.10 **[PROPOSED]** The amount paid at the store defaults to the expected store cost (it follows the items marked unavailable until the rider edits it); a receipt photo is required to mark Picked up.
+- BL-11.11 **[PROPOSED]** When items are marked unavailable, a percent coupon is recalculated on the new subtotal and points are capped to the remaining food; the delivery fee and a free-delivery reward stay.
+- BL-11.12 **[PROPOSED]** "Delivered" needs the cash-collected confirmation plus a proof photo or a note.
 - BL-11.8 **[CONFIRMED]** Price differences (store price ≠ app price): the **business absorbs** the difference. The customer always pays the app total; the rider records the actual amount paid and is **reimbursed** through the cash remittance (BL-12).
 - BL-11.9 Rider's cash flow per order: `+ total collected from customer − amount paid at store`. Handed to the business at the end of each shift (BL-12).
 
@@ -180,6 +191,7 @@ PENDING_APPROVAL ──admin approves──▶ APPROVED ──offered (auto/manu
 - BL-12.3 **[PROPOSED]** At **Time out** the rider sees a cash summary (collected, paid at stores, amount to remit) and confirms → shift remittance status `PENDING`.
 - BL-12.4 **[PROPOSED]** Admin (`cash.manage`) enters the **amount received** → status `RECEIVED` (matches) or `SHORT` / `OVER` (variance shown, note required).
 - BL-12.5 **[PROPOSED]** Rider income is **not** deducted from the remittance; it is paid separately (BL-8).
+- BL-12.7 **[PROPOSED]** Shift cash counts only DELIVERED orders whose cash was collected between time in and time out.
 - BL-12.6 **[PROPOSED]** A rider with an unrecorded (`PENDING`) remittance can still time in again; the console highlights pending remittances.
 
 ## BL-15 Owner signup & login
@@ -204,6 +216,7 @@ PENDING_APPROVAL ──admin approves──▶ APPROVED ──offered (auto/manu
 - BL-13.8 **[PROPOSED]** The customer pays the discounted total in cash; the rider still pays the store's full price → the business absorbs the discount (remittance BL-12 handles it automatically).
 - BL-13.9 **[PROPOSED]** If the rider marks items unavailable, a percent coupon is recalculated on the new subtotal; the coupon stays applied even if the subtotal drops below its minimum.
 - BL-13.10 **[PROPOSED]** Coupons can't be deleted once used — only turned off. Code and discount can't change after first use; limits, dates and description can.
+- BL-13.12 **[PROPOSED]** At checkout, applying a coupon switches off the free-delivery reward (one promo per order); remove the coupon to use the reward.
 - BL-13.11 **[PROPOSED]** Coupon status shown to staff: *Active · Scheduled* (not started) · *Expired* · *Used up* · *Turned off*.
 
 ## BL-14 Loyalty program
@@ -223,7 +236,10 @@ PENDING_APPROVAL ──admin approves──▶ APPROVED ──offered (auto/manu
 - BL-14.6 **[CONFIRMED]** **One promo per order**: a coupon **or** a free-delivery reward. Points and a free gift can be combined with either.
 - BL-14.7 **[PROPOSED]** Every change is a **loyalty transaction** (earned / redeemed / used / refunded / adjusted). If an order using points or rewards is REJECTED or CANCELLED, they are **refunded**.
 - BL-14.8 **[PROPOSED]** Owner/Admin with `loyalty.manage` can manually adjust a customer's points (reason required). Program settings need `settings.loyalty` (Owner by default).
-- BL-14.9 **[CONFIRMED]** Points don't expire in the MVP. Turning the program or a rule off hides it from customers but keeps balances; turning it back on restores them.
+- BL-14.9 **[CONFIRMED]** Points don't expire in the MVP.
+- BL-14.10 **[PROPOSED]** The points slider runs from the minimum to the allowed maximum and starts at the maximum when switched on.
+- BL-14.11 **[PROPOSED]** A free gift linked to another restaurant's item is shown but disabled, with an explanation.
+- BL-14.12 **[PROPOSED]** Loyalty balances update when the rider marks the order DELIVERED; PER_PESO points use food actually paid (subtotal − percent coupon − points). Turning the program or a rule off hides it from customers but keeps balances; turning it back on restores them.
 
 ## BL-9 Installable apps (PWA)
 
@@ -253,6 +269,11 @@ PENDING_APPROVAL ──admin approves──▶ APPROVED ──offered (auto/manu
 - BL-10.7 **[PROPOSED]** New tenants start as `FREE` (or trial) until the Platform Admin sets their billing.
 - BL-10.8 **[PROPOSED]** **Suspended** tenant → customer & rider apps show "temporarily unavailable"; console is read-only; Platform Admin can reactivate.
 - BL-10.9 **[PROPOSED]** Only `DELIVERED` orders count for `PER_ORDER` billing.
+- BL-10.10 **[PROPOSED]** A statement covers one Asia/Manila calendar month; one statement per tenant per month. It may be created during the month and counts delivered orders up to that moment.
+- BL-10.11 **[PROPOSED]** A ₱0 statement (free plan or trial month) is created as WAIVED with note "Free plan" / "Free trial", so it never shows as unpaid.
+- BL-10.12 **[PROPOSED]** An UNPAID statement can be marked PAID (optional payment note) or WAIVED (reason required); PAID / WAIVED are final.
+- BL-10.13 **[PROPOSED]** A billing change applies from now (sets effectiveFrom / updatedBy) and never changes existing statements; fields the plan doesn't use are cleared; FREE has no trial.
+- BL-10.14 **[PROPOSED]** Platform stats: "active customers" = customers with ≥1 order this Manila month; "delivery fees charged" = delivery fees of delivered orders.
 
 ---
 
@@ -261,6 +282,7 @@ PENDING_APPROVAL ──admin approves──▶ APPROVED ──offered (auto/manu
 |---|---|---|
 | 2026-11-15 | All | Initial draft (v0) |
 | 2026-11-15 | All | v1 rewrite from user requirements: Owner/Admin/Rider/Customer; merchants no longer log in; permissions; Facebook signup; location gate; first-order ID verification; order approval; time in/out; FIXED/PER_KM pricing; COMMISSION/DAILY/PER_DELIVERY rider pay |
+| 2026-11-15 | BL-3.9, 3.10, 4.5, 4.6, 5.15, 6.5, 7.9, 7.10, 10.10–10.14, 11.10–11.12, 12.7, 13.12, 14.10–14.12 (new) | Rules from building the customer, rider and platform apps (Milestones 1.5–1.7) |
 | 2026-11-15 | BL-5.12…5.14 (new) | Open offers count as busy; reassignment rules; prototype handling of offer expiry |
 | 2026-11-15 | BL-2.5, BL-2.6, BL-13.10, BL-13.11 | Role/admin rules and coupon editing/status rules from Milestone 1.3 |
 | 2026-11-15 | BL-15 (new) | Owner signup (link rules, password, starting service area) and console login rules |

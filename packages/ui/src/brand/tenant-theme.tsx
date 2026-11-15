@@ -1,16 +1,24 @@
 import type { CSSProperties, ReactNode } from "react";
 import { readableTextColor } from "@chowlane/lib";
+import { RootThemeSync } from "./root-theme";
 
-type TenantThemeProps = { color: string; className?: string; children: ReactNode };
+type TenantThemeProps = {
+  color: string;
+  className?: string;
+  children: ReactNode;
+  /** Also apply the color to <html> so portals (sheets, dialogs) match. Use once per tenant app, not for logo tiles. */
+  global?: boolean;
+};
 
 /** Applies a tenant's brand color to everything inside (BL-1.5). */
-export function TenantTheme({ color, className, children }: TenantThemeProps) {
+export function TenantTheme({ color, className, children, global = false }: TenantThemeProps) {
   const style = {
     "--brand": color,
     "--brand-foreground": readableTextColor(color),
   } as CSSProperties;
   return (
     <div style={style} className={className}>
+      {global ? <RootThemeSync color={color} foreground={readableTextColor(color)} /> : null}
       {children}
     </div>
   );

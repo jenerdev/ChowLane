@@ -29,7 +29,7 @@ export default async function TenantLayout({ children, params }: Props & { child
 
   if (tenant.status === "SUSPENDED") {
     return (
-      <TenantTheme color={tenant.primaryColor}>
+      <TenantTheme color={tenant.primaryColor} global>
         <main className="mx-auto flex min-h-dvh max-w-md flex-col items-center justify-center gap-3 px-6 text-center">
           <TenantLogo
             name={tenant.businessName}
@@ -46,7 +46,7 @@ export default async function TenantLayout({ children, params }: Props & { child
   }
 
   return (
-    <TenantTheme color={tenant.primaryColor}>
+    <TenantTheme color={tenant.primaryColor} global>
       <TenantChrome tenant={tenant}>{children}</TenantChrome>
     </TenantTheme>
   );

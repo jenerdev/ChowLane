@@ -51,6 +51,10 @@
 | D-043 | 2026-11-15 | Phase 1 logo upload is resized to a 256 px PNG data URL so it survives reloads in the mock store (Phase 2: Supabase Storage) | ✅ Done |
 | D-044 | 2026-11-15 | Order/customer state changes are **pure functions** in `packages/lib/order-actions.ts`; the console's `useOrderActions` applies side effects (rider availability, coupon uses, loyalty refunds, auto-assign). Phase 2 moves the same rules into server functions | ✅ Done |
 | D-045 | 2026-11-15 | Console prototype shows **"Simulate: rider accepts / declines"** and **"Mark as no response"** buttons, because the rider app is a separate app with no shared backend in Phase 1. Remove in Phase 2 | ✅ Done |
+| D-046 | 2026-11-15 | Milestones 1.5–1.7 built in parallel (one fork per app, each limited to its app + its own `packages/lib` file) and integrated afterwards | ✅ Done |
+| D-047 | 2026-11-15 | More prototype-only helpers (removed in Phase 2): rider app **"Simulate a new offer"**, customer **"use a sample location"**, mock Facebook account picker, rider any-6-digit login code | ✅ Done |
+| D-048 | 2026-11-15 | `TenantTheme global` mirrors the tenant color onto `<html>` so sheets/dialogs (portals) use it; only the tenant apps' outer frame sets `global` — logo tiles don't | ✅ Done |
+| D-049 | 2026-11-15 | Phase 1 limitation accepted: each app keeps its own copy of demo data, so a platform suspend, a customer order or a rider action is not seen by the other apps until Phase 2 (D-008) | ✅ Confirmed |
 | D-030 | 2026-11-15 | **Cash remittance**: at time out the rider remits net cash (collected from customers − paid at stores); Admin records amount received; business absorbs store price differences | ✅ Confirmed |
 
 ## Open questions

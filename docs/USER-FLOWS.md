@@ -48,7 +48,7 @@ Checklist on console home; each item links to its screen:
 1. Riders → **Add rider**: name, phone, vehicle, plate, (optional) pay override
 2. Rider gets login (mock credentials in Phase 1)
 
-## F-05 Rider shift  ⬜
+## F-05 Rider shift  🟨 (clickable)
 1. Rider opens `rider/<tenant>` → logs in → (first time) prompted to **install "<Business> Rider"** (F-10) → home shows **Time in** button
 2. **Time in** → status "On shift" → Available orders list appears
 3. Receives an **order offer** (auto-assigned, or assigned by admin): merchant, drop-off area, distance, earning, **cash needed at store ₱X**, 60s countdown → **Accept** → `ASSIGNED` · or **Reject** (reason) → order goes to next rider (AUTO) or back to admin (MANUAL)
@@ -57,7 +57,7 @@ Checklist on console home; each item links to its screen:
 6. Next offer … → **Time out** (blocked if an order is active) → **cash summary**: collected from customers − paid at stores = **amount to remit** → hand cash to admin → remittance `PENDING` until admin records it
 7. Earnings & shift history show today's totals per pay mode
 
-## F-06 First-time customer orders  ⬜
+## F-06 First-time customer orders  🟨 (clickable)
 1. Customer opens tenant link → branded splash → **Continue with Facebook**
 2. **Allow location** prompt → denied = blocked screen with "how to enable"; allowed → continue
 3. Home → (optional) **Install "<Business>" app** banner (F-10) → pick merchant → add products → cart
@@ -67,7 +67,7 @@ Checklist on console home; each item links to its screen:
 7. Admin approves customer (F-08) → admin approves order → order `APPROVED`
 8. Order assigned to an online rider (auto or manual) → rider accepts → tracking shows rider, status timeline, map → `DELIVERED`
 
-## F-07 Verified customer orders  ⬜
+## F-07 Verified customer orders  🟨 (clickable)
 1. Open app → (already logged in, location allowed) → browse → cart → checkout (no ID step; coupon / rewards optional) → **Place order**
 2. `PENDING_APPROVAL` → admin approves (or auto-approved if Owner enabled it) → rider → tracking → delivered
 
@@ -80,7 +80,7 @@ Checklist on console home; each item links to its screen:
 6. **Monitor riders**: map + list of timed-in riders, their current order, shift start time
 7. **Cash remittances**: rider timed out → admin counts cash → enters amount received → `RECEIVED` or `SHORT` / `OVER` (note)
 
-## F-09 Exceptions  ⬜
+## F-09 Exceptions  🟨 (clickable)
 - Location denied → customer cannot order (F-06 step 2)
 - Customer rejected → customer sees reason; first order auto-rejected → **Upload new ID** (from status screen, profile, or next checkout) → `PENDING` → admin reviews again
 - Order rejected → customer sees reason
@@ -102,13 +102,13 @@ Checklist on console home; each item links to its screen:
 3. Open from home screen → full-screen app with tenant name, logo, color; same login session
 4. When a new version is deployed → "New version available — Reload" banner
 
-## F-11 Platform Admin monitors tenants  ⬜  *(ChowLane owner, `apps/platform`)*
+## F-11 Platform Admin monitors tenants  🟨 (clickable)  *(ChowLane owner, `apps/platform`)*
 1. Log in → **Overview**: total tenants (active / suspended), orders today & this month, riders online, billing due
 2. **Tenants** list → search / filter → open a tenant
 3. Tenant detail tabs: **Overview stats · Riders · Orders · Customers · Merchants & products · Admins & settings · Billing** (all read-only except billing & status)
 4. **Suspend** (reason) / **Reactivate** a tenant
 
-## F-12 Platform Admin sets a tenant's billing  ⬜
+## F-12 Platform Admin sets a tenant's billing  🟨 (clickable)
 1. Tenant → **Billing** → choose model: FREE / MONTHLY / PER_ORDER / MONTHLY + PER_ORDER → amounts → optional trial end date → Save
 2. Monthly statement is computed (delivered orders × per-order fee + monthly fee)
 3. After the tenant pays (outside the app) → **Mark as paid** (note)
@@ -129,7 +129,7 @@ Checklist on console home; each item links to its screen:
    - **Points** — earn per order or per ₱ spent, point value, min points to redeem, max % of food
 3. Save → customers see their progress in **Rewards**; turning a rule off hides it but keeps balances
 
-## F-15 Customer earns & uses rewards  ⬜
+## F-15 Customer earns & uses rewards  🟨 (clickable)
 1. Order **DELIVERED** → points credited, progress counters move (e.g. "3 more orders for free delivery")
 2. Reward reached → customer notified (Phase 3) and sees it in **Rewards**
 3. Next checkout → **Use free delivery** / **Claim free gift** / **Pay with points** (slider up to the allowed max)

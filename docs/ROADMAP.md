@@ -23,9 +23,9 @@ before the backend is designed.
 | 1.2 Landing & Owner Signup | Landing page with live brand builder, Owner signup wizard (account, business name, link check, brand, delivery area, review), find-your-console page, console login + sign-out | ✅ |
 | 1.3 Console — Owner Setup | Setup checklist, business & branding, service area, merchants, products & prices, delivery pricing (fixed / per km), rider pay (commission / daily / per delivery), admin users, roles & permissions, **coupons**, **loyalty program settings** | ✅ |
 | 1.4 Console — Admin Operations | Customer verification queue, order approval, orders monitoring, manual rider assignment, riders CRUD, rider monitoring (live map, shifts), customer loyalty view & adjust | ✅ |
-| 1.5 Customer App | Facebook login (mock), location gate, browse merchants/products, cart, checkout, first-order ID upload, pending approval state, order tracking, history, **coupon code**, **rewards** (points, free delivery, free gift) | ⬜ |
-| 1.6 Rider App | Login, time in / out, available orders + accept, delivery steps, proof of delivery, shift & earnings history | ⬜ |
-| 1.7 Platform Admin Console | Platform login, overview stats across tenants, tenants list, tenant detail (stats, riders, orders, customers, merchants, admins — read-only), per-tenant billing config + monthly statements, suspend / reactivate | ⬜ |
+| 1.5 Customer App | Facebook login (mock), location gate, browse merchants/products, cart, checkout, first-order ID upload, pending approval state, order tracking, history, **coupon code**, **rewards** (points, free delivery, free gift) | ✅ |
+| 1.6 Rider App | Login, time in / out, available orders + accept, delivery steps, proof of delivery, shift & earnings history | ✅ |
+| 1.7 Platform Admin Console | Platform login, overview stats across tenants, tenants list, tenant detail (stats, riders, orders, customers, merchants, admins — read-only), per-tenant billing config + monthly statements, suspend / reactivate | ✅ |
 | 1.8 Walkthrough & Sign-off | Walk every flow in USER-FLOWS.md, **install each tenant app on a real Android + iPhone**, fix gaps, user sign-off, freeze DATA-MODEL v1 | ⬜ |
 
 **Exit:** user signs off all flows; DATA-MODEL.md frozen as v1.

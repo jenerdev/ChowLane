@@ -1,81 +1,141 @@
 "use client";
 
-import { use } from "react";
-import { Bike } from "lucide-react";
-import { findTenantBySlug } from "@chowlane/mocks";
-import { usePersona } from "@chowlane/mocks/react";
+import Link from "next/link";
+import { ChevronRight, Clock, Sparkles } from "lucide-react";
 import {
-  Badge,
-  Button,
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-  EmptyState,
-  Money,
-  OrderStatusBadge,
-  PageHeader,
-} from "@chowlane/ui";
-import { cashNeededAtStore } from "@chowlane/lib";
-import { useMockStore } from "@/lib/store";
+  canTimeOut,
+  computeRiderPay,
+  formatDateTime,
+  formatPeso,
+  manilaDateKey,
+  ORDER_STATUS_LABELS,
+} from "@chowlane/lib";
+import { Button, Card, CardContent, EmptyState, OrderStatusBadge, Stat, toast } from "@chowlane/ui";
+import { useRouter } from "next/navigation";
+import { OfferCard } from "@/components/offer-card";
+import { useNow, useRider } from "@/lib/use-rider";
+import { useRiderActions } from "@/lib/use-rider-actions";
 
-/** Foundation preview — the real rider home (S-201) is built in Milestone 1.6. */
-export default function RiderHome({ params }: { params: Promise<{ tenant: string }> }) {
-  const { tenant: slug } = use(params);
-  const tenant = findTenantBySlug(slug)!;
-  const riders = useMockStore((s) => s.riders).filter(
-    (r) => r.tenantId === tenant.id && r.status === "ACTIVE",
+const NEXT_STEP: Partial<Record<string, string>> = {
+  ASSIGNED: "Go to the store and order",
+  AT_MERCHANT: "Pay the store and pick up",
+  PICKED_UP: "Deliver to the customer",
+};
+
+/** S-201 — time in / out, incoming offer, active order, today's numbers (RID-002…004). */
+export default function RiderHome() {
+  const router = useRouter();
+  const { me, db, offer, active, shift, rule, base } = useRider();
+  const actions = useRiderActions();
+  const nowMs = useNow();
+  if (!me) return null;
+
+  const today = manilaDateKey(new Date(nowMs).toISOString());
+  const deliveredToday = db.orders.filter(
+    (o) =>
+      o.riderId === me.id &&
+      o.status === "DELIVERED" &&
+      o.cashCollectedAt &&
+      manilaDateKey(o.cashCollectedAt) === today,
   );
-  const orders = useMockStore((s) => s.orders);
-  const [personaId] = usePersona(`rider:${slug}`, riders[0]?.id ?? "");
-  const me = riders.find((r) => r.id === personaId) ?? riders[0];
-  const active = me?.activeOrderId ? orders.find((o) => o.id === me.activeOrderId) : undefined;
-
-  if (!me) return <EmptyState icon={<Bike />} title="No riders yet" />;
+  const shiftsToday = db.shifts.filter(
+    (s) => s.riderId === me.id && manilaDateKey(s.timeIn) === today,
+  );
+  const earnedToday = computeRiderPay({
+    rule,
+    deliveredOrderFees: deliveredToday.map((o) => o.deliveryFee),
+    shiftTimeIns: shiftsToday.map((s) => s.timeIn),
+  });
+  const store = active ? db.merchants.find((m) => m.id === active.merchantId) : undefined;
+  const devTools = process.env.NEXT_PUBLIC_DEV_TOOLS !== "0";
 
   return (
-    <>
-      <PageHeader
-        title={me.name}
-        description={me.vehicleType.toLowerCase()}
-        actions={
-          <Badge tone={me.isOnShift ? "success" : "neutral"}>
-            {me.isOnShift ? "On shift" : "Off shift"}
-          </Badge>
-        }
-      />
-      <Button
-        block
-        size="lg"
-        variant={me.isOnShift ? "outline" : "default"}
-        className="mb-4"
-        disabled
-      >
-        {me.isOnShift ? "Time out" : "Time in"} (Milestone 1.6)
-      </Button>
-      {active ? (
+    <div className="flex flex-col gap-6">
+      <div>
+        <h1 className="text-[22px] font-semibold tracking-tight">Hi, {me.name.split(" ")[0]}</h1>
+        <p className="mt-0.5 text-sm text-muted-foreground">
+          {me.isOnShift && shift
+            ? `On shift since ${formatDateTime(shift.timeIn)}`
+            : "You're off shift."}
+        </p>
+      </div>
+
+      {!me.isOnShift ? (
         <Card>
-          <CardHeader>
-            <CardTitle>Active order {active.orderNumber}</CardTitle>
-          </CardHeader>
-          <CardContent className="flex flex-col gap-2 text-sm">
-            <OrderStatusBadge status={active.status} />
-            <p>
-              Cash needed at store:{" "}
-              <Money value={cashNeededAtStore(active.items)} className="font-semibold" />
+          <CardContent className="flex flex-col gap-3 pt-5">
+            <p className="text-sm">
+              Time in to start getting orders. Keep this app open while you&apos;re on shift so
+              dispatch can see where you are.
             </p>
-            <p>
-              Collect from customer: <Money value={active.total} className="font-semibold" />
-            </p>
+            <Button size="lg" onClick={() => void actions.timeIn()}>
+              <Clock /> Time in
+            </Button>
           </CardContent>
         </Card>
+      ) : active ? (
+        <Link href={`${base}/active`}>
+          <Card className="transition-colors hover:border-zinc-400">
+            <CardContent className="flex items-center gap-3 pt-5">
+              <div className="min-w-0 flex-1">
+                <div className="flex items-center gap-2">
+                  <span className="text-[15px] font-semibold">{active.orderNumber}</span>
+                  <OrderStatusBadge status={active.status} />
+                </div>
+                <p className="mt-1 text-sm">
+                  {NEXT_STEP[active.status] ?? ORDER_STATUS_LABELS[active.status]}
+                </p>
+                <p className="text-[13px] text-muted-foreground">
+                  {store?.name} · collect {formatPeso(active.total)}
+                </p>
+              </div>
+              <ChevronRight className="size-5 text-muted-foreground" />
+            </CardContent>
+          </Card>
+        </Link>
+      ) : offer ? (
+        <OfferCard order={offer} />
       ) : (
-        <EmptyState
-          icon={<Bike />}
-          title="No active order"
-          description="New order offers will appear here."
-        />
+        <Card>
+          <CardContent className="pt-1">
+            <EmptyState
+              icon={<Clock />}
+              title="Waiting for orders"
+              description="New offers appear here. You'll have a short time to accept."
+              className="py-8"
+              action={
+                devTools ? (
+                  <Button variant="outline" size="sm" onClick={actions.simulateOffer}>
+                    <Sparkles /> Simulate a new offer (prototype)
+                  </Button>
+                ) : undefined
+              }
+            />
+          </CardContent>
+        </Card>
       )}
-    </>
+
+      <div className="grid grid-cols-2 gap-3">
+        <Stat label="Delivered today" value={deliveredToday.length} />
+        <Stat
+          label="Earned today"
+          value={formatPeso(earnedToday)}
+          hint={rule.mode === "DAILY" ? "Daily rate" : undefined}
+        />
+      </div>
+
+      {me.isOnShift ? (
+        <Button
+          variant="outline"
+          size="lg"
+          onClick={() => {
+            const check = canTimeOut(me, db.orders);
+            if (!check.ok) return void toast(check.reason, "error");
+            router.push(`${base}/time-out`);
+          }}
+        >
+          Time out
+        </Button>
+      ) : null}
+    </div>
   );
 }

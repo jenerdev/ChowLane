@@ -61,7 +61,7 @@ export function AppFrame({ tenant: initial, children }: { tenant: Tenant; childr
   const nav = items.filter((i) => (i.label === "Settings" ? hasSettings : !i.perm || can(i.perm)));
 
   return (
-    <TenantTheme color={t.primaryColor}>
+    <TenantTheme color={t.primaryColor} global>
       <AppShell
         layout="app"
         nav={nav}

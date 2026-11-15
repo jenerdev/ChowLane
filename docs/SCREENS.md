@@ -56,43 +56,43 @@
 ## apps/rider
 | # | Screen | Route | Reqs | Status |
 |---|---|---|---|---|
-| S-200 | Login | `/[tenant]/login` | RID-001 | ⬜ |
-| S-201 | Home: time in/out + incoming order offer | `/[tenant]` | RID-002, RID-003, RID-004 | ⬜ |
-| S-202 | Order offer detail (countdown, accept / reject with reason) | `/[tenant]/orders/[id]` | RID-004 | ⬜ |
-| S-203 | Active delivery (steps + map + call) | `/[tenant]/active` | RID-005, RID-006 | ⬜ |
-| S-204 | Proof of delivery | `/[tenant]/active/complete` | RID-007 | ⬜ |
-| S-205 | Shifts & earnings | `/[tenant]/earnings` | RID-008 | ⬜ |
-| S-207 | Time out — cash summary & remit | `/[tenant]/time-out` | RID-014 | ⬜ |
-| S-206 | Profile | `/[tenant]/profile` | RID-009 | ⬜ |
+| S-200 | Login | `/[tenant]/login` | RID-001 | ✅ |
+| S-201 | Home: time in/out + incoming order offer | `/[tenant]` | RID-002, RID-003, RID-004 | ✅ |
+| S-202 | Order offer detail (countdown, accept / reject with reason) | `/[tenant]/orders/[id]` | RID-004 | ✅ |
+| S-203 | Active delivery (steps + map + call) | `/[tenant]/active` | RID-005, RID-006 | ✅ |
+| S-204 | Proof of delivery | `/[tenant]/active/complete` | RID-007 | ✅ |
+| S-205 | Shifts & earnings | `/[tenant]/earnings` | RID-008 | ✅ |
+| S-207 | Time out — cash summary & remit | `/[tenant]/time-out` | RID-014 | ✅ |
+| S-206 | Profile | `/[tenant]/profile` | RID-009 | ✅ |
 
 ## apps/customer (branded per tenant)
 | # | Screen | Route | Reqs | Status |
 |---|---|---|---|---|
-| S-300 | Splash + Continue with Facebook | `/[tenant]/login` | CUS-001 | ⬜ |
-| S-301 | Location permission gate (+ denied state) | `/[tenant]/location` | CUS-002 | ⬜ |
-| S-302 | Home (merchants) | `/[tenant]` | CUS-003 | ⬜ |
-| S-303 | Merchant products | `/[tenant]/m/[merchantId]` | CUS-004 | ⬜ |
-| S-304 | Cart | `/[tenant]/cart` | CUS-004 | ⬜ |
-| S-305 | Checkout (+ coupon code, rewards, points) | `/[tenant]/checkout` | CUS-005, CUS-013, CUS-014 | ⬜ |
-| S-306 | ID verification: ID type, ID photo, selfie holding ID (first order / re-submit) | `/[tenant]/checkout/verify-id` | CUS-006, CUS-012 | ⬜ |
-| S-307 | Order status / tracking (incl. waiting-for-approval & rejected states) | `/[tenant]/orders/[id]` | CUS-007, CUS-008 | ⬜ |
-| S-308 | My orders | `/[tenant]/orders` | CUS-009 | ⬜ |
-| S-309 | Profile & addresses | `/[tenant]/profile` | CUS-010 | ⬜ |
-| S-310 | Rewards (points, progress, free delivery / free gift) | `/[tenant]/rewards` | CUS-014 | ⬜ |
+| S-300 | Splash + Continue with Facebook | `/[tenant]/login` | CUS-001 | ✅ |
+| S-301 | Location permission gate (+ denied state) | `/[tenant]/location` | CUS-002 | ✅ |
+| S-302 | Home (merchants) | `/[tenant]` | CUS-003 | ✅ |
+| S-303 | Merchant products | `/[tenant]/m/[merchantId]` | CUS-004 | ✅ |
+| S-304 | Cart | `/[tenant]/cart` | CUS-004 | ✅ |
+| S-305 | Checkout (+ coupon code, rewards, points) | `/[tenant]/checkout` | CUS-005, CUS-013, CUS-014 | ✅ |
+| S-306 | ID verification: ID type, ID photo, selfie holding ID (first order / re-submit) | `/[tenant]/checkout/verify-id` | CUS-006, CUS-012 | ✅ |
+| S-307 | Order status / tracking (incl. waiting-for-approval & rejected states) | `/[tenant]/orders/[id]` | CUS-007, CUS-008 | ✅ |
+| S-308 | My orders | `/[tenant]/orders` | CUS-009 | ✅ |
+| S-309 | Profile & addresses | `/[tenant]/profile` | CUS-010 | ✅ |
+| S-310 | Rewards (points, progress, free delivery / free gift) | `/[tenant]/rewards` | CUS-014 | ✅ |
 
 ## apps/platform (Platform Admin — ChowLane-branded, not a tenant PWA)
 | # | Screen | Route | Reqs | Status |
 |---|---|---|---|---|
-| S-500 | Login | `/login` | PLT-001 | ⬜ |
-| S-501 | Overview (all tenants stats) | `/` | PLT-002 | ⬜ |
-| S-502 | Tenants list | `/tenants` | PLT-003 | ⬜ |
-| S-503 | Tenant detail — overview stats + status (suspend / reactivate) | `/tenants/[id]` | PLT-004, PLT-009 | ⬜ |
-| S-504 | Tenant — riders | `/tenants/[id]/riders` | PLT-005 | ⬜ |
-| S-505 | Tenant — orders (+ order detail) | `/tenants/[id]/orders` | PLT-006 | ⬜ |
-| S-506 | Tenant — customers | `/tenants/[id]/customers` | PLT-006 | ⬜ |
-| S-507 | Tenant — merchants & products | `/tenants/[id]/merchants` | PLT-006 | ⬜ |
-| S-508 | Tenant — admins & settings | `/tenants/[id]/settings` | PLT-006 | ⬜ |
-| S-509 | Tenant — billing config + statements | `/tenants/[id]/billing` | PLT-007, PLT-008 | ⬜ |
-| S-510 | Billing overview (all tenants) | `/billing` | PLT-010 | ⬜ |
+| S-500 | Login | `/login` | PLT-001 | ✅ |
+| S-501 | Overview (all tenants stats) | `/` | PLT-002 | ✅ |
+| S-502 | Tenants list | `/tenants` | PLT-003 | ✅ |
+| S-503 | Tenant detail — overview stats + status (suspend / reactivate) | `/tenants/[id]` | PLT-004, PLT-009 | ✅ |
+| S-504 | Tenant — riders | `/tenants/[id]/riders` | PLT-005 | ✅ |
+| S-505 | Tenant — orders (+ order detail) | `/tenants/[id]/orders` | PLT-006 | ✅ |
+| S-506 | Tenant — customers | `/tenants/[id]/customers` | PLT-006 | ✅ |
+| S-507 | Tenant — merchants & products | `/tenants/[id]/merchants` | PLT-006 | ✅ |
+| S-508 | Tenant — admins & settings | `/tenants/[id]/settings` | PLT-006 | ✅ |
+| S-509 | Tenant — billing config + statements | `/tenants/[id]/billing` | PLT-007, PLT-008 | ✅ |
+| S-510 | Billing overview (all tenants) | `/billing` | PLT-010 | ✅ |
 
-**Progress: 33 / 65 screens** (landing 3 ✅ · shared PWA 3 ✅ · console 30 (27 ✅) · rider 8 · customer 11 · platform 11)
+**Progress: 63 / 65 screens** (landing 3 ✅ · shared PWA 3 ✅ · console 30 (28 ✅ — S-120, S-123 open) · rider 8 ✅ · customer 11 ✅ · platform 11 ✅)

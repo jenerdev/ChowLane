@@ -1,12 +1,12 @@
 import { Construction } from "lucide-react";
 import { EmptyState } from "@chowlane/ui";
 
-export default function ComingSoon() {
+export default function NotFoundHere() {
   return (
     <EmptyState
       icon={<Construction />}
-      title="Coming soon"
-      description="Planned in Milestone 1.7 (see docs/SCREENS.md)."
+      title="Page not found"
+      description="Use the menu to go to Overview, Tenants or Billing."
     />
   );
 }

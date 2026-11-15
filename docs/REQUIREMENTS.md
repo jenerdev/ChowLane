@@ -79,55 +79,55 @@
 
 | ID | Requirement | Src | UI | BE |
 |---|---|---|---|---|
-| RID-001 | Rider login (account created by Owner/Admin) | P | ⬜ | ⬜ |
-| RID-002 | **Time in / time out** | U | ⬜ | ⬜ |
-| RID-003 | Only online (timed-in) riders receive orders | U | ⬜ | ⬜ |
-| RID-004 | **Incoming order offer** (auto or admin-assigned): details + countdown → **Accept** / **Reject (reason)** | U | ⬜ | ⬜ |
-| RID-005 | Delivery steps: Going to merchant → Picked up → Delivered | P | ⬜ | ⬜ |
-| RID-006 | Map + "open in navigation" link; call customer | P | ⬜ | ⬜ |
-| RID-007 | Proof of delivery (photo and/or note) | P | ⬜ | ⬜ |
-| RID-008 | Shift history & earnings (by pay mode) | P | ⬜ | ⬜ |
-| RID-015 | Order shows discounts (amount to collect = discounted total) and any **free gift** item to buy | P | ⬜ | ⬜ |
-| RID-014 | **Time out cash summary**: collected, paid at stores, amount to remit; remittance status per shift | U | ⬜ | ⬜ |
-| RID-009 | Profile | P | ⬜ | ⬜ |
-| RID-011 | Order card shows **"Cash needed at store ₱X"** before accepting | P | ⬜ | ⬜ |
-| RID-012 | At store: order at counter → record **amount paid** + **receipt photo** → Picked up | U | ⬜ | ⬜ |
-| RID-013 | Mark items unavailable at store → total recalculated | P | ⬜ | ⬜ |
-| RID-010 | Show amount to collect (+ change needed); confirm **"Cash collected"** before Delivered | P | ⬜ | ⬜ |
+| RID-001 | Rider login (account created by Owner/Admin) | P | ✅ | ⬜ |
+| RID-002 | **Time in / time out** | U | ✅ | ⬜ |
+| RID-003 | Only online (timed-in) riders receive orders | U | ✅ | ⬜ |
+| RID-004 | **Incoming order offer** (auto or admin-assigned): details + countdown → **Accept** / **Reject (reason)** | U | ✅ | ⬜ |
+| RID-005 | Delivery steps: Going to merchant → Picked up → Delivered | P | ✅ | ⬜ |
+| RID-006 | Map + "open in navigation" link; call customer | P | ✅ | ⬜ |
+| RID-007 | Proof of delivery (photo and/or note) | P | ✅ | ⬜ |
+| RID-008 | Shift history & earnings (by pay mode) | P | ✅ | ⬜ |
+| RID-015 | Order shows discounts (amount to collect = discounted total) and any **free gift** item to buy | P | ✅ | ⬜ |
+| RID-014 | **Time out cash summary**: collected, paid at stores, amount to remit; remittance status per shift | U | ✅ | ⬜ |
+| RID-009 | Profile | P | ✅ | ⬜ |
+| RID-011 | Order card shows **"Cash needed at store ₱X"** before accepting | P | ✅ | ⬜ |
+| RID-012 | At store: order at counter → record **amount paid** + **receipt photo** → Picked up | U | ✅ | ⬜ |
+| RID-013 | Mark items unavailable at store → total recalculated | P | ✅ | ⬜ |
+| RID-010 | Show amount to collect (+ change needed); confirm **"Cash collected"** before Delivered | P | ✅ | ⬜ |
 
 ## CUS — Customer app (branded per tenant)
 
 | ID | Requirement | Src | UI | BE |
 |---|---|---|---|---|
-| CUS-001 | **Sign up / log in with Facebook** | U | ⬜ | ⬜ |
-| CUS-002 | **Location gate**: customer can only order if they allow current-location tracking | U | ⬜ | ⬜ |
-| CUS-003 | Branded home with merchants | P | ⬜ | ⬜ |
-| CUS-004 | Merchant page with products; cart (one merchant per cart) | P | ⬜ | ⬜ |
-| CUS-005 | Checkout: delivery location (current location pin), **barangay** (picked from list in PER_BARANGAY mode), notes, fee breakdown, **payment = Cash on Delivery** with optional "change for" amount | U | ⬜ | ⬜ |
-| CUS-006 | **First order requires ID**: pick ID type (valid PH IDs incl. school ID) + **photo of ID** + **selfie holding the ID** | U | ⬜ | ⬜ |
-| CUS-007 | "Waiting for approval" state for verification + order approval; rejection message | P | ⬜ | ⬜ |
-| CUS-008 | **Track order status** (timeline + rider on map) | U | ⬜ | ⬜ |
-| CUS-009 | Order history | P | ⬜ | ⬜ |
-| CUS-011 | Tracking shows updated total if rider marks items unavailable | P | ⬜ | ⬜ |
-| CUS-013 | Checkout: enter **coupon code** → validation message or discount line | U | ⬜ | ⬜ |
-| CUS-014 | **Rewards**: see points, progress to free delivery / free gift; use free-delivery reward, claim free gift, pay with points at checkout | U | ⬜ | ⬜ |
-| CUS-015 | Order details & tracking show discount lines and points earned | P | ⬜ | ⬜ |
-| CUS-012 | Rejected customer sees reason and can **re-submit a new ID** | U | ⬜ | ⬜ |
-| CUS-010 | Profile (name/photo from Facebook, phone, saved addresses) | P | ⬜ | ⬜ |
+| CUS-001 | **Sign up / log in with Facebook** | U | ✅ | ⬜ |
+| CUS-002 | **Location gate**: customer can only order if they allow current-location tracking | U | ✅ | ⬜ |
+| CUS-003 | Branded home with merchants | P | ✅ | ⬜ |
+| CUS-004 | Merchant page with products; cart (one merchant per cart) | P | ✅ | ⬜ |
+| CUS-005 | Checkout: delivery location (current location pin), **barangay** (picked from list in PER_BARANGAY mode), notes, fee breakdown, **payment = Cash on Delivery** with optional "change for" amount | U | ✅ | ⬜ |
+| CUS-006 | **First order requires ID**: pick ID type (valid PH IDs incl. school ID) + **photo of ID** + **selfie holding the ID** | U | ✅ | ⬜ |
+| CUS-007 | "Waiting for approval" state for verification + order approval; rejection message | P | ✅ | ⬜ |
+| CUS-008 | **Track order status** (timeline + rider on map) | U | ✅ | ⬜ |
+| CUS-009 | Order history | P | ✅ | ⬜ |
+| CUS-011 | Tracking shows updated total if rider marks items unavailable | P | ✅ | ⬜ |
+| CUS-013 | Checkout: enter **coupon code** → validation message or discount line | U | ✅ | ⬜ |
+| CUS-014 | **Rewards**: see points, progress to free delivery / free gift; use free-delivery reward, claim free gift, pay with points at checkout | U | ✅ | ⬜ |
+| CUS-015 | Order details & tracking show discount lines and points earned | P | ✅ | ⬜ |
+| CUS-012 | Rejected customer sees reason and can **re-submit a new ID** | U | ✅ | ⬜ |
+| CUS-010 | Profile (name/photo from Facebook, phone, saved addresses) | P | ✅ | ⬜ |
 
 ## PLT — Platform Admin console (ChowLane owner)
 
 | ID | Requirement | Src | UI | BE |
 |---|---|---|---|---|
-| PLT-001 | Platform Admin login | P | ⬜ | ⬜ |
-| PLT-002 | Overview: stats across all tenants (tenants active/suspended, orders today/month, delivered, riders online, billing due) | U | ⬜ | ⬜ |
-| PLT-003 | Tenants list: name, slug, status, billing model, orders this month, riders, created date; search & filter | U | ⬜ | ⬜ |
-| PLT-004 | Tenant detail: stats (orders, delivered, cancelled, revenue from delivery fees, active customers, riders online) | U | ⬜ | ⬜ |
-| PLT-005 | Tenant **riders**: list, on-shift status, deliveries, shifts (read-only) | U | ⬜ | ⬜ |
-| PLT-006 | Tenant **records** (read-only): orders + detail, customers (+ verification), merchants & products, admins & roles, settings | U | ⬜ | ⬜ |
-| PLT-007 | **Billing config per tenant**: FREE / MONTHLY / PER_ORDER / MONTHLY_PLUS_PER_ORDER, amounts, trial end date | U | ⬜ | ⬜ |
-| PLT-008 | Monthly billing statements per tenant (computed amount); mark PAID with note | P | ⬜ | ⬜ |
-| PLT-009 | Suspend / reactivate a tenant (reason required) | P | ⬜ | ⬜ |
-| PLT-010 | Billing overview: all tenants' amounts due / paid this month | P | ⬜ | ⬜ |
+| PLT-001 | Platform Admin login | P | ✅ | ⬜ |
+| PLT-002 | Overview: stats across all tenants (tenants active/suspended, orders today/month, delivered, riders online, billing due) | U | ✅ | ⬜ |
+| PLT-003 | Tenants list: name, slug, status, billing model, orders this month, riders, created date; search & filter | U | ✅ | ⬜ |
+| PLT-004 | Tenant detail: stats (orders, delivered, cancelled, revenue from delivery fees, active customers, riders online) | U | ✅ | ⬜ |
+| PLT-005 | Tenant **riders**: list, on-shift status, deliveries, shifts (read-only) | U | ✅ | ⬜ |
+| PLT-006 | Tenant **records** (read-only): orders + detail, customers (+ verification), merchants & products, admins & roles, settings | U | ✅ | ⬜ |
+| PLT-007 | **Billing config per tenant**: FREE / MONTHLY / PER_ORDER / MONTHLY_PLUS_PER_ORDER, amounts, trial end date | U | ✅ | ⬜ |
+| PLT-008 | Monthly billing statements per tenant (computed amount); mark PAID with note | P | ✅ | ⬜ |
+| PLT-009 | Suspend / reactivate a tenant (reason required) | P | ✅ | ⬜ |
+| PLT-010 | Billing overview: all tenants' amounts due / paid this month | P | ✅ | ⬜ |
 
 **Totals:** 89 requirements (FND 13 · LND 4 · OWN 19 · ADM 13 · RID 15 · CUS 15 · PLT 10) — 88 have a Phase 1 UI part (FND-013 is backend only)
