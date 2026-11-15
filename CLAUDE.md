@@ -32,9 +32,10 @@ Docs are the source of truth. Update them **in the same session** as the code ch
 
 ## Rules
 
-- **Phase 1 is UI ONLY.** No Supabase, no real API, no real auth. Use typed mock data from
-  `packages/mocks` and client-side state. Every mock must match `docs/DATA-MODEL.md` so Phase 2 can
-  swap mocks for Supabase queries without rewriting screens.
+- **Phase 1 (UI prototype) is signed off.** Phase 2 follows `docs/PHASE-2-PLAN.md`: Supabase via a new
+  `packages/db`, RLS on every tenant table, multi-row changes as Postgres functions, `packages/lib` stays the
+  source of business rules. `DATA-MODEL.md` is frozen at v1 — schema changes need a decision first.
+  Until a screen is migrated it keeps using `packages/mocks`.
 - **UI style: simple, minimalist, modern — follow `docs/DESIGN.md`** for every screen in every app. Use the
   `packages/ui` components and tokens; don't invent colors, shadows or font weights per screen.
 - **Mobile-first web design** for every app (including the Owner/Admin console). Design at ~375px
@@ -75,3 +76,4 @@ Docs are the source of truth. Update them **in the same session** as the code ch
 | `docs/DECISIONS.md` | Decision log + open questions |
 | `docs/DESIGN.md` | Design system: principles, tokens, components (minimalist) |
 | `docs/WALKTHROUGH.md` | Phase 1 walkthrough checklist + sign-off (demo logins, URLs) |
+| `docs/PHASE-2-PLAN.md` | Phase 2 (Supabase) plan: architecture, schema, RLS, auth, milestones |

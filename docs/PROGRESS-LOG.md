@@ -12,6 +12,27 @@
 
 ---
 
+## 2026-11-15 — Phase 1 signed off · Phase 2 planned
+
+**Done:** User skipped the rest of the walkthrough → Phase 1 signed off (D-053): WALKTHROUGH.md sign-off filled,
+F-06…F-15 marked skipped, F-10 moved to Phase 2.8. DATA-MODEL frozen as v1 (assignment attempt reject reasons/note
+added to match `packages/types`). Wrote `docs/PHASE-2-PLAN.md` (D-054) and roadmap milestones 2.1…2.8; new open
+questions Q-30…Q-35.
+
+**Stopped at / Next:** Waiting for the user to create the Supabase project, Meta app (and optionally Vercel) and to
+answer Q-30…Q-35. Then Milestone 2.1 Setup.
+
+---
+
+## 2026-11-15 — Walkthrough: F-01 … F-05 signed off
+
+**Done:** User walked F-01 (owner signup), F-01b (login), F-02 (owner setup), F-03 (admins & roles), F-03b (merchants &
+menu), F-04 (add rider), F-05 (rider shift) — no changes requested. Marked ✅ in WALKTHROUGH.md and USER-FLOWS.md.
+
+**Stopped at / Next:** Continue the walkthrough from F-06 (first-time customer order). User asked how a new customer verifies: ID + selfie step appears at checkout on the first order (S-306).
+
+---
+
 ## 2026-11-15 — Milestone 1.8 build (walkthrough pending)
 
 **Done:** S-120 rider pay report + S-123 tenant plan & billing (all 65 screens / 88 UI requirements now built);

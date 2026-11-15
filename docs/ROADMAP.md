@@ -13,7 +13,7 @@
 
 ---
 
-## Phase 1 — UI Prototype (no Supabase, no API)  🟨
+## Phase 1 — UI Prototype (no Supabase, no API)  ✅ signed off 2026-11-15
 Goal: **every screen built mobile-first with mock data, every flow clickable**, so flows are finalized
 before the backend is designed.
 
@@ -26,20 +26,25 @@ before the backend is designed.
 | 1.5 Customer App | Facebook login (mock), location gate, browse merchants/products, cart, checkout, first-order ID upload, pending approval state, order tracking, history, **coupon code**, **rewards** (points, free delivery, free gift) | ✅ |
 | 1.6 Rider App | Login, time in / out, available orders + accept, delivery steps, proof of delivery, shift & earnings history | ✅ |
 | 1.7 Platform Admin Console | Platform login, overview stats across tenants, tenants list, tenant detail (stats, riders, orders, customers, merchants, admins — read-only), per-tenant billing config + monthly statements, suspend / reactivate | ✅ |
-| 1.8 Walkthrough & Sign-off | Walk every flow in USER-FLOWS.md, **install each tenant app on a real Android + iPhone**, fix gaps, user sign-off, freeze DATA-MODEL v1 | 🟨 build done — waiting for the user walkthrough (docs/WALKTHROUGH.md) |
+| 1.8 Walkthrough & Sign-off | Last screens (S-120, S-123), shared clean-ups, phone preview, walkthrough (F-01…F-05 walked, rest skipped), sign-off, DATA-MODEL v1 frozen | ✅ |
 
 **Exit:** user signs off all flows; DATA-MODEL.md frozen as v1.
 
 ---
 
-## Phase 2 — Supabase Backend  ⬜
-- Supabase project, schema from DATA-MODEL v1, RLS per tenant + role
-- Auth: email for Owner/Admin/Rider, **Facebook OAuth** for Customer
-- Storage for customer ID images (private)
-- Replace mocks with Supabase queries, screen by screen
-- Permissions enforced server-side (RLS / functions), not only in UI
+## Phase 2 — Supabase Backend  ⬜ (plan: docs/PHASE-2-PLAN.md)
+| Milestone | Scope | Status |
+|---|---|---|
+| 2.1 Setup | Supabase CLI, local DB, `packages/db`, env, generated types, CI | ⬜ |
+| 2.2 Schema, RLS & seed | migrations, RLS + helper functions, seed from mocks, RLS tests | ⬜ |
+| 2.3 Auth | owner signup, staff invites, platform admin, rider login, customer Facebook | ⬜ |
+| 2.4 Console on real data | settings, catalog, team, coupons, loyalty, customers, riders | ⬜ |
+| 2.5 Ordering | catalog, checkout → `place_order`, ID upload & verification, tracking | ⬜ |
+| 2.6 Dispatch & delivery | approve → offer → accept → deliver, expiry job, realtime, cash | ⬜ |
+| 2.7 Platform & billing | platform admin, suspend, billing config, statement job | ⬜ |
+| 2.8 Deploy & exit | Vercel HTTPS previews, PWA install (F-10), remove prototype helpers, e2e tests | ⬜ |
 
-**Exit:** all Phase 1 flows work against Supabase with real logins.
+**Exit:** all flows work on Supabase with real logins and shared data across the 5 apps; RLS tested.
 
 ## Phase 3 — Live Operations  ⬜
 - Realtime order status + rider live location (Supabase Realtime)

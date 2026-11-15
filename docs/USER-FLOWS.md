@@ -3,7 +3,7 @@
 > Last updated: 2026-11-15
 > Flow status: ⬜ Draft · 🟨 Clickable in UI · ✅ Signed off by user
 
-## F-01 Owner discovers ChowLane & signs up  🟨 (clickable)
+## F-01 Owner discovers ChowLane & signs up  ✅ Signed off 2026-11-15
 1. Visitor opens the landing page → hero **brand builder**: types their business name, picks a color → phone preview of
    *their* customer app re-brands live → **Start "<name>" for free** (name + color carried into signup)
 2. Signup step 1 — **Your account**: full name, email, PH mobile, password (show/hide)
@@ -15,13 +15,13 @@
 8. Done screen: next steps (restaurant & menu, rider, fees & rider pay, share link) → **Open my console** → console login
    (prototype: opens the FastBite demo console — nothing is saved, D-038)
 
-## F-01b Owner / Admin logs in  🟨 (clickable)
+## F-01b Owner / Admin logs in  ✅ Signed off 2026-11-15
 1. Console link `…/<slug>` while signed out → redirected to `/<slug>/login` (tenant-branded)
 2. Email + password → **Log in** → console home. Errors: unknown email, invite not accepted, account turned off
 3. From the ChowLane site: **Log in** → enter business link → taken to that console's login
 4. **Log out** (sidebar / top bar) → back to login
 
-## F-02 Owner initial setup  🟨 (clickable)
+## F-02 Owner initial setup  ✅ Signed off 2026-11-15
 Checklist on console home; each item links to its screen:
 1. Business & branding ✔ (from signup)
 2. Service area — set center + radius on map
@@ -33,22 +33,22 @@ Checklist on console home; each item links to its screen:
 8. (Optional) **Admins** — create a role & invite an admin (F-03)
 9. Share customer app link `…/fastbite`
 
-## F-03 Owner manages admins & permissions  🟨 (clickable)
+## F-03 Owner manages admins & permissions  ✅ Signed off 2026-11-15
 1. Console → Settings → **Roles & permissions** → **New role** "Dispatcher" → tick permissions (e.g. `orders.view`, `orders.assign`, `riders.view`)
 2. Settings → **Admins** → **Invite** (name, email, role) → status *Invited* (resend / remove possible)
 3. Admin logs in → sees only menus allowed by their role
 4. Owner can change role, deactivate or delete the admin anytime
 
-## F-03b Owner or Admin sets up a merchant  🟨 (clickable)  *(no merchant portal — `merchants.manage`, `products.manage`)*
+## F-03b Owner or Admin sets up a merchant  ✅ Signed off 2026-11-15  *(no merchant portal — `merchants.manage`, `products.manage`)*
 1. Console → Merchants → **Add merchant**: name, category, address + map pin, photo, contact
 2. Merchant → Products → **Add product**: name, category, price, photo, description
 3. Toggle merchant **Open / Closed** and product **Available / Sold out** as needed
 
-## F-04 Add a rider  🟨 (clickable)  *(Owner or Admin with `riders.manage`)*
+## F-04 Add a rider  ✅ Signed off 2026-11-15  *(Owner or Admin with `riders.manage`)*
 1. Riders → **Add rider**: name, phone, vehicle, plate, (optional) pay override
 2. Rider gets login (mock credentials in Phase 1)
 
-## F-05 Rider shift  🟨 (clickable)
+## F-05 Rider shift  ✅ Signed off 2026-11-15
 1. Rider opens `rider/<tenant>` → logs in → (first time) prompted to **install "<Business> Rider"** (F-10) → home shows **Time in** button
 2. **Time in** → status "On shift" → Available orders list appears
 3. Receives an **order offer** (auto-assigned, or assigned by admin): merchant, drop-off area, distance, earning, **cash needed at store ₱X**, 60s countdown → **Accept** → `ASSIGNED` · or **Reject** (reason) → order goes to next rider (AUTO) or back to admin (MANUAL)

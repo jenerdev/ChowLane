@@ -1,6 +1,7 @@
 # ChowLane — Data Model
 
-> Last updated: 2026-11-15 · Version **v0.4 (draft)** — frozen as v1 at end of Phase 1.
+> Last updated: 2026-11-15 · Version **v1 — FROZEN** at Phase 1 sign-off (D-053). Phase 2 builds the database from this.
+> Changes after the freeze need a decision in DECISIONS.md and a note here. `packages/types` must stay in sync.
 > Phase 1: TypeScript types in `packages/types` + mocks in `packages/mocks`.
 > Phase 2: Supabase tables (snake_case), every tenant table has `tenant_id` + RLS.
 > Money = **integer centavos** (PHP; ₱1.00 = 100). Phones = E.164 `+639XXXXXXXXX`. Timestamps = ISO-8601 UTC. Rules for fields → BUSINESS-LOGIC.md.
@@ -175,7 +176,9 @@ OrderItem  { productId, name, unitPrice, storeUnitPrice?, qty, lineTotal,
              isUnavailable?: boolean,   // marked by rider at store
              isFreeGift?: boolean }     // loyalty gift, unitPrice 0
 AssignmentAttempt { riderId, by: 'AUTO' | 'ADMIN', staffId?, offeredAt, respondedAt?,
-                    response: 'ACCEPTED' | 'REJECTED' | 'TIMED_OUT' | 'WITHDRAWN', rejectReason? }
+                    response?: 'ACCEPTED' | 'REJECTED' | 'TIMED_OUT' | 'WITHDRAWN',   // empty while waiting
+                    rejectReason?: 'NOT_ENOUGH_CASH' | 'TOO_FAR' | 'VEHICLE_PROBLEM' | 'NO_RESPONSE' | 'OTHER',
+                    rejectNote? }
 OrderEvent { status, actorType: 'CUSTOMER' | 'OWNER' | 'ADMIN' | 'RIDER' | 'SYSTEM', actorId?, at, note? }
 
 LatLng { lat, lng }

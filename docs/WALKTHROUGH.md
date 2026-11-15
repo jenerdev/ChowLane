@@ -2,7 +2,7 @@
 
 > Milestone 1.8. Walk each flow, tick it, note anything to change. When every flow is ✅ (or its changes are
 > logged), Phase 1 is signed off and `DATA-MODEL.md` is frozen as v1 for Phase 2 (Supabase).
-> Last updated: 2026-11-15
+> Last updated: 2026-11-15 · Progress: F-01 … F-05 ✅ · F-06 … F-15 ⏭ skipped · **Phase 1 signed off**
 
 ## Before you start
 
@@ -30,23 +30,23 @@ Mark each: ✅ OK · ✏️ change needed (write it in Notes) · ⏭ skip for no
 
 | # | Flow | Where | What to try | Result | Notes |
 |---|---|---|---|---|---|
-| F-01 | Owner signs up | Landing | Type a name + pick a color in the hero → Start → 6 signup steps → done screen | | |
-| F-01b | Owner / Admin logs in | Landing `/login`, Console | Find console by link `fastbite` → log in → log out | | |
-| F-02 | Owner setup | Console → Home, Settings | Setup checklist · business & branding · delivery area · delivery fee (try the calculator) · rider income | | |
-| F-03 | Admins & roles | Console → Settings → Admins / Roles | Invite an admin · change role · edit the Dispatcher role · log in as Jun to see the limited menu | | |
-| F-03b | Merchants & menu | Console → Merchants | Add a merchant with a map pin · add menu items · mark sold out | | |
-| F-04 | Add a rider | Console → Riders → Add | Vehicle, plate, own pay rate | | |
-| F-05 | Rider shift | Rider app | Log in · Time in · Simulate a new offer · accept · store step (mark an item unavailable, receipt photo) · deliver (cash collected, proof) · Time out cash summary | | |
-| F-06 | First-time customer orders | Customer app | "Someone new" · allow location · order · ID + selfie · see "waiting for verification" | | |
-| F-07 | Verified customer orders | Customer app | As Bea or Andrea · coupon `WELCOME20` · pay with points · place order · track · cancel | | |
-| F-08 | Admin daily operations | Console | Verify Miguel's ID → approve his order · approve FB-10232 (auto-assign) · simulate decline → assign · dispatch AUTO/MANUAL · record cash (try a short amount) | | |
-| F-09 | Exceptions | All | Reject an order · reject an ID · rider declines · item unavailable · time out blocked with an active order · location blocked | | |
-| F-10 | Install as an app | Phone (see below) | Install customer, rider and console apps on Android + iPhone | | needs HTTPS |
-| F-11 | Platform monitors tenants | Platform | Overview · tenants · tenant tabs · suspend Pasabuy / reactivate | | |
-| F-12 | Platform billing | Platform → Tenant → Billing, Billing | Change a plan · create this month's statement · mark paid / waive | | |
-| F-13 | Coupons | Console → Coupons | Create a coupon · try an invalid code · turn one off | | |
-| F-14 | Loyalty setup | Console → Settings → Loyalty | Turn rules on/off · free gift linked to a menu item | | |
-| F-15 | Customer rewards | Customer → Rewards, checkout | See progress · use free delivery / free gift / points | | |
+| F-01 | Owner signs up | Landing | Type a name + pick a color in the hero → Start → 6 signup steps → done screen | ✅ | |
+| F-01b | Owner / Admin logs in | Landing `/login`, Console | Find console by link `fastbite` → log in → log out | ✅ | |
+| F-02 | Owner setup | Console → Home, Settings | Setup checklist · business & branding · delivery area · delivery fee (try the calculator) · rider income | ✅ | |
+| F-03 | Admins & roles | Console → Settings → Admins / Roles | Invite an admin · change role · edit the Dispatcher role · log in as Jun to see the limited menu | ✅ | |
+| F-03b | Merchants & menu | Console → Merchants | Add a merchant with a map pin · add menu items · mark sold out | ✅ | |
+| F-04 | Add a rider | Console → Riders → Add | Vehicle, plate, own pay rate | ✅ | |
+| F-05 | Rider shift | Rider app | Log in · Time in · Simulate a new offer · accept · store step (mark an item unavailable, receipt photo) · deliver (cash collected, proof) · Time out cash summary | ✅ | |
+| F-06 | First-time customer orders | Customer app | "Someone new" · allow location · order · ID + selfie · see "waiting for verification" | ⏭ | |
+| F-07 | Verified customer orders | Customer app | As Bea or Andrea · coupon `WELCOME20` · pay with points · place order · track · cancel | ⏭ | |
+| F-08 | Admin daily operations | Console | Verify Miguel's ID → approve his order · approve FB-10232 (auto-assign) · simulate decline → assign · dispatch AUTO/MANUAL · record cash (try a short amount) | ⏭ | |
+| F-09 | Exceptions | All | Reject an order · reject an ID · rider declines · item unavailable · time out blocked with an active order · location blocked | ⏭ | |
+| F-10 | Install as an app | Phone (see below) | Install customer, rider and console apps on Android + iPhone | ⏭ | needs HTTPS — done in Phase 2.8 |
+| F-11 | Platform monitors tenants | Platform | Overview · tenants · tenant tabs · suspend Pasabuy / reactivate | ⏭ | |
+| F-12 | Platform billing | Platform → Tenant → Billing, Billing | Change a plan · create this month's statement · mark paid / waive | ⏭ | |
+| F-13 | Coupons | Console → Coupons | Create a coupon · try an invalid code · turn one off | ⏭ | |
+| F-14 | Loyalty setup | Console → Settings → Loyalty | Turn rules on/off · free gift linked to a menu item | ⏭ | |
+| F-15 | Customer rewards | Customer → Rewards, checkout | See progress · use free delivery / free gift / points | ⏭ | |
 
 Also check: Console → Riders → **Pay** (rider pay report) and Settings → **Plan & billing** (owner only).
 
@@ -65,7 +65,7 @@ full-screen, works offline (shows the offline page).
 
 | | |
 |---|---|
-| Flows OK | ☐ all ✅ or changes logged |
-| Changes requested | (list → added to REQUIREMENTS / BUSINESS-LOGIC and built) |
-| Signed off by / date | |
-| DATA-MODEL frozen as v1 | ☐ |
+| Flows OK | ☑ F-01 … F-05 walked ✅ (no changes); F-06 … F-15 skipped by the user — clickable and browser-tested by Claude during the build; F-10 moves to Phase 2.8 |
+| Changes requested | None |
+| Signed off by / date | Owner (project lead) · 2026-11-15 |
+| DATA-MODEL frozen as v1 | ☑ 2026-11-15 |

@@ -58,11 +58,13 @@
 | D-050 | 2026-11-15 | Phone-width review via a dev **phone preview** page (landing `/preview`, iframes at 360/390/430 px) because the review browser can't be resized; Next.js dev badge turned off in all apps | ✅ Done |
 | D-051 | 2026-11-15 | Shared helpers consolidated: `useNow`, `useTicker`, `PhotoInput`, `photoToDataUrl`, `ReasonSheet` in `@chowlane/ui`; `newId` in `@chowlane/mocks/store`; `useStoreHydrated` in `@chowlane/mocks/react`; `couponRelease` + `promoRefunds` in lib (console & rider no longer copy the give-back logic) | ✅ Done |
 | D-052 | 2026-11-15 | Installing the PWAs on real phones (F-10) needs HTTPS → a preview deployment (e.g. Vercel) or a tunnel; scheduled as part of the walkthrough | 🟨 Proposed |
+| D-053 | 2026-11-15 | **Phase 1 signed off.** User walked F-01…F-05 (no changes) and chose to skip F-06…F-15 (clickable, browser-tested during the build). F-10 (phone install) moves to Phase 2.8. **DATA-MODEL frozen as v1.** | ✅ Confirmed |
+| D-054 | 2026-11-15 | **Phase 2 plan** (docs/PHASE-2-PLAN.md): Supabase (Singapore), new `packages/db`, multi-row actions as Postgres functions, RLS with `has_perm()`, `packages/lib` stays the rule source, 8 milestones 2.1…2.8 | 🟨 Proposed |
 | D-030 | 2026-11-15 | **Cash remittance**: at time out the rider remits net cash (collected from customers − paid at stores); Admin records amount received; business absorbs store price differences | ✅ Confirmed |
 
 ## Open questions
 
-> All questions answered as of 2026-11-15. Add new ones below as they come up.
+> Q-01…Q-29 answered. Q-30…Q-35 are new for Phase 2 (proposed defaults in PHASE-2-PLAN.md).
 
 | # | Question | Affects | Answer |
 |---|---|---|---|
@@ -95,3 +97,9 @@
 | Q-28 | Free gift: is it tied to one menu item/merchant (claimable only on orders from that merchant), or a generic gift the rider buys at any store? | BL-14.3b | ✅ **Optional link to a menu item**; if linked, claimable only on that merchant's orders (D-037) |
 | Q-29 | Do loyalty points expire? | BL-14.9 | ✅ **No expiry** in MVP (D-037) |
 | Q-19 | Rider location only updates while the rider app is open (PWA limit). OK, or is background tracking a must (would need a native rider app later)? | D-016, BL-9.5 | ✅ Accepted — location only while app open (D-016) |
+| Q-30 | Rider login: phone + one-time SMS code, or phone + password set by the admin? | Auth | Proposed: password set by admin for MVP (no SMS cost); OTP later |
+| Q-31 | Customer account: separate per tenant, or one account across tenants? | Data, auth | Proposed: one Facebook login, separate customer profile per tenant |
+| Q-32 | SMS provider (rider OTP, notifications)? | Phase 3 | Proposed: decide in Phase 3 (e.g. Semaphore) |
+| Q-33 | Hosting: one domain with paths or subdomains per app? | Deploy | Proposed: subdomains for MVP; custom tenant domains in Phase 4 |
+| Q-34 | Supabase plan & region? | Infra | Proposed: free tier while building, Singapore region; Pro before launch |
+| Q-35 | How long to keep customer ID photos (Data Privacy Act)? | Privacy | Proposed: delete images 90 days after review; keep the record |
