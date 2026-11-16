@@ -30,10 +30,12 @@
 | lucide-react | 1.73.0 | Icons (stroke 1.75) |
 | Font | **Geist** via `next/font/google` (`--font-geist`) in every app | D-041, docs/DESIGN.md |
 | Serwist | `@serwist/turbopack` + `serwist` 9.5.13, `esbuild` 0.28.2 | PWA service worker (D-035) |
-| Supabase CLI | `supabase` 3.1.0 (root dev dependency) | `pnpm db:start` / `db:stop` / `db:status` / `db:reset` / `db:env` / `db:types` — D-056 |
+| Supabase CLI | `supabase` 3.1.0 (root dev dependency) | `pnpm db:start` / `db:stop` / `db:status` / `db:reset` / `db:env` / `db:types` / `db:seed:gen` / `db:test:gen` / `db:test` — D-056, D-058 |
 | Supabase JS | `@supabase/supabase-js` 2.119.0, `@supabase/ssr` 0.12.7 | In `@chowlane/db` only |
 | Docker Desktop | dev machine | Runs the local Supabase stack |
-| GitHub Actions | `.github/workflows/ci.yml` | format → lint → typecheck → test → build on push / PR |
+| tsx | 4.23.15 (`@chowlane/db` dev) | Runs the seed / RLS-test generators (`pnpm db:seed:gen`, `pnpm db:test:gen`) |
+| pgTAP | bundled with Supabase | RLS tests: `pnpm db:test` (`supabase test db`) — D-058 |
+| GitHub Actions | `.github/workflows/ci.yml` | job `check`: format → lint → typecheck → test → build; job `database`: Postgres + RLS tests + generated-files check |
 
 pnpm 12 runs dependency install scripts only when allowed: see `allowBuilds` in `pnpm-workspace.yaml`.
 
@@ -60,7 +62,7 @@ chowlane/
     lib/          → shared logic: delivery-fee calculator, rider-pay calculator,
                     order status machine, permission checks
     config/       → shared tsconfig, eslint, tailwind preset
-  supabase/       → config.toml, migrations, seed (Phase 2)
+  supabase/       → config.toml, migrations/, seed.sql (generated), tests/database/ (pgTAP, generated)
   scripts/        → db-env.mjs (writes apps/*/.env.local)
   turbo.json
   pnpm-workspace.yaml
@@ -138,6 +140,12 @@ order in each status) so every screen can be reviewed. Live cross-app sync comes
 3. `pnpm dev` → `GET /api/health` on ports 3001–3004 returns `{ ok: true }` when the app reaches Supabase.
 4. After a migration: `pnpm db:reset` (re-applies migrations + seed) and `pnpm db:types` (regenerates
    `packages/db/src/database.types.ts`; commit it).
+5. Demo data: `pnpm db:seed:gen` rebuilds `supabase/seed.sql` from `@chowlane/mocks`. Local demo logins (password
+   `demo1234`): staff / platform admin by email (e.g. `marco@fastbite.ph`, `owner@chowlane.app`), riders by phone,
+   customers as `<facebookId>@demo.chowlane.local`. Studio: http://127.0.0.1:55323.
+6. RLS tests: `pnpm db:test:gen` (after changing policies or the matrix in `packages/db/scripts/gen-rls-tests.ts`),
+   then `pnpm db:test`.
+7. New tables: enable RLS in the same migration — Supabase grants new tables to `anon` / `authenticated` by default.
 
 Apps import `createServerSupabase()` from `@chowlane/db/server` (Server Components / Actions / Route Handlers, user
 session → RLS) and `createBrowserSupabase()` from `@chowlane/db/browser` (Client Components). Env values are read

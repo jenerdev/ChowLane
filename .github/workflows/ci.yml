@@ -26,3 +26,25 @@ jobs:
       - run: pnpm typecheck
       - run: pnpm test
       - run: pnpm build
+
+  database:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      # Postgres only (migrations + seed.sql); no Auth/Storage/Studio containers needed for the RLS tests.
+      - run: pnpm exec supabase db start
+      - name: RLS tests (pgTAP)
+        run: pnpm db:test
+      - name: Generated files are up to date (seed, RLS tests, types)
+        run: |
+          pnpm db:seed:gen
+          pnpm db:test:gen
+          pnpm db:types
+          git diff --exit-code supabase/seed.sql supabase/tests packages/db/src/database.types.ts

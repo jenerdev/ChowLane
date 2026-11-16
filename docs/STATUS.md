@@ -6,36 +6,44 @@
 **Phase 2 — Supabase backend** 🟨 (plan: `docs/PHASE-2-PLAN.md`) · Phase 1 UI prototype ✅ signed off 2026-11-15
 
 ## Current state
-- **Milestone 2.1 Setup ✅ (local, 2026-11-17)** — D-056:
-  - Supabase CLI 3.1.0 as a root dev dependency; `pnpm db:start | db:stop | db:status | db:reset | db:env | db:types`.
-  - `supabase/config.toml` (project id `chowlane`), local stack in Docker on ports **553xx** (API `127.0.0.1:55321`,
-    Studio `55323`) — the default 543xx ports are used by another local project (`chatbot-poc`).
-  - `packages/db` (`@chowlane/db`): env check, `createServerSupabase` / `createBrowserSupabase` (`@supabase/ssr`),
-    generated `Database` types, health check + 5 tests.
-  - `/api/health` in console, rider, customer, platform → `{ ok: true }` against local Supabase under `pnpm dev`.
-  - `pnpm db:env` writes each app's `.env.local`; `.env.example` at the root.
-  - GitHub Actions CI (`.github/workflows/ci.yml`): format, lint, typecheck, test, build. No git remote yet, so it
-    hasn't run on GitHub.
-- **Hosted project linked** (2026-11-17): Supabase project `ChowLane`, ref `ouoahwedxslvhnsegqqh`, Singapore
-  (`ap-southeast-1`); CLI logged in. Meta app created; **Facebook provider enabled** (verified: authorize → facebook.com dialog).
-- Q-30…Q-35 answered — Phase 2 defaults accepted (D-055). All open questions answered.
-- Screens still use `packages/mocks`; no tables yet (schema is 2.2).
+- **Milestone 2.2 Schema, RLS & seed ✅ (2026-11-17)** — D-057, D-058 · branch `phase-2`:
+  - 3 migrations in `supabase/migrations/`: schema (22 tables from DATA-MODEL v1, enums, JSONB rule validators,
+    composite tenant foreign keys), RLS (helpers in `private`, policies on every table, column grants), public views
+    (`tenants_public`, `tenant_settings_public`, `products_public`) + guards (settings permission per group, rider pay
+    override, coupon code immutability).
+  - Orders, shifts, ID reviews, coupon uses and loyalty have **no direct write access** — they wait for the server
+    functions in 2.3–2.7.
+  - `supabase/seed.sql` generated from `@chowlane/mocks` (`pnpm db:seed:gen`): 3 tenants, 13 orders, 22 local demo
+    logins (password `demo1234`).
+  - RLS tests (pgTAP, `pnpm db:test`): **269 pass** — 10 personas × 22 tables, views, 34 write checks. Proven to fail
+    when a policy leaks.
+  - `database.types.ts` regenerated (22 tables + 3 views); `schema-sync.test.ts` keeps DB enums = `packages/types`.
+  - CI job `database` (Postgres + RLS tests + generated-files check) — not run on GitHub yet (no remote).
+  - New rules from the build (confirmed by the user): BL-2.7 (settings permission groups), BL-2.8 (rider ↔ customer visibility only
+    while the order is live), BL-6.6 (rider phone unique per business), BL-7.11 (barangay once per price list).
+- **Milestone 2.1 Setup ✅** — D-056: Supabase CLI (`pnpm db:*`), local stack on ports **553xx** (API
+  `127.0.0.1:55321`, Studio `55323`; 543xx is used by another local project), `@chowlane/db` clients + env check,
+  `/api/health` in console/rider/customer/platform, `pnpm db:env`, CI.
+- **Hosted project**: Supabase `ChowLane` (ref `ouoahwedxslvhnsegqqh`, Singapore) linked; Facebook provider enabled.
+  Migrations are **not pushed** to the hosted project yet.
+- All open questions answered (Q-30…Q-35 → D-055).
+- Screens still use `packages/mocks`.
 
 ## Next up (in order)
-1. Claude: **Milestone 2.2 Schema, RLS & seed** — migrations for all DATA-MODEL v1 tables, RLS helper functions +
-   policies, `seed.sql` generated from `@chowlane/mocks`, RLS tests (one per role × table) on the local stack.
+1. Claude: **Milestone 2.3 Auth** (in progress) — `create_tenant` (owner signup), staff login + invites, platform admin login,
+   rider phone + password login (Q-30), customer Facebook login + per-tenant customer row; replace mock sessions.
 2. **You** (by 2.8): connect Vercel to the repo (needs a GitHub remote).
 
 ## Blockers
-- None for 2.2 (runs on the local Docker stack). Hosted Supabase + Facebook provider are ready for 2.3.
+- None.
 
 ## Progress snapshot
 | Area | Done / Total |
 |---|---|
 | Phase 1 screens (SCREENS.md) | 65 / 65 ✅ |
 | Requirements — UI (REQUIREMENTS.md) | 88 / 88 ✅ |
-| Phase 2 milestones (ROADMAP.md) | 1 / 8 (2.1 ✅) |
-| Tests | 79 (lib 58 · mocks 16 · db 5) |
+| Phase 2 milestones (ROADMAP.md) | 2 / 8 (2.1 ✅ 2.2 ✅) |
+| Tests | 81 unit (lib 58 · mocks 16 · db 7) + 269 RLS (pgTAP) |
 | Flows signed off (USER-FLOWS.md) | 7 / 17 walked ✅ · 10 skipped (Phase 1 signed off) |
-| Decisions logged (DECISIONS.md) | 57 (D-000…D-056; D-011, D-039 superseded) |
+| Decisions logged (DECISIONS.md) | 59 (D-000…D-058; D-011, D-039 superseded) |
 | Open questions answered | 35 / 35 |

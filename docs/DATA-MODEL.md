@@ -183,3 +183,24 @@ OrderEvent { status, actorType: 'CUSTOMER' | 'OWNER' | 'ADMIN' | 'RIDER' | 'SYST
 
 LatLng { lat, lng }
 ```
+
+## Phase 2 — database mapping (D-057)
+
+Not a model change: how v1 is stored in Supabase (`supabase/migrations/`). Column names = snake_case of the fields.
+
+| Model | Table(s) / columns |
+|---|---|
+| `Tenant.pwaIcons`, rule objects (`deliveryFee`, `riderPay`, `loyalty`, `Rider.payOverride`, `Order.deliveryFeeSnapshot`) | JSONB, same camelCase keys as `packages/types`, checked by `is_valid_*` functions |
+| `LatLng` fields | `<field>_lat`, `<field>_lng` (e.g. `merchants.location_lat`, `tenant_settings.service_area_lat` + `service_area_radius_km`) |
+| `Customer.addresses` | `customer_addresses` |
+| `Customer.verification` / `verificationHistory` | `verifications` (latest = newest `submitted_at`) |
+| `Customer.loyalty` | `customers.loyalty_*` columns (rebuildable from `loyalty_transactions`) |
+| `Order.items` / `timeline` / `assignmentAttempts` | `order_items` (+ `line_no`), `order_events`, `assignment_attempts` |
+| `Order.pendingOffer` | `orders.offer_rider_id`, `offer_offered_at`, `offer_expires_at`, `offer_by`, `offer_staff_id` |
+| `Order.proofOfDelivery` | `orders.proof_photo_url`, `proof_note` |
+| `TenantBilling` | `tenant_billing` (one row per tenant) |
+| Logins | `auth_user_id` on `platform_admins`, `staff_users`, `riders`, `customers` (one customer row per tenant — Q-31) |
+
+Public read-only views: `tenants_public`, `tenant_settings_public` (no rider pay), `products_public` (no store price).
+Types: `packages/db/src/database.types.ts` (generated, `pnpm db:types`); `schema-sync.test.ts` checks the enums match
+`packages/types`.

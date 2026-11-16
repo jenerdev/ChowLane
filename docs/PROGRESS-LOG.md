@@ -12,6 +12,27 @@
 
 ---
 
+## 2026-11-17 — Milestone 2.2 Schema, RLS & seed ✅
+
+**Done:** Committed 2.1 on new branch `phase-2`. Three migrations: schema (22 tables from DATA-MODEL v1, Postgres
+enums, JSONB rule validators, composite tenant FKs, indexes), RLS (`private` helper functions, select policies per
+role/permission, direct-write policies only for CRUD tables of ACTIVE tenants, column grants), public views + guard
+triggers. Seed generator (`packages/db/scripts/gen-seed.ts`, tsx) → `supabase/seed.sql` incl. local demo logins;
+RLS test generator → `supabase/tests/database/rls.test.sql` (269 pgTAP tests). Regenerated types; enum sync test.
+CI `database` job.
+
+**Verified:** `pnpm db:reset` loads migrations + seed; demo login via local Auth works; `pnpm db:test` 269/269 pass;
+an injected leaky policy makes them fail (then restored); build ✅ lint ✅ typecheck ✅ tests ✅ (81) format ✅; seed
+regeneration is byte-identical.
+
+**Changed docs:** BUSINESS-LOGIC (BL-2.4 note, BL-2.7, BL-2.8, BL-6.6, BL-7.11), DECISIONS (D-057, D-058),
+DATA-MODEL (Phase 2 mapping section, no entity change), TECH-STACK (tsx, pgTAP, scripts, demo logins, CRLF → LF),
+ROADMAP (2.2 ✅), PHASE-2-PLAN, STATUS.
+
+**Stopped at / Next:** User approved BL-2.7, BL-2.8, BL-6.6, BL-7.11; committed on `phase-2`. Next: Milestone 2.3 Auth.
+
+---
+
 ## 2026-11-17 — Phase 2 started · Milestone 2.1 Setup ✅ (local)
 
 **Done:** User accepted the Phase 2 defaults for Q-30…Q-35 (D-055). Supabase CLI 3.1.0 added (root dev dependency,

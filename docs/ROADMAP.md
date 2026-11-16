@@ -36,7 +36,7 @@ before the backend is designed.
 | Milestone | Scope | Status |
 |---|---|---|
 | 2.1 Setup | Supabase CLI, local DB, `packages/db`, env, generated types, CI | ✅ 2026-11-17 |
-| 2.2 Schema, RLS & seed | migrations, RLS + helper functions, seed from mocks, RLS tests | ⬜ |
+| 2.2 Schema, RLS & seed | migrations, RLS + helper functions, seed from mocks, RLS tests | ✅ 2026-11-17 |
 | 2.3 Auth | owner signup, staff invites, platform admin, rider login, customer Facebook | ⬜ |
 | 2.4 Console on real data | settings, catalog, team, coupons, loyalty, customers, riders | ⬜ |
 | 2.5 Ordering | catalog, checkout → `place_order`, ID upload & verification, tracking | ⬜ |

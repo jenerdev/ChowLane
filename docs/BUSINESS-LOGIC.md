@@ -1,6 +1,6 @@
 # ChowLane — Business Logic
 
-> Last updated: 2026-11-15
+> Last updated: 2026-11-17
 > Each rule is tagged **[CONFIRMED]** (stated/approved by user) or **[PROPOSED]** (Claude's default — needs OK).
 > When a rule changes: edit it here + add a line to the change log at the bottom.
 
@@ -19,6 +19,16 @@
 - BL-2.2 **[CONFIRMED]** Owner manages admin users and decides what each admin can do.
 - BL-2.3 **[CONFIRMED]** Owner creates **roles** (e.g. "Dispatcher", "Verifier"), each a set of permissions, and assigns one role per admin. A default role **"Admin"** is pre-created with the user's listed admin abilities.
 - BL-2.4 **[PROPOSED]** Permissions are checked in UI (hide/disable) now, and enforced server-side (RLS / functions) in Phase 2.
+  **Phase 2.2:** reads and direct edits are enforced by Row Level Security (`supabase/migrations/*_rls.sql`, tested in
+  `supabase/tests/database/rls.test.sql`); orders, shifts, ID reviews, coupon uses and loyalty change only through
+  server functions (2.3–2.7).
+- BL-2.7 **[CONFIRMED]** Settings permissions per group (same split as the console settings screens): delivery area +
+  accepted IDs → `settings.business`; delivery fee, max order and auto-approve → `settings.pricing`; rider income and a
+  rider's personal pay rule → `settings.riderPay`; dispatch mode and rider response time → `settings.dispatch`; loyalty
+  program → `settings.loyalty`.
+- BL-2.8 **[CONFIRMED]** A rider sees the customer's name and phone, and the customer sees the rider, only while the
+  order is ASSIGNED / AT_MERCHANT / PICKED_UP (as on the current screens). Staff see customers, riders and orders
+  only with a related permission (e.g. `orders.view` shows the customer on an order; ID photos need `customers.verify`).
 - BL-2.5 **[PROPOSED]** Role rules: role names are unique per tenant; the default **Admin** role can be edited but not deleted; a role with admins assigned can't be deleted; `admins.manage` can't be given to a role (owner-only).
 - BL-2.6 **[PROPOSED]** Admin rules: email unique within the tenant; new admins start as INVITED (invite can be resent); the Owner can't be edited or removed from the admins screen; turning an admin off blocks login but keeps history.
 
@@ -119,6 +129,7 @@ PENDING_APPROVAL ──admin approves──▶ APPROVED ──offered (auto/manu
 - BL-6.2 **[PROPOSED]** Only timed-in, ACTIVE riders can see, accept or be assigned orders.
 - BL-6.3 **[PROPOSED]** A rider cannot time out while holding an active order.
 - BL-6.5 **[PROPOSED]** A rider can't log out while on shift. Time in records the location if the phone allows it; without it the shift still starts with a reminder to turn location on.
+- BL-6.6 **[CONFIRMED]** A rider's mobile number is unique within the business (it is their login — Q-30).
 - BL-6.4 **[PROPOSED]** Each time-in/out creates a **Shift** record (start, end, location at both). Shifts feed DAILY pay and admin monitoring.
 
 ## BL-7 Pricing
@@ -140,6 +151,7 @@ PENDING_APPROVAL ──admin approves──▶ APPROVED ──offered (auto/manu
   total       = subtotal + deliveryFee
   ```
 - BL-7.5 **[PROPOSED]** Fee is calculated at checkout and frozen on the order.
+- BL-7.11 **[CONFIRMED]** A barangay (barangay + city/municipality + province) can appear only once in a business's price list.
 - BL-7.9 **[PROPOSED]** Checkout delivery fee uses the distance store → delivery pin; the service area is checked against the pin (in PER_BARANGAY mode only the chosen active barangay counts).
 - BL-7.10 **[PROPOSED]** Checkout lists every blocking problem: empty cart, store closed, item sold out, outside area / barangay not listed, over the maximum order, "change for" below the total.
 - BL-7.6 **[PROPOSED]** Delivery blocked if the customer is outside the tenant's service area (PER_KM / FIXED) or their barangay isn't listed (PER_BARANGAY).
@@ -280,6 +292,7 @@ PENDING_APPROVAL ──admin approves──▶ APPROVED ──offered (auto/manu
 ## Change log
 | Date | Rule | Change |
 |---|---|---|
+| 2026-11-17 | BL-2.4 (note), BL-2.7, BL-2.8, BL-6.6, BL-7.11 (new) | Phase 2.2 database: server-side permissions via RLS; settings permission groups and rider ↔ customer visibility written down as enforced; rider phone and barangay uniqueness; new rules confirmed by the user |
 | 2026-11-15 | All | Initial draft (v0) |
 | 2026-11-15 | All | v1 rewrite from user requirements: Owner/Admin/Rider/Customer; merchants no longer log in; permissions; Facebook signup; location gate; first-order ID verification; order approval; time in/out; FIXED/PER_KM pricing; COMMISSION/DAILY/PER_DELIVERY rider pay |
 | 2026-11-15 | BL-3.9, 3.10, 4.5, 4.6, 5.15, 6.5, 7.9, 7.10, 10.10–10.14, 11.10–11.12, 12.7, 13.12, 14.10–14.12 (new) | Rules from building the customer, rider and platform apps (Milestones 1.5–1.7) |

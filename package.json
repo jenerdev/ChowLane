@@ -18,6 +18,9 @@
     "db:status": "supabase status",
     "db:reset": "supabase db reset",
     "db:env": "node scripts/db-env.mjs",
+    "db:seed:gen": "pnpm --filter @chowlane/db seed:gen",
+    "db:test:gen": "pnpm --filter @chowlane/db test:gen",
+    "db:test": "supabase test db",
     "db:types": "supabase gen types typescript --local > packages/db/src/database.types.ts && prettier --write packages/db/src/database.types.ts"
   },
   "devDependencies": {
