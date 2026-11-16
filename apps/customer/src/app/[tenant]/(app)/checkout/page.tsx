@@ -65,7 +65,7 @@ export default function CheckoutPage() {
   const q = checkoutQuote(c.input);
   const s = c.settings;
   const l = s.loyalty;
-  const perBarangay = s.deliveryFee.mode === "PER_BARANGAY";
+  const perBarangay = s.deliveryFee?.mode === "PER_BARANGAY";
   const barangays = c.db.barangayFees
     .filter((b) => b.tenantId === c.tenant.id && b.isActive)
     .sort((a, b) => a.barangay.localeCompare(b.barangay));

@@ -2,16 +2,25 @@
 
 import { useEffect, type ReactNode } from "react";
 import { useRouter } from "next/navigation";
-import { Bike, History, UserRound, Wallet } from "lucide-react";
-import type { Tenant } from "@chowlane/types";
-import { AppShell, Badge, TenantLogo, TopBar, type NavItem } from "@chowlane/ui";
+import { Bike, History, Hourglass, UserRound, Wallet } from "lucide-react";
+import type { PublicTenant } from "@chowlane/db";
+import {
+  AppShell,
+  Badge,
+  Button,
+  EmptyState,
+  TenantLogo,
+  TopBar,
+  type NavItem,
+} from "@chowlane/ui";
 import { useRider } from "@/lib/use-rider";
 
 /** Shell + navigation for signed-in riders; redirects to /login when signed out or turned off (RID-001). */
-export function AppFrame({ tenant, children }: { tenant: Tenant; children: ReactNode }) {
+export function AppFrame({ tenant, children }: { tenant: PublicTenant; children: ReactNode }) {
   const router = useRouter();
-  const { session, me } = useRider();
-  const allowed = Boolean(session.staffId && me && me.status === "ACTIVE");
+  const { session, me, live } = useRider();
+  // Signed in = an ACTIVE rider row of this business in Supabase (Q-30).
+  const allowed = live?.status === "ACTIVE";
   const signedIn = session.ready && allowed;
 
   useEffect(() => {
@@ -44,7 +53,26 @@ export function AppFrame({ tenant, children }: { tenant: Tenant; children: React
         />
       }
     >
-      {signedIn ? children : null}
+      {!signedIn ? null : me ? (
+        children
+      ) : (
+        <EmptyState
+          icon={<Hourglass />}
+          title={`Hi ${live?.name.split(" ")[0] ?? ""}, you're logged in`}
+          description="Your rider account works. Orders and shifts move to live data in the next update — check back soon."
+          action={
+            <Button
+              variant="outline"
+              onClick={async () => {
+                await session.signOut();
+                router.replace(`/${tenant.slug}/login`);
+              }}
+            >
+              Log out
+            </Button>
+          }
+        />
+      )}
     </AppShell>
   );
 }

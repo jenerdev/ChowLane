@@ -19,18 +19,22 @@ export default function TenantSettingsView() {
   const r = useTenantRecords();
   if (!r.tenant || !r.settings) return null;
   const s = r.settings;
-  const fee =
-    s.deliveryFee.mode === "PER_KM"
-      ? `Per km — ${formatPeso(s.deliveryFee.baseFee)} for the first ${s.deliveryFee.includedKm} km, then ${formatPeso(s.deliveryFee.ratePerKm)}/km (min ${formatPeso(s.deliveryFee.minFee)})`
-      : s.deliveryFee.mode === "FIXED"
-        ? `Fixed — ${formatPeso(s.deliveryFee.amount)}`
+  const df = s.deliveryFee;
+  const fee = !df
+    ? "Not set yet"
+    : df.mode === "PER_KM"
+      ? `Per km — ${formatPeso(df.baseFee)} for the first ${df.includedKm} km, then ${formatPeso(df.ratePerKm)}/km (min ${formatPeso(df.minFee)})`
+      : df.mode === "FIXED"
+        ? `Fixed — ${formatPeso(df.amount)}`
         : `Per barangay — ${r.db.barangayFees.filter((b) => b.tenantId === r.tenant!.id && b.isActive).length} barangays`;
-  const pay =
-    s.riderPay.mode === "DAILY"
-      ? `${formatPeso(s.riderPay.dailyRate)} per day`
-      : s.riderPay.mode === "COMMISSION"
-        ? `${s.riderPay.percent}% of the delivery fee`
-        : `${formatPeso(s.riderPay.ratePerDelivery)} per delivery`;
+  const rp = s.riderPay;
+  const pay = !rp
+    ? "Not set yet"
+    : rp.mode === "DAILY"
+      ? `${formatPeso(rp.dailyRate)} per day`
+      : rp.mode === "COMMISSION"
+        ? `${rp.percent}% of the delivery fee`
+        : `${formatPeso(rp.ratePerDelivery)} per delivery`;
   const l = s.loyalty;
   const loyalty = !l.enabled
     ? "Off"

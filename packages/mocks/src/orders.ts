@@ -127,7 +127,7 @@ function buildOrder(spec: Spec): Order {
 
   const distanceKm = roundUpKm(haversineKm(merchant.location, address.location));
   const barangayFee = barangayFees.find((b) => b.id === address.barangayFeeId);
-  const feeResult = computeDeliveryFee({ rule: settings.deliveryFee, distanceKm, barangayFee });
+  const feeResult = computeDeliveryFee({ rule: settings.deliveryFee!, distanceKm, barangayFee }); // seeded tenants have rules;
   const deliveryFee = feeResult.ok ? feeResult.fee : 0;
   const subtotal = computeSubtotal(items);
   if (spec.claimFreeGift) {
@@ -192,11 +192,11 @@ function buildOrder(spec: Spec): Order {
     discountTotal: pricing.discountTotal,
     total: pricing.total,
     pointsEarned: delivered ? pointsEarnedForOrder(settings.loyalty, foodPaid(pricing)) : undefined,
-    deliveryFeeSnapshot: settings.deliveryFee,
+    deliveryFeeSnapshot: settings.deliveryFee!,
     riderEarning:
       delivered && rider
         ? riderEarningForOrder(
-            effectiveRiderPayRule(settings.riderPay, rider.payOverride),
+            effectiveRiderPayRule(settings.riderPay!, rider.payOverride),
             deliveryFee,
           )
         : undefined,

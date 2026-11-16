@@ -201,7 +201,7 @@ export function useRiderActions() {
         if (loyalty.freeGiftEarned) log("FREE_GIFT_EARNED", 0, 1);
       }
       toast(
-        rule.mode === "DAILY"
+        !rule || rule.mode === "DAILY"
           ? "Delivered — nice work!"
           : `Delivered — you earned ${formatPeso(r.value.riderEarning ?? 0)}`,
       );

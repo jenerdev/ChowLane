@@ -3,9 +3,9 @@
 import { useEffect, type ReactNode } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Gift, House, ReceiptText, ShoppingBag, UserRound } from "lucide-react";
-import type { Tenant } from "@chowlane/types";
-import { AppShell, TenantLogo, TenantTheme, TopBar, type NavItem } from "@chowlane/ui";
+import { Gift, Hourglass, House, ReceiptText, ShoppingBag, UserRound } from "lucide-react";
+import type { PublicTenant } from "@chowlane/db";
+import { AppShell, EmptyState, TenantLogo, TenantTheme, TopBar, type NavItem } from "@chowlane/ui";
 import { useCart, useCartStore } from "@/lib/cart";
 import { useDraftStore } from "@/lib/checkout-draft";
 import { useCustomer } from "@/lib/use-customer";
@@ -13,9 +13,15 @@ import { useCustomer } from "@/lib/use-customer";
 type Persisted = { persist: { rehydrate: () => void } };
 
 /** Shell for signed-in customers. Guards: no session → login (S-300); location not allowed → gate (S-301, BL-3.2). */
-export function AppFrame({ tenant: initial, children }: { tenant: Tenant; children: ReactNode }) {
+export function AppFrame({
+  tenant: initial,
+  children,
+}: {
+  tenant: PublicTenant;
+  children: ReactNode;
+}) {
   const router = useRouter();
-  const { me, ready, tenant, settings, base, db } = useCustomer();
+  const { me, ready, tenant, settings, base, db, signedIn } = useCustomer();
   const { count } = useCart(initial.slug);
 
   useEffect(() => {
@@ -25,9 +31,11 @@ export function AppFrame({ tenant: initial, children }: { tenant: Tenant; childr
 
   useEffect(() => {
     if (!ready) return;
-    if (!me) router.replace(`/${initial.slug}/login`);
+    if (!signedIn) router.replace(`/${initial.slug}/login`);
+    else if (!me)
+      return; // business not in the demo data yet — notice below
     else if (me.locationPermission !== "GRANTED") router.replace(`/${initial.slug}/location`);
-  }, [ready, me, router, initial.slug]);
+  }, [ready, me, signedIn, router, initial.slug]);
 
   const t = tenant ?? initial;
   const allowed = ready && me && me.locationPermission === "GRANTED";
@@ -81,7 +89,15 @@ export function AppFrame({ tenant: initial, children }: { tenant: Tenant; childr
           />
         }
       >
-        {allowed ? children : null}
+        {allowed ? (
+          children
+        ) : ready && signedIn && !me ? (
+          <EmptyState
+            icon={<Hourglass />}
+            title="You're logged in"
+            description={`${t.businessName} opens for orders here soon. Check back in a little while.`}
+          />
+        ) : null}
       </AppShell>
     </TenantTheme>
   );

@@ -1,10 +1,10 @@
 import { notFound } from "next/navigation";
-import { findTenantBySlug } from "@chowlane/mocks";
+import { getPublicTenant } from "@chowlane/db/tenant";
 
-/** Resolve /[tenant] → Tenant, or 404 (unknown slug). */
+/** Resolve /[tenant] → the business's public branding from Supabase, or 404 (unknown link). */
 export async function resolveTenant(params: Promise<{ tenant: string }>) {
   const { tenant: slug } = await params;
-  const tenant = findTenantBySlug(slug);
+  const tenant = await getPublicTenant(slug);
   if (!tenant) notFound();
   return tenant;
 }

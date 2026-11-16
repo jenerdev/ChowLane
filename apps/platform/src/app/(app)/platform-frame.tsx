@@ -3,9 +3,8 @@
 import { useEffect, type ReactNode } from "react";
 import { useRouter } from "next/navigation";
 import { Building2, LayoutDashboard, LogOut, ReceiptText } from "lucide-react";
-import { useSession } from "@chowlane/mocks/react";
 import { AppShell, ChowLaneLogo, TopBar, type NavItem } from "@chowlane/ui";
-import { SESSION_SCOPE, usePlatform } from "@/lib/use-platform";
+import { usePlatform } from "@/lib/use-platform";
 
 const NAV: NavItem[] = [
   { href: "/", label: "Overview", icon: <LayoutDashboard />, exact: true },
@@ -16,16 +15,15 @@ const NAV: NavItem[] = [
 /** ChowLane-branded shell for signed-in platform pages; redirects to /login when signed out (PLT-001). */
 export function PlatformFrame({ children }: { children: ReactNode }) {
   const router = useRouter();
-  const { ready, staffId, signOut } = useSession(SESSION_SCOPE);
-  const { me } = usePlatform();
-  const signedIn = ready && Boolean(staffId) && Boolean(me);
+  const { me, ready, signOut } = usePlatform();
+  const signedIn = ready && Boolean(me);
 
   useEffect(() => {
-    if (ready && (!staffId || !me)) router.replace("/login");
-  }, [ready, staffId, me, router]);
+    if (ready && !me) router.replace("/login");
+  }, [ready, me, router]);
 
-  const out = () => {
-    signOut();
+  const out = async () => {
+    await signOut();
     router.replace("/login");
   };
 

@@ -11,6 +11,7 @@ import { writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { mockDb } from "@chowlane/mocks";
 import type { LatLng } from "@chowlane/types";
+import { riderLoginEmail } from "../src/auth";
 import { authIdFor, uuidFor } from "./ids";
 
 export const DEMO_PASSWORD = "demo1234";
@@ -51,6 +52,7 @@ function login(key: string, l: Omit<DemoLogin, "key">): Lit {
 }
 
 const db = mockDb;
+const slugOf = (tenantId: string) => db.tenants.find((t) => t.id === tenantId)!.slug;
 let sql = "";
 
 // platform
@@ -79,7 +81,7 @@ const staffRows = db.staff.map((s) => ({
 const riderRows = db.riders.map((r) => ({
   id: id(r.id),
   tenant_id: id(r.tenantId),
-  auth_user_id: login(r.id, { phone: r.phone, name: r.name }),
+  auth_user_id: login(r.id, { email: riderLoginEmail(slugOf(r.tenantId), r.phone), name: r.name }),
   name: q(r.name),
   phone: q(r.phone),
   email: q(r.email),

@@ -49,9 +49,9 @@ export default function RiderProfile() {
         variant="outline"
         size="lg"
         block
-        onClick={() => {
+        onClick={async () => {
           if (me.isOnShift) return void toast("Time out before logging out.", "error");
-          session.signOut();
+          await session.signOut();
           router.replace(`${base}/login`);
         }}
       >

@@ -16,10 +16,10 @@
 | App | URL | Demo login |
 |---|---|---|
 | Landing & signup | http://localhost:3000 | — |
-| Console (Owner / Admin) | http://localhost:3001/fastbite | `marco@fastbite.ph` (Owner), `liza@fastbite.ph` (Admin), `jun@fastbite.ph` (Dispatcher) — any password |
-| Rider | http://localhost:3002/fastbite | `0920 123 0001` … `0920 123 0004` — any 6-digit code |
-| Customer | http://localhost:3003/fastbite | "Continue with Facebook" → pick a demo person |
-| Platform Admin | http://localhost:3004 | `owner@chowlane.app` — any password |
+| Console (Owner / Admin) | http://localhost:3001/fastbite | `marco@fastbite.ph` (Owner), `liza@fastbite.ph` (Admin), `jun@fastbite.ph` (Dispatcher) — password `demo1234` (local Supabase, since 2.3) |
+| Rider | http://localhost:3002/fastbite | `0920 123 0001` … `0920 123 0004` — password `demo1234` (since 2.3) |
+| Customer | http://localhost:3003/fastbite | "Continue with Facebook" → pick a demo person (local) or "Someone new"; real Facebook on the hosted project |
+| Platform Admin | http://localhost:3004 | `owner@chowlane.app` — password `demo1234` |
 
 Second tenant: replace `fastbite` with `kainexpress` (per-barangay fees, daily rider pay, manual dispatch).
 Suspended tenant: `pasabuyqc`.

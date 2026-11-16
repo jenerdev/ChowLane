@@ -1,8 +1,8 @@
 "use client";
 
 import { useState } from "react";
+import { isSlugTaken } from "@/lib/signup-actions";
 import Link from "next/link";
-import { findTenantBySlug } from "@chowlane/mocks";
 import { appUrl } from "@chowlane/mocks/react";
 import { Button, ChowLaneLogo, Field } from "@chowlane/ui";
 
@@ -24,10 +24,10 @@ export default function FindConsole() {
       </div>
       <form
         className="flex flex-col gap-4"
-        onSubmit={(e) => {
+        onSubmit={async (e) => {
           e.preventDefault();
           const clean = slug.trim().toLowerCase();
-          if (!findTenantBySlug(clean)) {
+          if (!clean || !(await isSlugTaken(clean))) {
             setError("No business uses this link. Check the spelling, or sign up.");
             return;
           }

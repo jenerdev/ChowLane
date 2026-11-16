@@ -150,8 +150,8 @@ export default function ProfilePage() {
         <Button
           variant="outline"
           block
-          onClick={() => {
-            signOut();
+          onClick={async () => {
+            await signOut();
             router.replace(`${base}/login`);
           }}
         >

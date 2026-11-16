@@ -12,6 +12,34 @@
 
 ---
 
+## 2026-11-17 — Milestone 2.3 Auth ✅
+
+**Done:** User approved BL-2.7/2.8/6.6/7.11 and chose: Admins/Roles/Riders screens move in 2.3 (D-059), local
+demo customer login (D-060), new business starts with delivery fee + rider pay not set (D-061, DATA-MODEL v1.1).
+Migration `auth.sql`: nullable fee/pay, `create_tenant`, `accept_staff_invite`, `ensure_customer`,
+`has_permission`, `auth_login_status`, admin removal keeps history. `@chowlane/db`: per-app session cookies,
+proxy session refresh, admin client, `useAuthIdentity`, `getPublicTenant`, row mappers. All five apps on real
+logins (identity providers, login pages, sign-out); rider login = mobile + password (D-062); customer Facebook OAuth
+callback; landing signup + link check on Supabase; console invite page; Admins, Roles, Riders screens on Supabase
+with invite / rider-login server actions. Lib: `DELIVERY_NOT_SET` checkout problem, `riderPayRuleLabel`,
+`shortNameFor`, `brandTint`, `NEW_TENANT_LOYALTY`. Mock sessions + DEV persona switcher removed.
+
+**Found & fixed while browser-testing:** the invite page lost the link tokens under dev StrictMode (now kept in a
+ref); "Resend invite" did not resend for a login created by an earlier invite (now replaced when unlinked); one
+rider-login save left an unlinked login (the action now reuses an unlinked login or removes the one it created);
+localhost requests failed with HTTP 431 once 4+ app sessions shared cookies (Node header limit raised — D-063).
+
+**Verified:** build ✅ lint ✅ typecheck ✅ tests ✅ (88 unit) RLS ✅ (305) format ✅; browser: owner login, invite →
+password → console, add rider → rider login, demo rider, demo + new customer, platform login, signup → new console.
+
+**Changed docs:** DECISIONS (D-059…D-064, Q-36), BUSINESS-LOGIC (BL-2.9, BL-6.7, BL-7.12, BL-15.6, BL-15.7),
+DATA-MODEL (v1.1), REQUIREMENTS (BE column), SCREENS (S-200 note, S-125), USER-FLOWS (2.3 note), WALKTHROUGH (demo
+passwords), TECH-STACK (auth section, cross-env), ROADMAP (2.3 ✅), PHASE-2-PLAN, STATUS.
+
+**Stopped at / Next:** Uncommitted on `phase-2`. User: Q-36. Next: Milestone 2.4 (console on real data).
+
+---
+
 ## 2026-11-17 — Milestone 2.2 Schema, RLS & seed ✅
 
 **Done:** Committed 2.1 on new branch `phase-2`. Three migrations: schema (22 tables from DATA-MODEL v1, Postgres

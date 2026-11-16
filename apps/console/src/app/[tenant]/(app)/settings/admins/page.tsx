@@ -4,6 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { Plus } from "lucide-react";
 import type { StaffUser } from "@chowlane/types";
+import { toRole, toStaffUser } from "@chowlane/db/mappers";
 import { isValidEmail } from "@chowlane/lib";
 import {
   Avatar,
@@ -21,10 +22,11 @@ import {
   toast,
 } from "@chowlane/ui";
 import { RequirePermission } from "@/components/require-permission";
-import { useMockStore } from "@/lib/store";
-import { newId, useConsole } from "@/lib/use-console";
+import { inviteAdmin, resendInvite } from "@/lib/team-actions";
+import { useConsole } from "@/lib/use-console";
+import { must, useLive } from "@/lib/use-live";
 
-/** S-118 — admin users: invite, change role, turn off, remove (OWN-007). */
+/** S-118 — admin users: invite, change role, turn off, remove (OWN-007). Live on Supabase since 2.3 (D-059). */
 export default function AdminsPage() {
   return (
     <RequirePermission perm="admins.manage">
@@ -34,16 +36,19 @@ export default function AdminsPage() {
 }
 
 function Admins() {
-  const { db, tenant, base, me } = useConsole();
-  const insert = useMockStore((s) => s.insert);
-  const patch = useMockStore((s) => s.patch);
-  const remove = useMockStore((s) => s.remove);
-  const roles = db.roles.filter((r) => r.tenantId === tenant.id);
-  const staff = db.staff
-    .filter((s) => s.tenantId === tenant.id)
-    .sort((a, b) =>
-      a.type === "OWNER" ? -1 : b.type === "OWNER" ? 1 : a.name.localeCompare(b.name),
-    );
+  const { live, base, staff: me, supabase } = useConsole();
+  const team = useLive(`team:${live.id}`, async (sb) => {
+    const [roles, staff] = await Promise.all([
+      sb.from("roles").select("*").eq("tenant_id", live.id).order("name"),
+      sb.from("staff_users").select("*").eq("tenant_id", live.id),
+    ]);
+    return { roles: must(roles).map(toRole), staff: must(staff).map(toStaffUser) };
+  });
+  const roles = team.data?.roles ?? [];
+  const staff = (team.data?.staff ?? []).sort((a, b) =>
+    a.type === "OWNER" ? -1 : b.type === "OWNER" ? 1 : a.name.localeCompare(b.name),
+  );
+  const [busy, setBusy] = useState(false);
 
   const [editing, setEditing] = useState<StaffUser | "new" | null>(null);
   const [name, setName] = useState("");
@@ -64,36 +69,38 @@ function Admins() {
     setActive(s === "new" ? true : s.status !== "INACTIVE");
   };
 
-  function save() {
-    if (editing === "new") {
-      const e: typeof errors = {};
-      if (name.trim().length < 2) e.name = "Enter their name.";
-      if (!isValidEmail(email)) e.email = "Enter a valid email.";
-      else if (staff.some((s) => s.email.toLowerCase() === email.trim().toLowerCase()))
-        e.email = "This person is already on your team.";
-      setErrors(e);
-      if (Object.keys(e).length) return;
-      insert("staff", {
-        id: newId("s"),
-        tenantId: tenant.id,
-        name: name.trim(),
-        email: email.trim().toLowerCase(),
-        type: "ADMIN",
-        roleId,
-        status: "INVITED",
-        createdAt: new Date().toISOString(),
-      });
-      toast(`Invite sent to ${email.trim()}`);
-    } else if (editing) {
-      const status = active
-        ? editing.status === "INACTIVE"
-          ? "ACTIVE"
-          : editing.status
-        : "INACTIVE";
-      patch("staff", editing.id, { roleId, status });
-      toast("Admin updated");
+  async function save() {
+    setBusy(true);
+    try {
+      if (editing === "new") {
+        const e: typeof errors = {};
+        if (name.trim().length < 2) e.name = "Enter their name.";
+        if (!isValidEmail(email)) e.email = "Enter a valid email.";
+        else if (staff.some((s) => s.email.toLowerCase() === email.trim().toLowerCase()))
+          e.email = "This person is already on your team.";
+        setErrors(e);
+        if (Object.keys(e).length) return;
+        const r = await inviteAdmin({ tenantId: live.id, slug: live.slug, name, email, roleId });
+        if (!r.ok) return setErrors({ email: r.error });
+        toast(r.note ?? `Invite sent to ${email.trim()}`);
+      } else if (editing) {
+        const status = active
+          ? editing.status === "INACTIVE"
+            ? "ACTIVE"
+            : editing.status
+          : "INACTIVE";
+        const { error } = await supabase
+          .from("staff_users")
+          .update({ role_id: roleId, status })
+          .eq("id", editing.id);
+        if (error) return toast(error.message);
+        toast("Admin updated");
+      }
+      setEditing(null);
+      await team.reload();
+    } finally {
+      setBusy(false);
     }
-    setEditing(null);
   }
 
   const roleName = (id?: string) => roles.find((r) => r.id === id)?.name ?? "No role";
@@ -110,7 +117,12 @@ function Admins() {
           </Button>
         }
       />
-      <ul className="divide-y rounded-card border">
+      {team.error ? (
+        <p role="alert" className="mb-3 text-sm text-danger">
+          Couldn&apos;t load your team: {team.error}
+        </p>
+      ) : null}
+      <ul className="divide-y rounded-card border" aria-busy={team.loading}>
         {staff.map((s) => (
           <li key={s.id}>
             <button
@@ -164,7 +176,7 @@ function Admins() {
             className="flex flex-col gap-4"
             onSubmit={(e) => {
               e.preventDefault();
-              save();
+              void save();
             }}
           >
             {editing === "new" ? (
@@ -221,12 +233,20 @@ function Admins() {
                 <Button
                   type="button"
                   variant="outline"
-                  onClick={() => toast(`Invite sent again to ${editing.email}`)}
+                  disabled={busy}
+                  onClick={async () => {
+                    const r = await resendInvite({
+                      tenantId: live.id,
+                      slug: live.slug,
+                      staffId: editing.id,
+                    });
+                    toast(r.ok ? (r.note ?? `Invite sent again to ${editing.email}`) : r.error);
+                  }}
                 >
                   Resend invite
                 </Button>
               ) : null}
-              <Button type="submit" className="ml-auto">
+              <Button type="submit" className="ml-auto" disabled={busy}>
                 {editing === "new" ? "Send invite" : "Save"}
               </Button>
             </div>
@@ -241,10 +261,11 @@ function Admins() {
         description="They lose access right away. Their past actions stay in the order history."
         confirmLabel="Remove admin"
         destructive
-        onConfirm={() => {
+        onConfirm={async () => {
           if (editing && editing !== "new") {
-            remove("staff", editing.id);
-            toast(`${editing.name} removed`);
+            const { error } = await supabase.from("staff_users").delete().eq("id", editing.id);
+            toast(error ? error.message : `${editing.name} removed`);
+            await team.reload();
           }
           setEditing(null);
         }}

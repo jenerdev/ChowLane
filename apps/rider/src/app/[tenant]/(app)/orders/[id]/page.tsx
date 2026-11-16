@@ -59,7 +59,7 @@ export default function RiderOrderPage({ params }: { params: Promise<{ id: strin
             <Row
               label="Your earning"
               value={
-                rule.mode === "DAILY"
+                rule?.mode === "DAILY"
                   ? "Daily rate"
                   : order.riderEarning !== undefined
                     ? formatPeso(order.riderEarning)

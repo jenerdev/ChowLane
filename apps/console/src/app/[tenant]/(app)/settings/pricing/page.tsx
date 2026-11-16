@@ -36,12 +36,13 @@ function Pricing() {
   const { settings, db, tenant, base } = useConsole();
   const setTenantRow = useMockStore((s) => s.setTenantRow);
   const fee = settings.deliveryFee;
-  const [mode, setMode] = useState<DeliveryFeeMode>(fee.mode);
+  // A new business has no fee yet (D-061): the form starts on per km with example values.
+  const [mode, setMode] = useState<DeliveryFeeMode>(fee?.mode ?? "PER_KM");
   const [perKm, setPerKm] = useState<PerKm>(
-    fee.mode === "PER_KM" ? fee : { baseFee: 4900, ratePerKm: 1000, includedKm: 2, minFee: 4900 },
+    fee?.mode === "PER_KM" ? fee : { baseFee: 4900, ratePerKm: 1000, includedKm: 2, minFee: 4900 },
   );
   const [fixed, setFixed] = useState<Centavos | undefined>(
-    fee.mode === "FIXED" ? fee.amount : 5000,
+    fee?.mode === "FIXED" ? fee.amount : 5000,
   );
   const [maxOrder, setMaxOrder] = useState<Centavos | undefined>(settings.maxOrderSubtotal);
   const [autoApprove, setAutoApprove] = useState(settings.autoApproveVerifiedCustomers);

@@ -31,15 +31,16 @@ function RiderPay() {
   const { settings, base } = useConsole();
   const setTenantRow = useMockStore((s) => s.setTenantRow);
   const cur = settings.riderPay;
-  const [mode, setMode] = useState<RiderPayMode>(cur.mode);
+  // Not set yet on a new business (D-061): the form starts on per delivery.
+  const [mode, setMode] = useState<RiderPayMode>(cur?.mode ?? "PER_DELIVERY");
   const [daily, setDaily] = useState<Centavos | undefined>(
-    cur.mode === "DAILY" ? cur.dailyRate : 60000,
+    cur?.mode === "DAILY" ? cur.dailyRate : 60000,
   );
   const [percent, setPercent] = useState<number | undefined>(
-    cur.mode === "COMMISSION" ? cur.percent : 80,
+    cur?.mode === "COMMISSION" ? cur.percent : 80,
   );
   const [perDelivery, setPerDelivery] = useState<Centavos | undefined>(
-    cur.mode === "PER_DELIVERY" ? cur.ratePerDelivery : 4000,
+    cur?.mode === "PER_DELIVERY" ? cur.ratePerDelivery : 4000,
   );
 
   const rule: RiderPayRule | null =

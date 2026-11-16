@@ -6,33 +6,31 @@
 **Phase 2 — Supabase backend** 🟨 (plan: `docs/PHASE-2-PLAN.md`) · Phase 1 UI prototype ✅ signed off 2026-11-15
 
 ## Current state
-- **Milestone 2.2 Schema, RLS & seed ✅ (2026-11-17)** — D-057, D-058 · branch `phase-2`:
-  - 3 migrations in `supabase/migrations/`: schema (22 tables from DATA-MODEL v1, enums, JSONB rule validators,
-    composite tenant foreign keys), RLS (helpers in `private`, policies on every table, column grants), public views
-    (`tenants_public`, `tenant_settings_public`, `products_public`) + guards (settings permission per group, rider pay
-    override, coupon code immutability).
-  - Orders, shifts, ID reviews, coupon uses and loyalty have **no direct write access** — they wait for the server
-    functions in 2.3–2.7.
-  - `supabase/seed.sql` generated from `@chowlane/mocks` (`pnpm db:seed:gen`): 3 tenants, 13 orders, 22 local demo
-    logins (password `demo1234`).
-  - RLS tests (pgTAP, `pnpm db:test`): **269 pass** — 10 personas × 22 tables, views, 34 write checks. Proven to fail
-    when a policy leaks.
-  - `database.types.ts` regenerated (22 tables + 3 views); `schema-sync.test.ts` keeps DB enums = `packages/types`.
-  - CI job `database` (Postgres + RLS tests + generated-files check) — not run on GitHub yet (no remote).
-  - New rules from the build (confirmed by the user): BL-2.7 (settings permission groups), BL-2.8 (rider ↔ customer visibility only
-    while the order is live), BL-6.6 (rider phone unique per business), BL-7.11 (barangay once per price list).
-- **Milestone 2.1 Setup ✅** — D-056: Supabase CLI (`pnpm db:*`), local stack on ports **553xx** (API
-  `127.0.0.1:55321`, Studio `55323`; 543xx is used by another local project), `@chowlane/db` clients + env check,
-  `/api/health` in console/rider/customer/platform, `pnpm db:env`, CI.
-- **Hosted project**: Supabase `ChowLane` (ref `ouoahwedxslvhnsegqqh`, Singapore) linked; Facebook provider enabled.
-  Migrations are **not pushed** to the hosted project yet.
-- All open questions answered (Q-30…Q-35 → D-055).
-- Screens still use `packages/mocks`.
+- **Milestone 2.3 Auth ✅ (2026-11-17)** — D-059…D-064 · branch `phase-2` (2.1, 2.2 committed):
+  - Real Supabase logins in all apps; mock sessions and the DEV "acting as" switcher are gone.
+    - Console: email + password; invited admins set a password from the email link (`/[tenant]/invite`).
+    - Rider: mobile number + password set by the admin (Q-30, no SMS — D-062).
+    - Customer: Facebook on the hosted project; local demo customers + "Someone new" locally (D-060). One customer
+      row per business, created on first visit (`ensure_customer`).
+    - Platform admin: email + password.
+  - Owner signup (landing) creates the login + business (`create_tenant`): owner, default Admin role, settings with
+    delivery fee / rider pay **not set** (D-061 → checkout closed until set), FREE plan.
+  - Live on Supabase: console **Admins**, **Roles**, **Riders** (list, detail, add/edit + password) (D-059); tenant
+    branding, manifests and icons. Other screens still use mock data (mapped to the real login by email / mobile /
+    Facebook id); a business without demo data sees a "moves to live data soon" notice on them.
+  - Tests: 88 unit + **305 RLS** (pgTAP). Browser-tested end to end: owner login, invite → set password → console,
+    add rider with password → rider app login, demo rider, demo + new customer, platform login, owner signup → new
+    console.
+  - Local dev: all apps share `localhost` cookies → `dev`/`start` raise Node's header limit (D-063). Invite emails:
+    Mailpit http://127.0.0.1:55324.
+- **Hosted project**: Supabase `ChowLane` (Singapore) linked; Facebook provider enabled. Migrations **not pushed** yet.
+- Open: **Q-36** — email confirmation for new owners (currently none).
 
 ## Next up (in order)
-1. Claude: **Milestone 2.3 Auth** (in progress) — `create_tenant` (owner signup), staff login + invites, platform admin login,
-   rider phone + password login (Q-30), customer Facebook login + per-tenant customer row; replace mock sessions.
-2. **You** (by 2.8): connect Vercel to the repo (needs a GitHub remote).
+1. **You**: answer Q-36 (or accept: add email confirmation before launch).
+2. Claude: **Milestone 2.4 Console on real data** — settings (business, area, pricing, rider pay, dispatch, loyalty),
+   merchants & products, barangay fees, coupons, loyalty adjustments, customers & verification view.
+3. **You** (by 2.8): connect Vercel to the repo (needs a GitHub remote).
 
 ## Blockers
 - None.
@@ -40,10 +38,11 @@
 ## Progress snapshot
 | Area | Done / Total |
 |---|---|
-| Phase 1 screens (SCREENS.md) | 65 / 65 ✅ |
+| Phase 1 screens (SCREENS.md) | 65 / 65 ✅ (+ S-125 invite page in 2.3) |
 | Requirements — UI (REQUIREMENTS.md) | 88 / 88 ✅ |
-| Phase 2 milestones (ROADMAP.md) | 2 / 8 (2.1 ✅ 2.2 ✅) |
-| Tests | 81 unit (lib 58 · mocks 16 · db 7) + 269 RLS (pgTAP) |
+| Requirements — backend (REQUIREMENTS.md) | 11 ✅ · 1 🟨 |
+| Phase 2 milestones (ROADMAP.md) | 3 / 8 (2.1 ✅ 2.2 ✅ 2.3 ✅) |
+| Tests | 88 unit (lib 62 · mocks 16 · db 10) + 305 RLS (pgTAP) |
 | Flows signed off (USER-FLOWS.md) | 7 / 17 walked ✅ · 10 skipped (Phase 1 signed off) |
-| Decisions logged (DECISIONS.md) | 59 (D-000…D-058; D-011, D-039 superseded) |
-| Open questions answered | 35 / 35 |
+| Decisions logged (DECISIONS.md) | 65 (D-000…D-064; D-011, D-039 superseded) |
+| Open questions answered | 35 / 36 (Q-36 open) |

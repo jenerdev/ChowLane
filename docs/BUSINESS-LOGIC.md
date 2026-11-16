@@ -30,6 +30,7 @@
   order is ASSIGNED / AT_MERCHANT / PICKED_UP (as on the current screens). Staff see customers, riders and orders
   only with a related permission (e.g. `orders.view` shows the customer on an order; ID photos need `customers.verify`).
 - BL-2.5 **[PROPOSED]** Role rules: role names are unique per tenant; the default **Admin** role can be edited but not deleted; a role with admins assigned can't be deleted; `admins.manage` can't be given to a role (owner-only).
+- BL-2.9 **[PROPOSED]** Invites: the invited admin gets an email link, sets a password and becomes ACTIVE; if the email already has a ChowLane login, they just log in and are linked. "Resend invite" sends a fresh link (an unused earlier invite is replaced). Removing an admin keeps their past actions in history (shown without a name link).
 - BL-2.6 **[PROPOSED]** Admin rules: email unique within the tenant; new admins start as INVITED (invite can be resent); the Owner can't be edited or removed from the admins screen; turning an admin off blocks login but keeps history.
 
 ### Permission keys
@@ -130,6 +131,7 @@ PENDING_APPROVAL ──admin approves──▶ APPROVED ──offered (auto/manu
 - BL-6.3 **[PROPOSED]** A rider cannot time out while holding an active order.
 - BL-6.5 **[PROPOSED]** A rider can't log out while on shift. Time in records the location if the phone allows it; without it the shift still starts with a reminder to turn location on.
 - BL-6.6 **[CONFIRMED]** A rider's mobile number is unique within the business (it is their login — Q-30).
+- BL-6.7 **[PROPOSED]** Riders log in with mobile number + a password the admin sets (`riders.manage`) in the rider form; same password rule as owners (BL-15.2); a forgotten password is reset by the admin. Changing the number changes the login. Inactive riders can't log in.
 - BL-6.4 **[PROPOSED]** Each time-in/out creates a **Shift** record (start, end, location at both). Shifts feed DAILY pay and admin monitoring.
 
 ## BL-7 Pricing
@@ -152,6 +154,7 @@ PENDING_APPROVAL ──admin approves──▶ APPROVED ──offered (auto/manu
   ```
 - BL-7.5 **[PROPOSED]** Fee is calculated at checkout and frozen on the order.
 - BL-7.11 **[CONFIRMED]** A barangay (barangay + city/municipality + province) can appear only once in a business's price list.
+- BL-7.12 **[CONFIRMED]** A new business has no delivery fee or rider pay yet (D-061). Until the delivery fee is set, checkout is closed ("This business isn't taking orders yet"); rider pay shows "Not set yet" and computes to ₱0.
 - BL-7.9 **[PROPOSED]** Checkout delivery fee uses the distance store → delivery pin; the service area is checked against the pin (in PER_BARANGAY mode only the chosen active barangay counts).
 - BL-7.10 **[PROPOSED]** Checkout lists every blocking problem: empty cart, store closed, item sold out, outside area / barangay not listed, over the maximum order, "change for" below the total.
 - BL-7.6 **[PROPOSED]** Delivery blocked if the customer is outside the tenant's service area (PER_KM / FIXED) or their barangay isn't listed (PER_BARANGAY).
@@ -212,6 +215,8 @@ PENDING_APPROVAL ──admin approves──▶ APPROVED ──offered (auto/manu
 - BL-15.2 **[PROPOSED]** Owner password: at least 8 characters with letters and a number. Mobile must be a valid PH mobile number.
 - BL-15.3 **[PROPOSED]** Signup asks for city + delivery radius (1–15 km, default 5 km) as the starting service area; delivery fees and rider pay are set later in the console setup checklist.
 - BL-15.4 **[PROPOSED]** New tenant starts on the FREE billing plan (BL-10.7).
+- BL-15.6 **[PROPOSED]** A new business's home-screen label (short name, ≤12 characters) is its name if it fits, else its first word if that fits, else the name cut to 12; its app background is a light tint of the brand color. Both can be changed later.
+- BL-15.7 **[PROPOSED]** Signup creates the owner's login and the business together; if creating the business fails, the login is removed again. A taken business link is caught while typing and again on submit.
 - BL-15.5 **[PROPOSED]** Console login: only ACTIVE staff can log in; INVITED → "accept the invite first"; INACTIVE → "account turned off". Password reset is done by the Owner (self-service reset in Phase 2).
 
 ## BL-13 Coupons
@@ -292,6 +297,7 @@ PENDING_APPROVAL ──admin approves──▶ APPROVED ──offered (auto/manu
 ## Change log
 | Date | Rule | Change |
 |---|---|---|
+| 2026-11-17 | BL-2.9, BL-6.7, BL-7.12, BL-15.6, BL-15.7 (new) | Milestone 2.3 auth: invites, rider password login, new business starts without fee / pay (D-061), short name + tint, signup rollback |
 | 2026-11-17 | BL-2.4 (note), BL-2.7, BL-2.8, BL-6.6, BL-7.11 (new) | Phase 2.2 database: server-side permissions via RLS; settings permission groups and rider ↔ customer visibility written down as enforced; rider phone and barangay uniqueness; new rules confirmed by the user |
 | 2026-11-15 | All | Initial draft (v0) |
 | 2026-11-15 | All | v1 rewrite from user requirements: Owner/Admin/Rider/Customer; merchants no longer log in; permissions; Facebook signup; location gate; first-order ID verification; order approval; time in/out; FIXED/PER_KM pricing; COMMISSION/DAILY/PER_DELIVERY rider pay |

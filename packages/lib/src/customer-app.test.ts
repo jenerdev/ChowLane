@@ -138,6 +138,12 @@ describe("checkoutQuote", () => {
     expect(checkoutQuote(base({ lines: [] })).problems).toContain("EMPTY_CART");
   });
 
+  it("stays closed until the business sets a delivery fee (D-061)", () => {
+    const q = checkoutQuote(base({ settings: { ...settings, deliveryFee: undefined } }));
+    expect(q.problems).toContain("DELIVERY_NOT_SET");
+    expect(q.pricing).toBeNull();
+  });
+
   it("uses the barangay list in PER_BARANGAY mode", () => {
     const s = { ...settings, deliveryFee: { mode: "PER_BARANGAY" } as const };
     const b: BarangayFee = {

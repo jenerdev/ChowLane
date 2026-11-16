@@ -119,7 +119,7 @@ export default function RiderHome() {
         <Stat
           label="Earned today"
           value={formatPeso(earnedToday)}
-          hint={rule.mode === "DAILY" ? "Daily rate" : undefined}
+          hint={rule?.mode === "DAILY" ? "Daily rate" : undefined}
         />
       </div>
 

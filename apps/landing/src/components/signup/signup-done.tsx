@@ -37,11 +37,14 @@ export function SignupDone({ draft, logoUrl }: { draft: SignupDraft; logoUrl?: s
             </li>
           ))}
         </ul>
-        <a href={`${appUrl("console")}/fastbite/login`} className={buttonVariants({ size: "lg" })}>
+        <a
+          href={`${appUrl("console")}/${draft.slug}/login`}
+          className={buttonVariants({ size: "lg" })}
+        >
           Open my console
         </a>
         <p className="text-xs text-muted-foreground">
-          Prototype: nothing is saved yet, so the console opens with the FastBite demo business.
+          Log in with the email and password you just chose.
         </p>
       </div>
       <div className="flex justify-center">

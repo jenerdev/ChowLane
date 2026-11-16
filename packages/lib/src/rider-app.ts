@@ -144,8 +144,12 @@ export function offerSecondsLeft(order: Order, nowMs: number): number {
 }
 
 /** What the rider earns for this order, or null when paid by the day (BL-8.1). */
-export function offerEarning(rule: RiderPayRule, deliveryFee: Centavos): Centavos | null {
-  return rule.mode === "DAILY" ? null : riderEarningForOrder(rule, deliveryFee);
+/** null when there is no per-order amount to show (DAILY pay, or no pay rule yet — D-061). */
+export function offerEarning(
+  rule: RiderPayRule | undefined,
+  deliveryFee: Centavos,
+): Centavos | null {
+  return !rule || rule.mode === "DAILY" ? null : riderEarningForOrder(rule, deliveryFee);
 }
 
 /** Before accepting, only the area (barangay, city) is shown — not the street address. */
@@ -254,7 +258,7 @@ export type DeliveryProof = { photoUrl?: string; note?: string };
 export function completeDelivery(
   order: Order,
   riderId: ID,
-  rule: RiderPayRule,
+  rule: RiderPayRule | undefined,
   proof: DeliveryProof,
   cashCollected: boolean,
   pointsEarned: number,
@@ -271,7 +275,7 @@ export function completeDelivery(
       ...event(order, "DELIVERED", riderId, now),
       paymentStatus: "COLLECTED",
       cashCollectedAt: now,
-      riderEarning: riderEarningForOrder(rule, order.deliveryFee),
+      riderEarning: rule ? riderEarningForOrder(rule, order.deliveryFee) : undefined,
       pointsEarned: pointsEarned || undefined,
       proofOfDelivery: { photoUrl: proof.photoUrl, note: proof.note?.trim() || undefined },
     },

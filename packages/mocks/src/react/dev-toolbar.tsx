@@ -1,12 +1,10 @@
 "use client";
 
-import { useSyncExternalStore } from "react";
 import { FlaskConical, RotateCcw } from "lucide-react";
-import { Button, Select, Sheet, SheetContent, SheetTrigger } from "@chowlane/ui";
+import { Button, Sheet, SheetContent, SheetTrigger } from "@chowlane/ui";
 import { tenants } from "../data";
 
 export type AppKey = "landing" | "console" | "rider" | "customer" | "platform";
-export type Persona = { id: string; label: string; detail?: string };
 
 /** Dev URLs per app — override in production previews with NEXT_PUBLIC_APP_URL_<APP>. */
 const APP_URLS: Record<AppKey, string> = {
@@ -30,101 +28,19 @@ const APP_LABEL: Record<AppKey, string> = {
   platform: "Platform Admin",
 };
 
-// ------------------------------------------------------------------ persona ("acting as") — localStorage
-const PERSONA_KEY = "chowlane-dev-persona";
-const listeners = new Set<() => void>();
-
-function readPersonas(): Record<string, string> {
-  try {
-    return JSON.parse(localStorage.getItem(PERSONA_KEY) ?? "{}") as Record<string, string>;
-  } catch {
-    return {};
-  }
-}
-
-function writePersona(scope: string, id: string) {
-  try {
-    localStorage.setItem(PERSONA_KEY, JSON.stringify({ ...readPersonas(), [scope]: id }));
-  } catch {
-    /* ignore */
-  }
-  listeners.forEach((l) => l());
-}
-
-const subscribe = (cb: () => void) => {
-  listeners.add(cb);
-  return () => listeners.delete(cb);
-};
-
-/**
- * Which mock user this browser is "acting as" in an app + tenant (FND-007).
- * Phase 2 replaces this with the real logged-in user.
- */
-export function usePersona(scope: string, fallbackId: string): [string, (id: string) => void] {
-  const id = useSyncExternalStore(
-    subscribe,
-    () => readPersonas()[scope] ?? fallbackId,
-    () => fallbackId,
-  );
-  return [id, (next) => writePersona(scope, next)];
-}
-
-function clearPersona(scope: string) {
-  try {
-    const all = readPersonas();
-    delete all[scope];
-    localStorage.setItem(PERSONA_KEY, JSON.stringify(all));
-  } catch {
-    /* ignore */
-  }
-  listeners.forEach((l) => l());
-}
-
-const noopSubscribe = () => () => {};
-
-/**
- * Mock login session for an app + tenant (LND-004). `ready` is false during SSR / first render,
- * so guards don't redirect before localStorage has been read. Phase 2: Supabase Auth.
- */
-export function useSession(scope: string) {
-  const staffId = useSyncExternalStore(
-    subscribe,
-    () => readPersonas()[scope] ?? null,
-    () => null,
-  );
-  const ready = useSyncExternalStore(
-    noopSubscribe,
-    () => true,
-    () => false,
-  );
-  return {
-    staffId,
-    ready,
-    signIn: (id: string) => writePersona(scope, id),
-    signOut: () => clearPersona(scope),
-  };
-}
-
 // ------------------------------------------------------------------ toolbar
 type DevToolbarProps = {
   app: AppKey;
   tenantSlug?: string;
-  /** Persona choices for this app + tenant (staff / riders / customers / platform admins). */
-  personas?: Persona[];
-  personaScope?: string;
   /** Resets this app's demo data. */
   onReset?: () => void;
 };
 
-/** Floating dev-only switcher: jump between apps & tenants, pick who you act as, reset demo data. */
-export function DevToolbar({
-  app,
-  tenantSlug,
-  personas = [],
-  personaScope,
-  onReset,
-}: DevToolbarProps) {
-  const [personaId, setPersonaId] = usePersona(personaScope ?? app, personas[0]?.id ?? "");
+/**
+ * Floating dev-only switcher: jump between apps & tenants, reset the mock data of screens not yet on Supabase.
+ * Logins are real since Milestone 2.3 (no "acting as"); the whole toolbar goes in 2.8 (D-045).
+ */
+export function DevToolbar({ app, tenantSlug, onReset }: DevToolbarProps) {
   if (process.env.NEXT_PUBLIC_DEV_TOOLS === "0") return null;
 
   const link = (target: AppKey, slug = tenantSlug) =>
@@ -142,27 +58,10 @@ export function DevToolbar({
           <FlaskConical className="size-3.5" /> DEV
         </button>
       </SheetTrigger>
-      <SheetContent title="Prototype switcher" description="Phase 1 mock data — not a real login.">
-        {personas.length > 0 ? (
-          <div className="flex flex-col gap-1.5">
-            <label htmlFor="dev-persona" className="text-sm font-medium">
-              Acting as
-            </label>
-            <Select
-              id="dev-persona"
-              value={personaId}
-              onChange={(e) => setPersonaId(e.target.value)}
-            >
-              {personas.map((p) => (
-                <option key={p.id} value={p.id}>
-                  {p.label}
-                  {p.detail ? ` — ${p.detail}` : ""}
-                </option>
-              ))}
-            </Select>
-          </div>
-        ) : null}
-
+      <SheetContent
+        title="Prototype switcher"
+        description="Logins are real; screens not yet on Supabase use per-browser demo data."
+      >
         {tenantSlug ? (
           <div className="flex flex-col gap-1.5">
             <p className="text-sm font-medium">Tenant</p>

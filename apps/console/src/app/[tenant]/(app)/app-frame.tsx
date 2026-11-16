@@ -1,9 +1,9 @@
 "use client";
 
 import { useEffect, type ReactNode } from "react";
-import { useRouter } from "next/navigation";
 import {
   Banknote,
+  Hourglass,
   Bike,
   LayoutDashboard,
   LogOut,
@@ -14,30 +14,33 @@ import {
   Ticket,
   Users,
 } from "lucide-react";
-import type { PermissionKey, Tenant } from "@chowlane/types";
-import { useSession } from "@chowlane/mocks/react";
-import { AppShell, TenantLogo, TenantTheme, TopBar, type NavItem } from "@chowlane/ui";
+import { usePathname, useRouter } from "next/navigation";
+import type { PermissionKey } from "@chowlane/types";
+import type { PublicTenant } from "@chowlane/db";
+import { AppShell, EmptyState, TenantLogo, TenantTheme, TopBar, type NavItem } from "@chowlane/ui";
 import { useConsole } from "@/lib/use-console";
 
 type Item = NavItem & { perm?: PermissionKey };
 
+/** Screens already on Supabase — they work for a business that has no Phase 1 mock data (D-059). */
+const LIVE_ROUTES = /^\/[^/]+\/(riders(\/|$)|settings\/(admins|roles)$)/;
+
 /** Shell + navigation for signed-in pages (redirects to /login when signed out — LND-004). */
-export function AppFrame({ tenant: initial, children }: { tenant: Tenant; children: ReactNode }) {
+export function AppFrame({ tenant: t, children }: { tenant: PublicTenant; children: ReactNode }) {
   const router = useRouter();
-  const { staffId, ready, signOut } = useSession(`console:${initial.slug}`);
-  const { tenant, can, me } = useConsole();
-  const signedIn = ready && Boolean(staffId) && Boolean(me);
+  const pathname = usePathname();
+  const { can, me, ready, signOut, hasMockData } = useConsole();
+  const signedIn = ready && Boolean(me);
 
   useEffect(() => {
-    if (ready && (!staffId || !me)) router.replace(`/${initial.slug}/login`);
-  }, [ready, staffId, me, router, initial.slug]);
+    if (ready && !me) router.replace(`/${t.slug}/login`);
+  }, [ready, me, router, t.slug]);
 
-  const signOutNow = () => {
-    signOut();
-    router.replace(`/${initial.slug}/login`);
+  const signOutNow = async () => {
+    await signOut();
+    router.replace(`/${t.slug}/login`);
   };
 
-  const t = tenant ?? initial;
   const base = `/${t.slug}`;
   const items: Item[] = [
     { href: base, label: "Home", icon: <LayoutDashboard />, exact: true },
@@ -86,7 +89,15 @@ export function AppFrame({ tenant: initial, children }: { tenant: Tenant; childr
           </div>
         }
       >
-        {signedIn ? children : null}
+        {!signedIn ? null : hasMockData || LIVE_ROUTES.test(pathname) ? (
+          children
+        ) : (
+          <EmptyState
+            icon={<Hourglass />}
+            title="This screen moves to live data soon"
+            description="Your business is set up. Riders, admins and roles already work; the other console screens switch to your live data in the next update."
+          />
+        )}
       </AppShell>
     </TenantTheme>
   );

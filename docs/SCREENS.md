@@ -55,13 +55,14 @@
 | S-117 | Settings — Rider income (DAILY / % of delivery fee / PER_DELIVERY) | `/[tenant]/settings/rider-pay` | OWN-006 | `settings.riderPay` | ✅ |
 | S-121 | Dispatch: mode switch (AUTO / MANUAL) + "Needs rider" list | `/[tenant]/dispatch` | ADM-004, ADM-010 | `settings.dispatch`, `orders.assign` | ✅ |
 | S-118 | Admin users list + invite / edit | `/[tenant]/settings/admins` | OWN-007 | Owner | ✅ |
+| S-125 | Accept admin invite — set password (Phase 2.3) | `/[tenant]/invite` | OWN-007 | — | ✅ |
 | S-119 | Roles & permissions editor | `/[tenant]/settings/roles` | OWN-008, OWN-009 | Owner | ✅ |
 | S-120 | Rider pay report | `/[tenant]/reports/rider-pay` | OWN-012 | `reports.view` | ✅ |
 
 ## apps/rider
 | # | Screen | Route | Reqs | Status |
 |---|---|---|---|---|
-| S-200 | Login | `/[tenant]/login` | RID-001 | ✅ |
+| S-200 | Login (mobile number + password since 2.3, Q-30) | `/[tenant]/login` | RID-001 | ✅ |
 | S-201 | Home: time in/out + incoming order offer | `/[tenant]` | RID-002, RID-003, RID-004 | ✅ |
 | S-202 | Order offer detail (countdown, accept / reject with reason) | `/[tenant]/orders/[id]` | RID-004 | ✅ |
 | S-203 | Active delivery (steps + map + call) | `/[tenant]/active` | RID-005, RID-006 | ✅ |

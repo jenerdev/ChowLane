@@ -1,49 +1,61 @@
 "use client";
 
-import { use, useState } from "react";
+import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Eye, EyeOff } from "lucide-react";
-import { findTenantBySlug } from "@chowlane/mocks";
-import { useSession } from "@chowlane/mocks/react";
+import { findTenantBySlug, forTenant, staff as mockStaff } from "@chowlane/mocks";
+import { isLocalSupabase, supabaseEnv } from "@chowlane/db";
 import { Button, Field, Input, TenantLogo } from "@chowlane/ui";
-import { useMockStore } from "@/lib/store";
+import { useConsoleIdentity } from "@/lib/identity";
+
+/** Local demo logins (seed.sql) — shown only against the local Supabase (D-058). */
+const DEMO_PASSWORD = "demo1234";
 
 /**
- * S-100 Owner / Admin login (LND-004). Phase 1 mock: email must belong to an active staff member of this
- * tenant; any password is accepted. Phase 2: Supabase Auth.
+ * S-100 Owner / Admin login (LND-004): Supabase email + password. Only ACTIVE staff of this business get in;
+ * an invited admin is linked to their invite on first login (BL-2.6, BL-15.5).
  */
-export default function ConsoleLogin({ params }: { params: Promise<{ tenant: string }> }) {
-  const { tenant: slug } = use(params);
-  const tenant = findTenantBySlug(slug)!;
+export default function ConsoleLogin() {
+  const { tenant, supabase, refresh, signOut } = useConsoleIdentity();
+  const slug = tenant.slug;
   const router = useRouter();
-  const { signIn } = useSession(`console:${slug}`);
-  const staff = useMockStore((s) => s.staff).filter((x) => x.tenantId === tenant.id);
+  const [busy, setBusy] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPw, setShowPw] = useState(false);
   const [error, setError] = useState<{ field: "email" | "password"; message: string }>();
 
-  function submit() {
-    const user = staff.find((s) => s.email.toLowerCase() === email.trim().toLowerCase());
+  async function submit() {
     if (!email.trim()) return setError({ field: "email", message: "Enter your email." });
     if (!password) return setError({ field: "password", message: "Enter your password." });
-    if (!user)
-      return setError({
-        field: "email",
-        message: `No ${tenant.businessName} account uses this email.`,
+    setBusy(true);
+    try {
+      const { error: authError } = await supabase.auth.signInWithPassword({
+        email: email.trim().toLowerCase(),
+        password,
       });
-    if (user.status === "INVITED")
-      return setError({ field: "email", message: "Accept the invite sent to your email first." });
-    if (user.status === "INACTIVE")
-      return setError({
-        field: "email",
-        message: "This account is turned off. Ask the business owner.",
-      });
-    signIn(user.id);
-    router.replace(`/${slug}`);
+      if (authError) return setError({ field: "password", message: "Wrong email or password." });
+      const me = await refresh();
+      if (!me || me.staff.status !== "ACTIVE") {
+        await signOut();
+        return setError({
+          field: "email",
+          message: !me
+            ? `No ${tenant.businessName} account uses this email.`
+            : "This account is turned off. Ask the business owner.",
+        });
+      }
+      router.replace(`/${slug}`);
+    } finally {
+      setBusy(false);
+    }
   }
 
-  const demo = staff.filter((s) => s.status === "ACTIVE");
+  const mockTenant = findTenantBySlug(slug);
+  const demo =
+    mockTenant && isLocalSupabase(supabaseEnv().url)
+      ? forTenant(mockStaff, mockTenant.id).filter((s) => s.status === "ACTIVE")
+      : [];
 
   return (
     <main className="mx-auto flex min-h-dvh max-w-sm flex-col justify-center gap-8 px-4 py-10">
@@ -64,7 +76,7 @@ export default function ConsoleLogin({ params }: { params: Promise<{ tenant: str
         noValidate
         onSubmit={(e) => {
           e.preventDefault();
-          submit();
+          void submit();
         }}
       >
         <Field
@@ -112,8 +124,8 @@ export default function ConsoleLogin({ params }: { params: Promise<{ tenant: str
             </button>
           </div>
         </Field>
-        <Button type="submit" size="lg">
-          Log in
+        <Button type="submit" size="lg" disabled={busy}>
+          {busy ? "Logging in…" : "Log in"}
         </Button>
         <p className="text-sm text-muted-foreground">
           Forgot your password? Ask the business owner to reset it.
@@ -122,7 +134,7 @@ export default function ConsoleLogin({ params }: { params: Promise<{ tenant: str
 
       {demo.length > 0 ? (
         <div className="rounded-2xl border border-dashed p-4 text-sm">
-          <p className="font-medium">Demo accounts (any password)</p>
+          <p className="font-medium">Local demo accounts (password {DEMO_PASSWORD})</p>
           <ul className="mt-2 flex flex-col gap-1">
             {demo.map((s) => (
               <li key={s.id}>
@@ -131,7 +143,7 @@ export default function ConsoleLogin({ params }: { params: Promise<{ tenant: str
                   className="text-left text-brand underline-offset-4 hover:underline"
                   onClick={() => {
                     setEmail(s.email);
-                    setPassword("demo-1234");
+                    setPassword(DEMO_PASSWORD);
                     setError(undefined);
                   }}
                 >

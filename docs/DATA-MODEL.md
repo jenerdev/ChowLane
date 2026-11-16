@@ -1,6 +1,6 @@
 # ChowLane — Data Model
 
-> Last updated: 2026-11-15 · Version **v1 — FROZEN** at Phase 1 sign-off (D-053). Phase 2 builds the database from this.
+> Last updated: 2026-11-15 · Version **v1.1** — v1 frozen at Phase 1 sign-off (D-053); v1.1 (2026-11-17, D-061): `TenantSettings.deliveryFee` and `riderPay` optional on a new business. Phase 2 builds the database from this.
 > Changes after the freeze need a decision in DECISIONS.md and a note here. `packages/types` must stay in sync.
 > Phase 1: TypeScript types in `packages/types` + mocks in `packages/mocks`.
 > Phase 2: Supabase tables (snake_case), every tenant table has `tenant_id` + RLS.
@@ -31,11 +31,11 @@ Tenant { id, slug, businessName, shortName,      // shortName = PWA home-screen 
 
 TenantSettings { tenantId,
   serviceArea: { center: LatLng, radiusKm },
-  deliveryFee:
+  deliveryFee?:                                                   // v1.1: unset on a new business (D-061)
       { mode: 'PER_KM', baseFee, ratePerKm, includedKm, minFee }   // store → customer distance
     | { mode: 'FIXED', amount }
     | { mode: 'PER_BARANGAY' },                                    // fees in BarangayFee table
-  riderPay:
+  riderPay?:                                   // v1.1: unset on a new business (D-061)
       { mode: 'COMMISSION', percent }          // % of the delivery fee (D-022)
     | { mode: 'DAILY', dailyRate }
     | { mode: 'PER_DELIVERY', ratePerDelivery },

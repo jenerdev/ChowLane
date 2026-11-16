@@ -56,8 +56,10 @@ export type DispatchMode = "AUTO" | "MANUAL";
 export type TenantSettings = {
   tenantId: ID;
   serviceArea: { center: LatLng; radiusKm: number };
-  deliveryFee: DeliveryFeeRule;
-  riderPay: RiderPayRule;
+  /** Not set yet on a new business (D-061): checkout stays closed until it is. */
+  deliveryFee?: DeliveryFeeRule;
+  /** Not set yet on a new business (D-061). */
+  riderPay?: RiderPayRule;
   autoApproveVerifiedCustomers: boolean;
   dispatchMode: DispatchMode;
   riderResponseTimeoutSec: number;

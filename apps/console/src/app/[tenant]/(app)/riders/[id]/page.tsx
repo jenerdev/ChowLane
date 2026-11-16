@@ -9,6 +9,7 @@ import {
   formatDateTime,
   formatPeso,
   formatPhMobile,
+  riderPayRuleLabel,
 } from "@chowlane/lib";
 import {
   Badge,
@@ -23,10 +24,12 @@ import {
   RemitBadge,
   Stat,
 } from "@chowlane/ui";
+import { toRider, toShift, toTenantSettings } from "@chowlane/db/mappers";
 import { RequirePermission } from "@/components/require-permission";
 import { useConsole, useNow } from "@/lib/use-console";
+import { must, useLive } from "@/lib/use-live";
 
-/** S-109 — rider profile, current order, shifts, earnings (ADM-005, OWN-012 basic). */
+/** S-109 — rider profile, current order, shifts, earnings (ADM-005, OWN-012 basic). Live since 2.3. */
 export default function RiderDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
   return (
@@ -40,34 +43,53 @@ const hours = (a: string, b: string | undefined, nowMs: number) =>
   (((b ? Date.parse(b) : nowMs) - Date.parse(a)) / 3_600_000).toFixed(1);
 
 function Detail({ id }: { id: string }) {
-  const { db, tenant, base, can, settings } = useConsole();
+  const { live, base, can, db } = useConsole();
   const nowMs = useNow();
-  const r = db.riders.find((x) => x.id === id && x.tenantId === tenant.id);
-  if (!r) return <EmptyState icon={<Bike />} title="Rider not found" />;
+  const data = useLive(`rider:${id}`, async (sb) => {
+    const rider = must(
+      await sb.from("riders").select("*").eq("id", id).eq("tenant_id", live.id).maybeSingle(),
+    );
+    if (!rider) return null;
+    const [settings, shifts, orders] = await Promise.all([
+      sb.from("tenant_settings").select("*").eq("tenant_id", live.id).single(),
+      sb.from("shifts").select("*").eq("rider_id", id).order("time_in", { ascending: false }),
+      sb
+        .from("orders")
+        .select("id, order_number, status, delivery_fee, created_at, merchant:merchants(name)")
+        .eq("rider_id", id),
+    ]);
+    return {
+      rider: toRider(rider),
+      settings: toTenantSettings(must(settings)),
+      shifts: must(shifts).map(toShift),
+      orders: must(orders),
+    };
+  });
+  if (data.loading) return null;
+  if (data.error)
+    return <EmptyState icon={<Bike />} title="Couldn't load this rider" description={data.error} />;
+  if (!data.data) return <EmptyState icon={<Bike />} title="Rider not found" />;
+  const { rider: r, settings, shifts, orders } = data.data;
 
   const weekAgo = nowMs - 7 * 86_400_000;
-  const delivered = db.orders.filter((o) => o.riderId === r.id && o.status === "DELIVERED");
-  const shifts = db.shifts
-    .filter((s) => s.riderId === r.id)
-    .sort((a, b) => Date.parse(b.timeIn) - Date.parse(a.timeIn));
+  const delivered = orders.filter((o) => o.status === "DELIVERED");
   const rule = effectiveRiderPayRule(settings.riderPay, r.payOverride);
   const week = computeRiderPay({
     rule,
     deliveredOrderFees: delivered
-      .filter((o) => Date.parse(o.createdAt) >= weekAgo)
-      .map((o) => o.deliveryFee),
+      .filter((o) => Date.parse(o.created_at) >= weekAgo)
+      .map((o) => o.delivery_fee),
     shiftTimeIns: shifts.filter((s) => Date.parse(s.timeIn) >= weekAgo).map((s) => s.timeIn),
   });
-  const active = db.orders.find((o) => o.id === r.activeOrderId);
+  const active = orders.find((o) => o.id === r.activeOrderId);
+  // The order screen still runs on mock data (until 2.5–2.6): open the same order by its number.
+  const activeMockId = active
+    ? db.orders.find((o) => o.orderNumber === active.order_number)?.id
+    : undefined;
   const toRemit = shifts
     .filter((s) => s.remitStatus === "PENDING")
     .reduce((sum, s) => sum + s.expectedRemit, 0);
-  const payLabel =
-    rule.mode === "DAILY"
-      ? `${formatPeso(rule.dailyRate)} per day`
-      : rule.mode === "COMMISSION"
-        ? `${rule.percent}% of delivery fee`
-        : `${formatPeso(rule.ratePerDelivery)} per delivery`;
+  const payLabel = riderPayRuleLabel(rule);
 
   return (
     <>
@@ -106,16 +128,16 @@ function Detail({ id }: { id: string }) {
         <Card className="mb-6">
           <CardContent className="flex items-center justify-between gap-3 pt-5">
             <div className="text-sm">
-              <p className="font-medium">Current order {active.orderNumber}</p>
-              <p className="text-[13px] text-muted-foreground">
-                {db.merchants.find((m) => m.id === active.merchantId)?.name}
-              </p>
+              <p className="font-medium">Current order {active.order_number}</p>
+              <p className="text-[13px] text-muted-foreground">{active.merchant?.name}</p>
             </div>
             <div className="flex items-center gap-3">
               <OrderStatusBadge status={active.status} />
-              <Button variant="outline" size="sm" asChild>
-                <Link href={`${base}/orders/${active.id}`}>Open</Link>
-              </Button>
+              {activeMockId ? (
+                <Button variant="outline" size="sm" asChild>
+                  <Link href={`${base}/orders/${activeMockId}`}>Open</Link>
+                </Button>
+              ) : null}
             </div>
           </CardContent>
         </Card>

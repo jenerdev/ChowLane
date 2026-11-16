@@ -37,7 +37,7 @@ function Area() {
       <FormSection
         title="Area"
         description={
-          settings.deliveryFee.mode === "PER_BARANGAY"
+          settings.deliveryFee?.mode === "PER_BARANGAY"
             ? "You charge per barangay, so only listed barangays can order. This area is still used for the map and rider search."
             : "Customers outside this circle can't order. Tap the map to move the center."
         }

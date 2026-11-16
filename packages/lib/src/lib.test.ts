@@ -16,6 +16,7 @@ import {
   computeDeliveryFee,
   computeExpectedRemit,
   computeRiderPay,
+  riderPayRuleLabel,
   computeSubtotal,
   exceedsMaxOrder,
   formatPeso,
@@ -196,6 +197,13 @@ describe("rider pay", () => {
       shiftTimeIns: ["2026-11-15T01:00:00Z", "2026-11-15T08:00:00Z", "2026-11-16T01:00:00Z"],
     });
     expect(pay).toBe(100000);
+  });
+  it("a business without a pay rule yet pays ₱0 and says so (D-061)", () => {
+    expect(computeRiderPay({ rule: undefined, deliveredOrderFees: [6000], shiftTimeIns: [] })).toBe(
+      0,
+    );
+    expect(riderPayRuleLabel(undefined)).toBe("Not set yet");
+    expect(riderPayRuleLabel({ mode: "COMMISSION", percent: 80 })).toBe("80% of the delivery fee");
   });
 });
 

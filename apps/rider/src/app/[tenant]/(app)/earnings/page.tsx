@@ -101,7 +101,7 @@ export default function Earnings() {
                   </span>
                 </span>
                 <span className="tabular-nums">
-                  {rule.mode === "DAILY" ? "—" : formatPeso(o.riderEarning ?? 0)}
+                  {rule?.mode === "DAILY" ? "—" : formatPeso(o.riderEarning ?? 0)}
                 </span>
               </li>
             ))}

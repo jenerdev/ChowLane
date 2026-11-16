@@ -13,12 +13,12 @@
 | FND-001 | Turborepo with apps `landing`, `console`, `rider`, `customer`, `platform` + shared packages | U | ✅ | — |
 | FND-002 | **Mobile-first** responsive design across all apps | U | ✅ | — |
 | FND-003 | Shared design system in `packages/ui` | P | ✅ | — |
-| FND-004 | Tenant theming (business name, logo, primary color) in customer & rider apps | P | ✅ | ⬜ |
+| FND-004 | Tenant theming (business name, logo, primary color) in customer & rider apps | P | ✅ | ✅ |
 | FND-005 | Typed mock data + seeded scenarios matching DATA-MODEL.md | P | ✅ | — |
 | FND-006 | Shared business logic in `packages/lib` (fee calc, rider pay calc, order status machine, permission check) | P | ✅ | ⬜ |
 | FND-007 | Dev-only role/scenario switcher for walkthroughs | P | ✅ | — |
 | FND-008 | **Every tenant app (console, rider, customer) is installable as a PWA** | U | ✅ | — |
-| FND-009 | Per-tenant manifest: tenant name, icon, theme color, scope `/[tenant]/` | P | ✅ | ⬜ |
+| FND-009 | Per-tenant manifest: tenant name, icon, theme color, scope `/[tenant]/` | P | ✅ | ✅ |
 | FND-010 | Service worker: cached app shell + offline fallback page | P | ✅ | — |
 | FND-011 | Install prompt: "Install app" button (Android/desktop) + "Add to Home Screen" guide (iOS) | P | ✅ | — |
 | FND-012 | "New version available" update banner | P | ✅ | — |
@@ -29,9 +29,9 @@
 | ID | Requirement | Src | UI | BE |
 |---|---|---|---|---|
 | LND-001 | Landing page that shows what ChowLane is about (hero, how it works, features for owner/admin/rider/customer, CTA) — placeholder ChowLane brand designed by Claude | U | ✅ | — |
-| LND-002 | Business owner can sign up (account → business name → storefront link → logo & color → delivery area → review) | U | ✅ | ⬜ |
-| LND-003 | Storefront slug availability check | P | ✅ | ⬜ |
-| LND-004 | Owner / Admin login (console `/[tenant]/login`; landing `/login` finds the console by business link) | U | ✅ | ⬜ |
+| LND-002 | Business owner can sign up (account → business name → storefront link → logo & color → delivery area → review) | U | ✅ | ✅ |
+| LND-003 | Storefront slug availability check | P | ✅ | ✅ |
+| LND-004 | Owner / Admin login (console `/[tenant]/login`; landing `/login` finds the console by business link) | U | ✅ | ✅ |
 
 ## OWN — Owner (console)
 
@@ -44,8 +44,8 @@
 | OWN-005 | Delivery fee (Owner **or Admin**): choose **PER_KM** (store → customer distance; base fee, rate/km, included km, min fee), **FIXED** (amount), or **PER_BARANGAY** | U | ✅ | ⬜ |
 | OWN-014 | Barangay price list: add / edit / deactivate barangays with a delivery fee each | U | ✅ | ⬜ |
 | OWN-006 | Rider income (Owner): **fixed DAILY** rate, **% of delivery fee**, or **fixed amount PER_DELIVERY** | U | ✅ | ⬜ |
-| OWN-007 | Admin users: invite, edit, deactivate, delete | U | ✅ | ⬜ |
-| OWN-008 | Roles & permissions: create roles, toggle permissions per role, assign role to admin | U | ✅ | ⬜ |
+| OWN-007 | Admin users: invite, edit, deactivate, delete | U | ✅ | ✅ |
+| OWN-008 | Roles & permissions: create roles, toggle permissions per role, assign role to admin | U | ✅ | ✅ |
 | OWN-009 | Owner has every permission; owner's access can't be restricted | U | ✅ | ⬜ |
 | OWN-010 | Service area (center + radius) — orders outside are blocked | P | ✅ | ⬜ |
 | OWN-011 | Order approval setting: auto-approve orders from verified customers (on/off) | P | ✅ | ⬜ |
@@ -69,8 +69,8 @@
 | ADM-011 | Order assignment history (offers, accepts, rejects + reasons) on order detail | P | ✅ | ⬜ |
 | ADM-013 | Customer loyalty: balances, progress, history; manual points adjustment (reason) | P | ✅ | ⬜ |
 | ADM-012 | **Cash remittances**: list of shifts with expected cash; record amount received; flag short / over | U | ✅ | ⬜ |
-| ADM-005 | **Monitor riders**: timed-in/out status, current order, location on map | U | ✅ | ⬜ |
-| ADM-006 | **Riders CRUD** (name, phone, vehicle, plate, pay override, active/inactive) | U | ✅ | ⬜ |
+| ADM-005 | **Monitor riders**: timed-in/out status, current order, location on map | U | ✅ | 🟨 |
+| ADM-006 | **Riders CRUD** (name, phone, vehicle, plate, pay override, active/inactive) | U | ✅ | ✅ |
 | ADM-007 | Cancel an order with reason | P | ✅ | ⬜ |
 | ADM-008 | Dashboard overview (pending approvals, active orders, riders on shift) | P | ✅ | ⬜ |
 | ADM-009 | Customers list & detail | P | ✅ | ⬜ |
@@ -79,7 +79,7 @@
 
 | ID | Requirement | Src | UI | BE |
 |---|---|---|---|---|
-| RID-001 | Rider login (account created by Owner/Admin) | P | ✅ | ⬜ |
+| RID-001 | Rider login (account created by Owner/Admin) | P | ✅ | ✅ |
 | RID-002 | **Time in / time out** | U | ✅ | ⬜ |
 | RID-003 | Only online (timed-in) riders receive orders | U | ✅ | ⬜ |
 | RID-004 | **Incoming order offer** (auto or admin-assigned): details + countdown → **Accept** / **Reject (reason)** | U | ✅ | ⬜ |
@@ -99,7 +99,7 @@
 
 | ID | Requirement | Src | UI | BE |
 |---|---|---|---|---|
-| CUS-001 | **Sign up / log in with Facebook** | U | ✅ | ⬜ |
+| CUS-001 | **Sign up / log in with Facebook** | U | ✅ | ✅ |
 | CUS-002 | **Location gate**: customer can only order if they allow current-location tracking | U | ✅ | ⬜ |
 | CUS-003 | Branded home with merchants | P | ✅ | ⬜ |
 | CUS-004 | Merchant page with products; cart (one merchant per cart) | P | ✅ | ⬜ |
@@ -119,7 +119,7 @@
 
 | ID | Requirement | Src | UI | BE |
 |---|---|---|---|---|
-| PLT-001 | Platform Admin login | P | ✅ | ⬜ |
+| PLT-001 | Platform Admin login | P | ✅ | ✅ |
 | PLT-002 | Overview: stats across all tenants (tenants active/suspended, orders today/month, delivered, riders online, billing due) | U | ✅ | ⬜ |
 | PLT-003 | Tenants list: name, slug, status, billing model, orders this month, riders, created date; search & filter | U | ✅ | ⬜ |
 | PLT-004 | Tenant detail: stats (orders, delivered, cancelled, revenue from delivery fees, active customers, riders online) | U | ✅ | ⬜ |
@@ -131,3 +131,5 @@
 | PLT-010 | Billing overview: all tenants' amounts due / paid this month | P | ✅ | ⬜ |
 
 **Totals:** 89 requirements (FND 13 · LND 4 · OWN 19 · ADM 13 · RID 15 · CUS 15 · PLT 10) — 88 have a Phase 1 UI part (FND-013 is backend only)
+
+**Backend (Phase 2):** 11 ✅ · 1 🟨 after Milestone 2.3 (logins, signup, tenant branding & manifests, admins/roles, riders CRUD on Supabase).

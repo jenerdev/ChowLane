@@ -1349,12 +1349,12 @@ export type Database = {
         Row: {
           accepted_id_types: Database["public"]["Enums"]["id_type"][];
           auto_approve_verified_customers: boolean;
-          delivery_fee: NonNullable<Json>;
+          delivery_fee: Json | null;
           dispatch_mode: Database["public"]["Enums"]["dispatch_mode"];
           loyalty: NonNullable<Json>;
           max_order_subtotal: number;
           pin_adjust_radius_m: number;
-          rider_pay: NonNullable<Json>;
+          rider_pay: Json | null;
           rider_response_timeout_sec: number;
           service_area_lat: number;
           service_area_lng: number;
@@ -1365,12 +1365,12 @@ export type Database = {
         Insert: {
           accepted_id_types?: Database["public"]["Enums"]["id_type"][];
           auto_approve_verified_customers?: boolean;
-          delivery_fee: NonNullable<Json>;
-          dispatch_mode: Database["public"]["Enums"]["dispatch_mode"];
+          delivery_fee?: Json | null;
+          dispatch_mode?: Database["public"]["Enums"]["dispatch_mode"];
           loyalty: NonNullable<Json>;
           max_order_subtotal?: number;
           pin_adjust_radius_m?: number;
-          rider_pay: NonNullable<Json>;
+          rider_pay?: Json | null;
           rider_response_timeout_sec?: number;
           service_area_lat: number;
           service_area_lng: number;
@@ -1380,12 +1380,12 @@ export type Database = {
         Update: {
           accepted_id_types?: Database["public"]["Enums"]["id_type"][];
           auto_approve_verified_customers?: boolean;
-          delivery_fee?: NonNullable<Json>;
+          delivery_fee?: Json | null;
           dispatch_mode?: Database["public"]["Enums"]["dispatch_mode"];
           loyalty?: NonNullable<Json>;
           max_order_subtotal?: number;
           pin_adjust_radius_m?: number;
-          rider_pay?: NonNullable<Json>;
+          rider_pay?: Json | null;
           rider_response_timeout_sec?: number;
           service_area_lat?: number;
           service_area_lng?: number;
@@ -1584,7 +1584,7 @@ export type Database = {
         Row: {
           accepted_id_types: Database["public"]["Enums"]["id_type"][];
           auto_approve_verified_customers: boolean;
-          delivery_fee: NonNullable<Json>;
+          delivery_fee: Json | null;
           loyalty: NonNullable<Json>;
           max_order_subtotal: number;
           pin_adjust_radius_m: number;
@@ -1656,6 +1656,37 @@ export type Database = {
       };
     };
     Functions: {
+      accept_staff_invite: { Args: { p_tenant: string }; Returns: string };
+      auth_login_status: {
+        Args: { p_email: string };
+        Returns: {
+          in_use: boolean;
+          user_id: string;
+        }[];
+      };
+      create_tenant: {
+        Args: {
+          p_admin_permissions: Database["public"]["Enums"]["permission_key"][];
+          p_background_color: string;
+          p_business_name: string;
+          p_center_lat: number;
+          p_center_lng: number;
+          p_loyalty: Json;
+          p_owner_auth_id: string;
+          p_owner_email: string;
+          p_owner_name: string;
+          p_primary_color: string;
+          p_radius_km: number;
+          p_short_name: string;
+          p_slug: string;
+        };
+        Returns: string;
+      };
+      ensure_customer: { Args: { p_tenant: string }; Returns: string };
+      has_permission: {
+        Args: { p_perm: Database["public"]["Enums"]["permission_key"]; p_tenant: string };
+        Returns: boolean;
+      };
       is_nonneg_int: { Args: { v: Json }; Returns: boolean };
       is_valid_delivery_fee: { Args: { r: Json }; Returns: boolean };
       is_valid_loyalty: { Args: { l: Json }; Returns: boolean };

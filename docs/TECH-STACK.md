@@ -33,6 +33,7 @@
 | Supabase CLI | `supabase` 3.1.0 (root dev dependency) | `pnpm db:start` / `db:stop` / `db:status` / `db:reset` / `db:env` / `db:types` / `db:seed:gen` / `db:test:gen` / `db:test` — D-056, D-058 |
 | Supabase JS | `@supabase/supabase-js` 2.119.0, `@supabase/ssr` 0.12.7 | In `@chowlane/db` only |
 | Docker Desktop | dev machine | Runs the local Supabase stack |
+| cross-env | 10.1.0 (apps, dev) | `dev`/`start` set `NODE_OPTIONS=--max-http-header-size=65536` — all apps share `localhost` cookies (D-063) |
 | tsx | 4.23.15 (`@chowlane/db` dev) | Runs the seed / RLS-test generators (`pnpm db:seed:gen`, `pnpm db:test:gen`) |
 | pgTAP | bundled with Supabase | RLS tests: `pnpm db:test` (`supabase test db`) — D-058 |
 | GitHub Actions | `.github/workflows/ci.yml` | job `check`: format → lint → typecheck → test → build; job `database`: Postgres + RLS tests + generated-files check |
@@ -146,6 +147,21 @@ order in each status) so every screen can be reviewed. Live cross-app sync comes
 6. RLS tests: `pnpm db:test:gen` (after changing policies or the matrix in `packages/db/scripts/gen-rls-tests.ts`),
    then `pnpm db:test`.
 7. New tables: enable RLS in the same migration — Supabase grants new tables to `anon` / `authenticated` by default.
+8. Auth emails (admin invites) go to Mailpit: http://127.0.0.1:55324. Local Auth sends at most 2 emails per hour
+   (`[auth.rate_limit] email_sent`).
+
+### Auth in the apps (Milestone 2.3)
+
+- `@chowlane/db/react` → `useAuthIdentity(app, resolve)`: the app's session + its own identity (staff row of this
+  tenant, rider row, customer row via `ensure_customer`, platform admin). Each app wraps `/[tenant]` (or the root)
+  in an identity provider (`src/lib/identity.tsx`); the existing hooks (`useConsole`, `useRider`, `useCustomer`,
+  `usePlatform`) read it.
+- `@chowlane/db/tenant` → `getPublicTenant(slug)` (cached per request) for layouts, manifests and icons.
+- `@chowlane/db/mappers` → DB rows → `@chowlane/types` shapes.
+- Server actions with the Auth admin API: `apps/landing/src/lib/signup-actions.ts` (signup),
+  `apps/console/src/lib/team-actions.ts` (invites, rider logins). They check `has_permission` first.
+- Customer Facebook login (hosted): `signInWithOAuth` → `/[tenant]/auth/callback` (code exchange). Add each app's
+  callback / invite URLs to Supabase Auth → URL configuration when deploying (2.8).
 
 Apps import `createServerSupabase()` from `@chowlane/db/server` (Server Components / Actions / Route Handlers, user
 session → RLS) and `createBrowserSupabase()` from `@chowlane/db/browser` (Client Components). Env values are read

@@ -106,7 +106,7 @@ function Barangays() {
         back={{ href: `${base}/settings/pricing`, label: "Delivery fee" }}
         title="Barangay prices"
         description={
-          settings.deliveryFee.mode === "PER_BARANGAY"
+          settings.deliveryFee?.mode === "PER_BARANGAY"
             ? "Customers pick their barangay at checkout. Only active barangays can order."
             : "Not in use — your delivery fee is set to per kilometer or fixed."
         }

@@ -1,5 +1,21 @@
 import type { Centavos, CustomerLoyalty, LoyaltySettings } from "@chowlane/types";
 
+/** Loyalty program of a new business: switched off, example values ready for when the owner turns it on. */
+export const NEW_TENANT_LOYALTY: LoyaltySettings = {
+  enabled: false,
+  freeDelivery: { enabled: false, ordersRequired: 10 },
+  freeGift: { enabled: false, ordersRequired: 10, giftName: "" },
+  points: {
+    enabled: false,
+    earnMode: "PER_ORDER",
+    pointsPerOrder: 5,
+    centavosPerPoint: 5000,
+    pointValue: 100, // BL-14.5: 1 point = ₱1
+    minRedeemPoints: 50, // BL-14.5
+    maxRedeemPercent: 50, // BL-14.5
+  },
+};
+
 export const EMPTY_LOYALTY: CustomerLoyalty = {
   deliveredOrders: 0,
   ordersTowardFreeDelivery: 0,

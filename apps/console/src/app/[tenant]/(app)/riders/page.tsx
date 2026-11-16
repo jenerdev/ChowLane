@@ -4,6 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { Bike, ChevronRight, Map, Plus, Wallet } from "lucide-react";
 import { formatDateTime } from "@chowlane/lib";
+import { toRider } from "@chowlane/db/mappers";
 import {
   Avatar,
   Badge,
@@ -16,10 +17,11 @@ import {
 } from "@chowlane/ui";
 import { RequirePermission } from "@/components/require-permission";
 import { useConsole } from "@/lib/use-console";
+import { must, useLive } from "@/lib/use-live";
 
 type Tab = "on" | "off" | "inactive";
 
-/** S-107 — riders by shift status (ADM-005, ADM-006). */
+/** S-107 — riders by shift status (ADM-005, ADM-006). Live on Supabase since 2.3 (D-059). */
 export default function RidersPage() {
   return (
     <RequirePermission perm="riders.view">
@@ -29,16 +31,30 @@ export default function RidersPage() {
 }
 
 function Riders() {
-  const { db, tenant, base, can } = useConsole();
+  const { live, base, can } = useConsole();
   const [tab, setTab] = useState<Tab>("on");
-  const all = db.riders.filter((r) => r.tenantId === tenant.id);
+  const data = useLive(`riders:${live.id}`, async (sb) => {
+    const riders = must(await sb.from("riders").select("*").eq("tenant_id", live.id).order("name"));
+    const shiftIds = riders.flatMap((r) => (r.current_shift_id ? [r.current_shift_id] : []));
+    const orderIds = riders.flatMap((r) => (r.active_order_id ? [r.active_order_id] : []));
+    const [shifts, orders] = await Promise.all([
+      shiftIds.length
+        ? sb.from("shifts").select("id, time_in").in("id", shiftIds)
+        : { data: [], error: null },
+      orderIds.length
+        ? sb.from("orders").select("id, order_number").in("id", orderIds)
+        : { data: [], error: null },
+    ]);
+    return { riders: riders.map(toRider), shifts: must(shifts), orders: must(orders) };
+  });
+  const all = data.data?.riders ?? [];
   const groups: Record<Tab, typeof all> = {
     on: all.filter((r) => r.status === "ACTIVE" && r.isOnShift),
     off: all.filter((r) => r.status === "ACTIVE" && !r.isOnShift),
     inactive: all.filter((r) => r.status === "INACTIVE"),
   };
-  const shiftStart = (id?: string) => db.shifts.find((s) => s.id === id)?.timeIn;
-  const orderNo = (id?: string) => db.orders.find((o) => o.id === id)?.orderNumber;
+  const shiftStart = (id?: string) => data.data?.shifts.find((s) => s.id === id)?.time_in;
+  const orderNo = (id?: string) => data.data?.orders.find((o) => o.id === id)?.order_number;
 
   return (
     <>
@@ -75,7 +91,12 @@ function Riders() {
           <TabsTrigger value="inactive">Inactive ({groups.inactive.length})</TabsTrigger>
         </TabsList>
       </Tabs>
-      {groups[tab].length === 0 ? (
+      {data.error ? (
+        <p role="alert" className="mb-3 text-sm text-danger">
+          Couldn&apos;t load riders: {data.error}
+        </p>
+      ) : null}
+      {data.loading ? null : groups[tab].length === 0 ? (
         <EmptyState
           icon={<Bike />}
           title={

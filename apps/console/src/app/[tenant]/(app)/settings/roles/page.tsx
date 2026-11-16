@@ -4,6 +4,7 @@ import { useState } from "react";
 import { Plus } from "lucide-react";
 import type { PermissionKey, Role } from "@chowlane/types";
 import { PERMISSION_GROUPS } from "@chowlane/lib";
+import { toRole } from "@chowlane/db/mappers";
 import {
   Badge,
   Button,
@@ -17,12 +18,12 @@ import {
   toast,
 } from "@chowlane/ui";
 import { RequirePermission } from "@/components/require-permission";
-import { useMockStore } from "@/lib/store";
-import { newId, useConsole } from "@/lib/use-console";
+import { useConsole } from "@/lib/use-console";
+import { must, useLive } from "@/lib/use-live";
 
 const OWNER_ONLY: PermissionKey[] = ["admins.manage"];
 
-/** S-119 — roles: named sets of permissions the Owner assigns to admins (OWN-008, BL-2.3). */
+/** S-119 — roles: named sets of permissions the Owner assigns to admins (OWN-008, BL-2.3). Live since 2.3. */
 export default function RolesPage() {
   return (
     <RequirePermission perm="admins.manage">
@@ -32,12 +33,16 @@ export default function RolesPage() {
 }
 
 function Roles() {
-  const { db, tenant, base } = useConsole();
-  const insert = useMockStore((s) => s.insert);
-  const patch = useMockStore((s) => s.patch);
-  const remove = useMockStore((s) => s.remove);
-  const roles = db.roles.filter((r) => r.tenantId === tenant.id);
-  const membersOf = (id: string) => db.staff.filter((s) => s.roleId === id).length;
+  const { live, base, supabase } = useConsole();
+  const data = useLive(`roles:${live.id}`, async (sb) => {
+    const [roles, staff] = await Promise.all([
+      sb.from("roles").select("*").eq("tenant_id", live.id).order("name"),
+      sb.from("staff_users").select("role_id").eq("tenant_id", live.id),
+    ]);
+    return { roles: must(roles).map(toRole), roleIds: must(staff).map((x) => x.role_id) };
+  });
+  const roles = data.data?.roles ?? [];
+  const membersOf = (id: string) => (data.data?.roleIds ?? []).filter((r) => r === id).length;
 
   const [editing, setEditing] = useState<Role | "new" | null>(null);
   const [name, setName] = useState("");
@@ -52,7 +57,7 @@ function Roles() {
     setPerms(r === "new" ? ["orders.view"] : r.permissions);
   };
 
-  function save() {
+  async function save() {
     const n = name.trim();
     if (n.length < 2) return setError("Enter a role name.");
     if (
@@ -62,17 +67,18 @@ function Roles() {
       )
     )
       return setError("Another role has this name.");
-    if (editing === "new")
-      insert("roles", {
-        id: newId("r"),
-        tenantId: tenant.id,
-        name: n,
-        permissions: perms,
-        isDefault: false,
-      });
-    else if (editing) patch("roles", editing.id, { name: n, permissions: perms });
+    const { error } =
+      editing === "new"
+        ? await supabase.from("roles").insert({ tenant_id: live.id, name: n, permissions: perms })
+        : await supabase
+            .from("roles")
+            .update({ name: n, permissions: perms })
+            .eq("id", editing!.id);
+    if (error)
+      return setError(error.code === "23505" ? "Another role has this name." : error.message);
     toast("Role saved");
     setEditing(null);
+    await data.reload();
   }
 
   const canDelete =
@@ -119,7 +125,7 @@ function Roles() {
             className="flex flex-col gap-5"
             onSubmit={(e) => {
               e.preventDefault();
-              save();
+              void save();
             }}
           >
             <Field
@@ -188,10 +194,11 @@ function Roles() {
         title="Delete this role?"
         confirmLabel="Delete role"
         destructive
-        onConfirm={() => {
+        onConfirm={async () => {
           if (editing && editing !== "new") {
-            remove("roles", editing.id);
-            toast("Role deleted");
+            const { error } = await supabase.from("roles").delete().eq("id", editing.id);
+            toast(error ? error.message : "Role deleted");
+            await data.reload();
           }
           setEditing(null);
         }}

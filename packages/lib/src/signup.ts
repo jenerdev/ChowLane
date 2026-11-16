@@ -88,3 +88,18 @@ export function checkPassword(pw: string): string | null {
 export function isHexColor(value: string): boolean {
   return /^#[0-9a-fA-F]{6}$/.test(value);
 }
+
+/** Max length of the home-screen label under an installed app (Tenant.shortName). */
+export const SHORT_NAME_MAX = 12;
+
+/**
+ * Home-screen label for a new business (BL-15.6): the business name if it fits in 12 characters, else its first
+ * word if that fits, else the name cut to 12 characters. The owner can change it later in Settings.
+ */
+export function shortNameFor(businessName: string): string {
+  const name = businessName.trim().replace(/\s+/g, " ");
+  if (name.length <= SHORT_NAME_MAX) return name;
+  const first = name.split(" ")[0]!;
+  if (first.length <= SHORT_NAME_MAX) return first;
+  return name.slice(0, SHORT_NAME_MAX).trim();
+}

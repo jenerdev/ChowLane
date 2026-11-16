@@ -2,9 +2,14 @@
 -- Run: pnpm db:test (local Supabase with the seed loaded: pnpm db:reset).
 begin;
 create extension if not exists pgtap with schema extensions;
-select plan(269);
+select plan(305);
 
 create schema if not exists tests;
+
+-- A login with no business role: carla@fastbite.ph has an INVITED staff row in the seed.
+insert into auth.users (instance_id, id, aud, role, email, raw_app_meta_data, raw_user_meta_data)
+values ('00000000-0000-0000-0000-000000000000', 'be92927e-4f79-516b-9788-26675277611d', 'authenticated', 'authenticated',
+  'carla@fastbite.ph', '{}', '{}');
 
 -- Rows visible to a user (auth uid, or null = anonymous); -1 when the table is not readable at all.
 create or replace function tests.rls_count(p_auth uuid, p_table text) returns bigint
@@ -689,6 +694,72 @@ select is(tests.rls_count('65d6130d-c8eb-5ff8-996b-952310de7c97'::uuid, 'public.
 select is(tests.rls_count('65d6130d-c8eb-5ff8-996b-952310de7c97'::uuid, 'public.loyalty_transactions'),
   (select count(*) from public.loyalty_transactions where customer_id = '76c9a1f0-8b00-5942-89e2-428ab20f68a8'),
   $q$FastBite customer with a pending order: public.loyalty_transactions rows$q$);
+select is(tests.rls_count('be92927e-4f79-516b-9788-26675277611d'::uuid, 'public.platform_admins'),
+  (select count(*) from public.platform_admins where false),
+  $q$signed-in stranger (invited, not accepted): public.platform_admins rows$q$);
+select is(tests.rls_count('be92927e-4f79-516b-9788-26675277611d'::uuid, 'public.tenants'),
+  (select count(*) from public.tenants where false),
+  $q$signed-in stranger (invited, not accepted): public.tenants rows$q$);
+select is(tests.rls_count('be92927e-4f79-516b-9788-26675277611d'::uuid, 'public.tenant_settings'),
+  (select count(*) from public.tenant_settings where false),
+  $q$signed-in stranger (invited, not accepted): public.tenant_settings rows$q$);
+select is(tests.rls_count('be92927e-4f79-516b-9788-26675277611d'::uuid, 'public.tenant_billing'),
+  (select count(*) from public.tenant_billing where false),
+  $q$signed-in stranger (invited, not accepted): public.tenant_billing rows$q$);
+select is(tests.rls_count('be92927e-4f79-516b-9788-26675277611d'::uuid, 'public.billing_statements'),
+  (select count(*) from public.billing_statements where false),
+  $q$signed-in stranger (invited, not accepted): public.billing_statements rows$q$);
+select is(tests.rls_count('be92927e-4f79-516b-9788-26675277611d'::uuid, 'public.barangay_fees'),
+  (select count(*) from public.barangay_fees where (is_active and tenant_id in (select id from public.tenants where status = 'ACTIVE'))),
+  $q$signed-in stranger (invited, not accepted): public.barangay_fees rows$q$);
+select is(tests.rls_count('be92927e-4f79-516b-9788-26675277611d'::uuid, 'public.roles'),
+  (select count(*) from public.roles where false),
+  $q$signed-in stranger (invited, not accepted): public.roles rows$q$);
+select is(tests.rls_count('be92927e-4f79-516b-9788-26675277611d'::uuid, 'public.staff_users'),
+  (select count(*) from public.staff_users where false),
+  $q$signed-in stranger (invited, not accepted): public.staff_users rows$q$);
+select is(tests.rls_count('be92927e-4f79-516b-9788-26675277611d'::uuid, 'public.merchants'),
+  (select count(*) from public.merchants where (status = 'ACTIVE' and tenant_id in (select id from public.tenants where status = 'ACTIVE'))),
+  $q$signed-in stranger (invited, not accepted): public.merchants rows$q$);
+select is(tests.rls_count('be92927e-4f79-516b-9788-26675277611d'::uuid, 'public.products'),
+  (select count(*) from public.products where false),
+  $q$signed-in stranger (invited, not accepted): public.products rows$q$);
+select is(tests.rls_count('be92927e-4f79-516b-9788-26675277611d'::uuid, 'public.riders'),
+  (select count(*) from public.riders where false),
+  $q$signed-in stranger (invited, not accepted): public.riders rows$q$);
+select is(tests.rls_count('be92927e-4f79-516b-9788-26675277611d'::uuid, 'public.shifts'),
+  (select count(*) from public.shifts where false),
+  $q$signed-in stranger (invited, not accepted): public.shifts rows$q$);
+select is(tests.rls_count('be92927e-4f79-516b-9788-26675277611d'::uuid, 'public.customers'),
+  (select count(*) from public.customers where false),
+  $q$signed-in stranger (invited, not accepted): public.customers rows$q$);
+select is(tests.rls_count('be92927e-4f79-516b-9788-26675277611d'::uuid, 'public.customer_addresses'),
+  (select count(*) from public.customer_addresses where false),
+  $q$signed-in stranger (invited, not accepted): public.customer_addresses rows$q$);
+select is(tests.rls_count('be92927e-4f79-516b-9788-26675277611d'::uuid, 'public.verifications'),
+  (select count(*) from public.verifications where false),
+  $q$signed-in stranger (invited, not accepted): public.verifications rows$q$);
+select is(tests.rls_count('be92927e-4f79-516b-9788-26675277611d'::uuid, 'public.coupons'),
+  (select count(*) from public.coupons where false),
+  $q$signed-in stranger (invited, not accepted): public.coupons rows$q$);
+select is(tests.rls_count('be92927e-4f79-516b-9788-26675277611d'::uuid, 'public.orders'),
+  (select count(*) from public.orders where false),
+  $q$signed-in stranger (invited, not accepted): public.orders rows$q$);
+select is(tests.rls_count('be92927e-4f79-516b-9788-26675277611d'::uuid, 'public.order_items'),
+  (select count(*) from public.order_items where false),
+  $q$signed-in stranger (invited, not accepted): public.order_items rows$q$);
+select is(tests.rls_count('be92927e-4f79-516b-9788-26675277611d'::uuid, 'public.order_events'),
+  (select count(*) from public.order_events where false),
+  $q$signed-in stranger (invited, not accepted): public.order_events rows$q$);
+select is(tests.rls_count('be92927e-4f79-516b-9788-26675277611d'::uuid, 'public.assignment_attempts'),
+  (select count(*) from public.assignment_attempts where false),
+  $q$signed-in stranger (invited, not accepted): public.assignment_attempts rows$q$);
+select is(tests.rls_count('be92927e-4f79-516b-9788-26675277611d'::uuid, 'public.coupon_redemptions'),
+  (select count(*) from public.coupon_redemptions where false),
+  $q$signed-in stranger (invited, not accepted): public.coupon_redemptions rows$q$);
+select is(tests.rls_count('be92927e-4f79-516b-9788-26675277611d'::uuid, 'public.loyalty_transactions'),
+  (select count(*) from public.loyalty_transactions where false),
+  $q$signed-in stranger (invited, not accepted): public.loyalty_transactions rows$q$);
 select is(tests.rls_count(null::uuid, 'public.tenants_public'),
   (select count(*) from public.tenants where true),
   $q$anonymous: public.tenants_public rows$q$);
@@ -772,7 +843,21 @@ select is(tests.rls_exec('0e118346-c0ef-57d8-ace3-2fb7ce30ed26'::uuid, $q$update
 select is(tests.rls_exec('1e8b48fb-748f-502a-8bae-84a02f6f4b6d'::uuid, $q$update public.tenant_billing set model = 'FREE', monthly_fee = null, per_order_fee = null where tenant_id = 'aab2c268-2e7a-5365-8156-7f1cdb262693'$q$), 'ok:1', $q$platform admin: platform admin changes a tenant's billing$q$);
 select is(tests.rls_exec('1e8b48fb-748f-502a-8bae-84a02f6f4b6d'::uuid, $q$insert into public.merchants (tenant_id, name, category, phone, address, location_lat, location_lng)
           values ('c4a259d0-1f1b-5ad3-91ea-3f12de964763', 'Platform', 'X', '+639170000000', 'X', 14.5, 121.0)$q$), '42501', $q$platform admin: platform admin can't edit tenant records (read-only, BL-10.3)$q$);
+select is(tests.rls_exec('5a33ac1d-1ccb-5f35-be0a-efe50d70f234'::uuid, $q$select 1 where public.has_permission('c4a259d0-1f1b-5ad3-91ea-3f12de964763', 'admins.manage')$q$), 'ok:0', $q$FastBite dispatcher: has_permission says no to a missing permission$q$);
+select is(tests.rls_exec('0e118346-c0ef-57d8-ace3-2fb7ce30ed26'::uuid, $q$select 1 where public.has_permission('c4a259d0-1f1b-5ad3-91ea-3f12de964763', 'admins.manage')$q$), 'ok:1', $q$FastBite owner: has_permission says yes to the owner$q$);
+select is(tests.rls_exec('0e118346-c0ef-57d8-ace3-2fb7ce30ed26'::uuid, $q$select public.create_tenant(null, null, null, null, null, null, null, null, null, null, null, null, null)$q$), '42501', $q$FastBite owner: create_tenant is server-only (service role)$q$);
+select is(tests.rls_exec('be92927e-4f79-516b-9788-26675277611d'::uuid, $q$select public.accept_staff_invite('c4a259d0-1f1b-5ad3-91ea-3f12de964763')$q$), 'ok:1', $q$signed-in stranger (invited, not accepted): an invited admin's first login links the invite (BL-2.6)$q$);
+select is(tests.rls_exec('be92927e-4f79-516b-9788-26675277611d'::uuid, $q$select 1 where public.has_permission('c4a259d0-1f1b-5ad3-91ea-3f12de964763', 'orders.view')$q$), 'ok:1', $q$signed-in stranger (invited, not accepted): after accepting, the role's permissions apply$q$);
+select is(tests.rls_exec('65d6130d-c8eb-5ff8-996b-952310de7c97'::uuid, $q$select public.ensure_customer('aab2c268-2e7a-5365-8156-7f1cdb262693')$q$), 'ok:1', $q$FastBite customer with a pending order: first visit to another business creates a customer row there (Q-31)$q$);
+select is(tests.rls_exec('65d6130d-c8eb-5ff8-996b-952310de7c97'::uuid, $q$select public.ensure_customer('785074bd-2bd0-52bb-9e63-d54b1bdf8370')$q$), '42501', $q$FastBite customer with a pending order: a suspended business doesn't take new customers (BL-10.8)$q$);
+select is(tests.rls_exec('0d9ada38-4399-54f9-9859-50d2a3255df2'::uuid, $q$select public.ensure_customer('c4a259d0-1f1b-5ad3-91ea-3f12de964763')$q$), '42501', $q$FastBite rider with a live order: a rider's login can't become a customer of the same business$q$);
+select is(tests.rls_exec(null::uuid, $q$select public.ensure_customer('c4a259d0-1f1b-5ad3-91ea-3f12de964763')$q$), '42501', $q$anonymous: anonymous can't create customers$q$);
+select is(tests.rls_exec('0e118346-c0ef-57d8-ace3-2fb7ce30ed26'::uuid, $q$delete from public.staff_users where tenant_id = 'c4a259d0-1f1b-5ad3-91ea-3f12de964763' and type = 'OWNER'$q$), 'ok:0', $q$FastBite owner: the owner can't be removed from the admins screen$q$);
+select is(tests.rls_exec('f250a141-bd68-5365-9622-bf694f6f0627'::uuid, $q$delete from public.staff_users where tenant_id = 'c4a259d0-1f1b-5ad3-91ea-3f12de964763' and type = 'ADMIN'$q$), 'ok:0', $q$Kain Express admin: admin of another tenant can't remove FastBite admins$q$);
+select is(tests.rls_exec('0e118346-c0ef-57d8-ace3-2fb7ce30ed26'::uuid, $q$delete from public.staff_users where id = 'fd4f1061-a8a2-51a0-a3f4-28d6e977f0ab'$q$), 'ok:1', $q$FastBite owner: owner removes an admin; their history stays (BL-2.6)$q$);
 select is((select code from public.coupons where code = 'LOWER10'), 'LOWER10', 'coupon code was uppercased');
+select is((select status::text from public.staff_users where email = 'carla@fastbite.ph'), 'ACTIVE', 'accepted invite is ACTIVE');
+select is((select count(*) from public.customers where tenant_id = 'aab2c268-2e7a-5365-8156-7f1cdb262693' and auth_user_id = '65d6130d-c8eb-5ff8-996b-952310de7c97'), 1::bigint, 'one customer row in the new business');
 
 select * from finish();
 rollback;

@@ -38,7 +38,7 @@ export default function SettingsIndex() {
           description: "Per km, fixed or per barangay",
           perm: "settings.pricing",
         },
-        ...(settings.deliveryFee.mode === "PER_BARANGAY"
+        ...(settings.deliveryFee?.mode === "PER_BARANGAY"
           ? [
               {
                 href: "pricing/barangays",

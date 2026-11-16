@@ -3,31 +3,49 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Eye, EyeOff } from "lucide-react";
-import { useSession } from "@chowlane/mocks/react";
+import { platformAdmins } from "@chowlane/mocks";
+import { isLocalSupabase, supabaseEnv } from "@chowlane/db";
 import { Button, ChowLaneLogo, Field, Input } from "@chowlane/ui";
-import { useMockStore } from "@/lib/store";
-import { SESSION_SCOPE } from "@/lib/use-platform";
+import { usePlatformIdentity } from "@/lib/identity";
 
-/** S-500 — Platform Admin login (PLT-001). Phase 1 mock: email of an active platform admin, any password. */
+/** Local demo logins (seed.sql) — shown only against the local Supabase (D-058). */
+const DEMO_PASSWORD = "demo1234";
+
+/** S-500 — Platform Admin login (PLT-001): Supabase email + password; only ACTIVE platform admins get in. */
 export default function PlatformLogin() {
   const router = useRouter();
-  const admins = useMockStore((s) => s.platformAdmins);
-  const { signIn } = useSession(SESSION_SCOPE);
+  const { supabase, refresh, signOut } = usePlatformIdentity();
+  const admins = isLocalSupabase(supabaseEnv().url) ? platformAdmins : [];
+  const [busy, setBusy] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [show, setShow] = useState(false);
   const [error, setError] = useState<{ field: "email" | "password"; message: string }>();
 
-  function submit() {
+  async function submit() {
     if (!email.trim()) return setError({ field: "email", message: "Enter your email." });
     if (!password) return setError({ field: "password", message: "Enter your password." });
-    const a = admins.find((x) => x.email.toLowerCase() === email.trim().toLowerCase());
-    if (!a)
-      return setError({ field: "email", message: "No ChowLane admin account uses this email." });
-    if (a.status !== "ACTIVE")
-      return setError({ field: "email", message: "This account is turned off." });
-    signIn(a.id);
-    router.replace("/");
+    setBusy(true);
+    try {
+      const { error: authError } = await supabase.auth.signInWithPassword({
+        email: email.trim().toLowerCase(),
+        password,
+      });
+      if (authError) return setError({ field: "password", message: "Wrong email or password." });
+      const me = await refresh();
+      if (!me || me.admin.status !== "ACTIVE") {
+        await signOut();
+        return setError({
+          field: "email",
+          message: !me
+            ? "No ChowLane admin account uses this email."
+            : "This account is turned off.",
+        });
+      }
+      router.replace("/");
+    } finally {
+      setBusy(false);
+    }
   }
 
   return (
@@ -44,7 +62,7 @@ export default function PlatformLogin() {
         className="flex flex-col gap-4"
         onSubmit={(e) => {
           e.preventDefault();
-          submit();
+          void submit();
         }}
       >
         <Field
@@ -92,30 +110,32 @@ export default function PlatformLogin() {
             </button>
           </div>
         </Field>
-        <Button type="submit" size="lg">
-          Log in
+        <Button type="submit" size="lg" disabled={busy}>
+          {busy ? "Logging in…" : "Log in"}
         </Button>
       </form>
-      <div className="rounded-card border border-dashed p-4 text-sm">
-        <p className="font-medium">Demo account (any password)</p>
-        <ul className="mt-2 flex flex-col gap-1">
-          {admins.map((a) => (
-            <li key={a.id}>
-              <button
-                type="button"
-                className="text-left underline decoration-border underline-offset-4 hover:decoration-foreground"
-                onClick={() => {
-                  setEmail(a.email);
-                  setPassword("demo-1234");
-                  setError(undefined);
-                }}
-              >
-                {a.email}
-              </button>
-            </li>
-          ))}
-        </ul>
-      </div>
+      {admins.length > 0 ? (
+        <div className="rounded-card border border-dashed p-4 text-sm">
+          <p className="font-medium">Local demo account (password {DEMO_PASSWORD})</p>
+          <ul className="mt-2 flex flex-col gap-1">
+            {admins.map((a) => (
+              <li key={a.id}>
+                <button
+                  type="button"
+                  className="text-left underline decoration-border underline-offset-4 hover:decoration-foreground"
+                  onClick={() => {
+                    setEmail(a.email);
+                    setPassword(DEMO_PASSWORD);
+                    setError(undefined);
+                  }}
+                >
+                  {a.email}
+                </button>
+              </li>
+            ))}
+          </ul>
+        </div>
+      ) : null}
     </main>
   );
 }

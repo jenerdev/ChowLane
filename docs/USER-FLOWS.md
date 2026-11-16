@@ -15,6 +15,11 @@
 8. Done screen: next steps (restaurant & menu, rider, fees & rider pay, share link) → **Open my console** → console login
    (prototype: opens the FastBite demo console — nothing is saved, D-038)
 
+> **Phase 2.3:** F-01 signup now creates the business in Supabase (owner login + `create_tenant`); logins in
+> F-01b, F-04/F-05 (rider: mobile number + password set by the admin), F-06 (customer: Facebook / local demo) and
+> F-11 (platform admin) are real Supabase logins. New in F-03: the invited admin opens the email link →
+> `/[tenant]/invite` → sets a password → lands in the console (BL-2.6).
+
 ## F-01b Owner / Admin logs in  ✅ Signed off 2026-11-15
 1. Console link `…/<slug>` while signed out → redirected to `/<slug>/login` (tenant-branded)
 2. Email + password → **Log in** → console home. Errors: unknown email, invite not accepted, account turned off

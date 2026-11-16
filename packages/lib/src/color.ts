@@ -21,3 +21,21 @@ function contrast(a: number, b: number): number {
 export function readableTextColor(bgHex: string): "#ffffff" | "#1c1917" {
   return contrast(luminance(bgHex), 1) >= 3 ? "#ffffff" : "#1c1917";
 }
+
+/**
+ * A very light tint of the brand color (mixed with white) — the installed app's splash / background color for a
+ * new business (Tenant.backgroundColor). `amount` = share of white, 0–1.
+ */
+export function brandTint(hex: string, amount = 0.94): string {
+  const n = hex.replace("#", "");
+  const full = n.length === 3 ? n.replace(/./g, "$&$&") : n;
+  return `#${[0, 2, 4]
+    .map((i) => {
+      const c = parseInt(full.slice(i, i + 2), 16);
+      return Math.round(c + (255 - c) * amount)
+        .toString(16)
+        .padStart(2, "0");
+    })
+    .join("")
+    .toUpperCase()}`;
+}

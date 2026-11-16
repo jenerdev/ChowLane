@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import type { Centavos, Rider, RiderPayMode, RiderPayRule, VehicleType } from "@chowlane/types";
-import { formatPhMobile, isValidEmail, normalizePhMobile } from "@chowlane/lib";
+import { checkPassword, formatPhMobile, isValidEmail, normalizePhMobile } from "@chowlane/lib";
 import {
   Button,
   ConfirmSheet,
@@ -20,12 +20,13 @@ import {
   SwitchRow,
   toast,
 } from "@chowlane/ui";
-import { useMockStore } from "@/lib/store";
-import { newId, useConsole } from "@/lib/use-console";
+import { saveRiderLogin } from "@/lib/team-actions";
+import { useConsole } from "@/lib/use-console";
 
 type Draft = {
   name: string;
   phone: string;
+  password: string;
   email: string;
   vehicleType: VehicleType;
   plateNumber: string;
@@ -45,36 +46,43 @@ const ruleToDraft = (r?: RiderPayRule) =>
         ? { mode: r.mode, percent: r.percent }
         : {};
 
-/** S-108 — add / edit a rider incl. optional pay override (ADM-006, BL-8.2). */
-export function RiderForm({ rider }: { rider?: Rider }) {
+/**
+ * S-108 — add / edit a rider incl. optional pay override (ADM-006, BL-8.2). Live on Supabase since 2.3: the
+ * admin sets the rider's password; the rider logs in with mobile number + password (Q-30).
+ */
+export function RiderForm({ rider, tenantRule }: { rider?: Rider; tenantRule?: RiderPayRule }) {
   const router = useRouter();
-  const { tenant, base, settings, can } = useConsole();
-  const insert = useMockStore((s) => s.insert);
-  const patch = useMockStore((s) => s.patch);
+  const { live, base, can, supabase } = useConsole();
+  const [busy, setBusy] = useState(false);
   const [confirmOff, setConfirmOff] = useState(false);
   const [errors, setErrors] = useState<
-    Partial<Record<"name" | "phone" | "email" | "plateNumber" | "pay", string>>
+    Partial<Record<"name" | "phone" | "password" | "email" | "plateNumber" | "pay", string>>
   >({});
   const [d, setD] = useState<Draft>({
     name: rider?.name ?? "",
     phone: rider ? formatPhMobile(rider.phone) : "",
+    password: "",
     email: rider?.email ?? "",
     vehicleType: rider?.vehicleType ?? "MOTORCYCLE",
     plateNumber: rider?.plateNumber ?? "",
     active: rider ? rider.status === "ACTIVE" : true,
     override: Boolean(rider?.payOverride),
-    mode: settings.riderPay.mode,
-    ...ruleToDraft(settings.riderPay),
+    mode: tenantRule?.mode ?? "PER_DELIVERY",
+    ...ruleToDraft(tenantRule),
     ...ruleToDraft(rider?.payOverride),
   });
   const set = <K extends keyof Draft>(k: K, v: Draft[K]) => setD((x) => ({ ...x, [k]: v }));
   const canPay = can("settings.riderPay");
 
-  function save() {
+  async function save() {
     const e: typeof errors = {};
     if (d.name.trim().length < 2) e.name = "Enter the rider's full name.";
     const phone = normalizePhMobile(d.phone);
     if (!phone) e.phone = "Enter a PH mobile number, like 0917 123 4567.";
+    if (!rider || d.password) {
+      const pw = d.password ? checkPassword(d.password) : "Set a password so the rider can log in.";
+      if (pw) e.password = pw;
+    }
     if (d.email && !isValidEmail(d.email)) e.email = "Enter a valid email or leave it empty.";
     if (d.vehicleType !== "BICYCLE" && !d.plateNumber.trim())
       e.plateNumber = "Enter the plate number.";
@@ -103,22 +111,48 @@ export function RiderForm({ rider }: { rider?: Rider }) {
       payOverride,
       status: d.active ? ("ACTIVE" as const) : ("INACTIVE" as const),
     };
-    if (rider) {
-      patch("riders", rider.id, { ...row, ...(d.active ? {} : { isOnShift: false }) });
-      toast("Rider saved");
-      router.push(`${base}/riders/${rider.id}`);
-    } else {
-      const id = newId("rd");
-      insert("riders", {
-        id,
-        tenantId: tenant.id,
-        photoUrl: "",
-        isOnShift: false,
-        createdAt: new Date().toISOString(),
-        ...row,
-      });
-      toast(`${row.name} added — login details sent by SMS`);
+    const values = {
+      name: row.name,
+      phone: row.phone,
+      email: row.email ?? null,
+      vehicle_type: row.vehicleType,
+      plate_number: row.plateNumber ?? null,
+      pay_override: row.payOverride ?? null,
+      status: row.status,
+    };
+    setBusy(true);
+    try {
+      const saved = rider
+        ? await supabase.from("riders").update(values).eq("id", rider.id).select("id").single()
+        : await supabase
+            .from("riders")
+            .insert({ ...values, tenant_id: live.id })
+            .select("id")
+            .single();
+      if (saved.error)
+        return setErrors(
+          saved.error.code === "23505"
+            ? { phone: "Another rider already uses this number." }
+            : { name: saved.error.message },
+        );
+      const id = saved.data.id;
+      // Login (mobile number + password): needed for a new rider, a new number or a new password.
+      if (!rider || d.password || phone !== rider.phone) {
+        const login = await saveRiderLogin({
+          tenantId: live.id,
+          slug: live.slug,
+          riderId: id,
+          password: d.password || undefined,
+        });
+        if (!login.ok) {
+          toast(`Rider saved, but the login wasn't: ${login.error}`);
+          return router.push(`${base}/riders/${id}/edit`);
+        }
+      }
+      toast(rider ? "Rider saved" : `${row.name} added — tell them their password to log in`);
       router.push(`${base}/riders/${id}`);
+    } finally {
+      setBusy(false);
     }
   }
 
@@ -135,13 +169,15 @@ export function RiderForm({ rider }: { rider?: Rider }) {
         noValidate
         onSubmit={(e) => {
           e.preventDefault();
-          save();
+          void save();
         }}
       >
         <FormSection
           title="Rider"
           description={
-            rider ? undefined : "They get a text with a link to the rider app and a login code."
+            rider
+              ? undefined
+              : "They log in to the rider app with their mobile number and the password you set."
           }
         >
           <Field label="Full name" htmlFor="r-name" error={errors.name}>
@@ -161,6 +197,25 @@ export function RiderForm({ rider }: { rider?: Rider }) {
               placeholder="0917 123 4567"
               onChange={(e) => set("phone", e.target.value)}
               aria-invalid={Boolean(errors.phone)}
+            />
+          </Field>
+          <Field
+            label={rider ? "New password" : "Password"}
+            htmlFor="r-password"
+            error={errors.password}
+            hint={
+              rider
+                ? "Leave empty to keep the current one"
+                : "At least 8 characters, letters and a number"
+            }
+          >
+            <Input
+              id="r-password"
+              type="text"
+              autoComplete="off"
+              value={d.password}
+              onChange={(e) => set("password", e.target.value)}
+              aria-invalid={Boolean(errors.password)}
             />
           </Field>
           <Field label="Email" htmlFor="r-email" error={errors.email} hint="Optional">
@@ -272,7 +327,9 @@ export function RiderForm({ rider }: { rider?: Rider }) {
           <Button variant="ghost" type="button" onClick={() => router.back()}>
             Cancel
           </Button>
-          <Button type="submit">{rider ? "Save changes" : "Add rider"}</Button>
+          <Button type="submit" disabled={busy}>
+            {rider ? "Save changes" : "Add rider"}
+          </Button>
         </SaveBar>
       </form>
       <ConfirmSheet

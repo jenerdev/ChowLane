@@ -12,9 +12,9 @@ import {
   slugify,
   suggestSlugs,
 } from "@chowlane/lib";
-import { tenants } from "@chowlane/mocks";
 import { Button, ChowLaneLogo, Field, Input, Select, cn, ColorPicker } from "@chowlane/ui";
 import { CITIES, DEFAULT_BRAND } from "@/lib/presets";
+import { createBusiness, isSlugTaken, type SignupInput } from "@/lib/signup-actions";
 import { PhonePreview } from "../phone-preview";
 import { SignupDone } from "./signup-done";
 
@@ -39,7 +39,18 @@ const STEPS = [
   "Review",
 ] as const;
 const DRAFT_KEY = "chowlane-signup-draft";
-const TAKEN = tenants.map((t) => t.slug);
+/** Which wizard step holds each field (to jump back when the server rejects it). */
+const FIELD_STEP: Partial<Record<keyof SignupInput, number>> = {
+  ownerName: 0,
+  email: 0,
+  mobile: 0,
+  password: 0,
+  businessName: 1,
+  slug: 2,
+  color: 3,
+  city: 4,
+  radiusKm: 4,
+};
 
 type Errors = Partial<Record<keyof SignupDraft | "password", string>>;
 
@@ -61,6 +72,8 @@ export function SignupWizard({
 }) {
   const [step, setStep] = useState(0);
   const [done, setDone] = useState(false);
+  const [creating, setCreating] = useState(false);
+  const [createError, setCreateError] = useState<string>();
   const [password, setPassword] = useState("");
   const [showPw, setShowPw] = useState(false);
   const [logoUrl, setLogoUrl] = useState<string>();
@@ -109,19 +122,25 @@ export function SignupWizard({
     setErrors((e) => ({ ...e, [key]: undefined }));
   };
 
-  const slugProblem = useMemo(() => checkSlug(draft.slug, TAKEN), [draft.slug]);
+  const [taken, setTaken] = useState<string[]>([]);
+  const slugProblem = useMemo(() => checkSlug(draft.slug, taken), [draft.slug, taken]);
   const suggestions = useMemo(
     () =>
-      slugProblem === "TAKEN" || slugProblem === "RESERVED" ? suggestSlugs(draft.slug, TAKEN) : [],
-    [slugProblem, draft.slug],
+      slugProblem === "TAKEN" || slugProblem === "RESERVED" ? suggestSlugs(draft.slug, taken) : [],
+    [slugProblem, draft.slug, taken],
   );
 
-  // Simulated availability check (Phase 2: Supabase query).
+  // Availability check against Supabase while typing (debounced).
   useEffect(() => {
     if (step !== 2) return;
     // eslint-disable-next-line react-hooks/set-state-in-effect -- shows a short "checking" state while typing
     setChecking(true);
-    const t = window.setTimeout(() => setChecking(false), 350);
+    const slug = draft.slug;
+    const t = window.setTimeout(async () => {
+      const isTaken = await isSlugTaken(slug).catch(() => false);
+      if (isTaken) setTaken((prev) => (prev.includes(slug) ? prev : [...prev, slug]));
+      setChecking(false);
+    }, 350);
     return () => window.clearTimeout(t);
   }, [draft.slug, step]);
 
@@ -141,7 +160,7 @@ export function SignupWizard({
     return e;
   }
 
-  function next() {
+  async function next() {
     const e = validate(step);
     setErrors(e);
     const first = Object.keys(e)[0];
@@ -150,6 +169,19 @@ export function SignupWizard({
       return;
     }
     if (step === STEPS.length - 1) {
+      setCreating(true);
+      try {
+        const r = await createBusiness({ ...draft, password });
+        if (!r.ok) {
+          if (r.field && FIELD_STEP[r.field] !== undefined) {
+            setErrors({ [r.field]: r.error });
+            setStep(FIELD_STEP[r.field]!);
+          } else setCreateError(r.error);
+          return;
+        }
+      } finally {
+        setCreating(false);
+      }
       try {
         sessionStorage.removeItem(DRAFT_KEY);
       } catch {
@@ -205,7 +237,7 @@ export function SignupWizard({
           noValidate
           onSubmit={(e) => {
             e.preventDefault();
-            next();
+            void next();
           }}
           id="signup-form"
         >
@@ -542,6 +574,11 @@ export function SignupWizard({
       </main>
 
       <div className="fixed inset-x-0 bottom-0 border-t bg-white/95 pb-[env(safe-area-inset-bottom)] backdrop-blur">
+        {createError ? (
+          <p role="alert" className="mx-auto max-w-5xl px-4 pt-3 text-sm text-danger">
+            {createError}
+          </p>
+        ) : null}
         <div className="mx-auto flex max-w-5xl gap-3 px-4 py-3">
           {step > 0 ? (
             <Button type="button" variant="outline" size="lg" onClick={() => setStep((s) => s - 1)}>
@@ -553,8 +590,13 @@ export function SignupWizard({
             form="signup-form"
             size="lg"
             className="flex-1 md:flex-none md:px-10"
+            disabled={creating}
           >
-            {step === STEPS.length - 1 ? "Create my business" : "Continue"}
+            {step === STEPS.length - 1
+              ? creating
+                ? "Creating your business…"
+                : "Create my business"
+              : "Continue"}
           </Button>
         </div>
       </div>

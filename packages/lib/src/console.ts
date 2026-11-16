@@ -287,7 +287,7 @@ export function checklistProgress(steps: SetupStep[]): {
 export type RiderPayRow = {
   riderId: string;
   name: string;
-  rule: RiderPayRule;
+  rule: RiderPayRule | undefined;
   hasOverride: boolean;
   deliveries: number;
   deliveryFees: Centavos;
@@ -302,7 +302,7 @@ export function riderPayReport(args: {
   riders: Rider[];
   orders: Order[];
   shifts: Shift[];
-  tenantRule: RiderPayRule;
+  tenantRule: RiderPayRule | undefined;
   period: { start: string; end: string };
 }): RiderPayRow[] {
   const inP = (iso?: string) =>

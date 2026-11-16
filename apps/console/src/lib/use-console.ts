@@ -2,28 +2,54 @@
 
 import { useParams } from "next/navigation";
 import type { PermissionKey } from "@chowlane/types";
-import { permissionsOf } from "@chowlane/lib";
-import { useSession } from "@chowlane/mocks/react";
+import { useConsoleIdentity } from "./identity";
 import { useMockStore } from "./store";
 
 /**
- * Everything a console screen needs: tenant (live from the mock store), its settings, the signed-in
- * staff member, their role and a `can()` permission check (BL-2). Phase 2: Supabase session + queries.
+ * Everything a console screen needs. The signed-in staff member, their role and `can()` come from Supabase
+ * (BL-2). Screens not yet moved to Supabase still read the tenant, settings and records from the mock store
+ * (`db`, `tenant`, `settings`) until Milestones 2.4–2.7; `live` is the business as stored in Supabase.
  */
 export function useConsole() {
   const { tenant: slug } = useParams<{ tenant: string }>();
   const db = useMockStore();
-  const { staffId } = useSession(`console:${slug}`);
+  const auth = useConsoleIdentity();
+  const staff = auth.identity?.staff;
+  const active = staff?.status === "ACTIVE" ? staff : undefined;
 
-  const tenant = db.tenants.find((t) => t.slug === slug)!;
-  const settings = db.tenantSettings.find((s) => s.tenantId === tenant.id)!;
-  const me = db.staff.find((s) => s.id === staffId && s.tenantId === tenant.id);
-  const role = db.roles.find((r) => r.id === me?.roleId);
-  const perms = me ? permissionsOf(me, role) : [];
+  const mockTenant = db.tenants.find((t) => t.slug === slug);
+  // Mock screens keep their own ids: the mock staff member with the same email, else the real row.
+  const me = active
+    ? (db.staff.find(
+        (s) =>
+          s.tenantId === mockTenant?.id && s.email.toLowerCase() === active.email.toLowerCase(),
+      ) ?? active)
+    : undefined;
+  const perms = active ? (auth.identity?.perms ?? []) : [];
   const can = (key: PermissionKey) => perms.includes(key);
-  const isOwner = me?.type === "OWNER";
 
-  return { slug, base: `/${slug}`, db, tenant, settings, me, role, perms, can, isOwner };
+  return {
+    slug,
+    base: `/${slug}`,
+    db,
+    /** Mock tenant (screens on mock data). Only use when `hasMockData`. */
+    tenant: mockTenant!,
+    settings: db.tenantSettings.find((s) => s.tenantId === mockTenant?.id)!,
+    hasMockData: Boolean(mockTenant),
+    /** The business in Supabase. */
+    live: auth.tenant,
+    me,
+    /** The signed-in staff row in Supabase (any status). */
+    staff,
+    role: auth.identity?.role,
+    perms,
+    can,
+    isOwner: active?.type === "OWNER",
+    ready: auth.ready,
+    supabase: auth.supabase,
+    refresh: auth.refresh,
+    signOut: auth.signOut,
+  };
 }
 
 export { newId } from "@chowlane/mocks/store";

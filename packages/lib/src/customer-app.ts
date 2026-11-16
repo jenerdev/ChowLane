@@ -33,6 +33,7 @@ import { formatPeso } from "./money";
 export type CartLine = { productId: ID; qty: number };
 
 export type CheckoutProblem =
+  | "DELIVERY_NOT_SET"
   | "EMPTY_CART"
   | "MERCHANT_CLOSED"
   | "ITEM_UNAVAILABLE"
@@ -42,6 +43,7 @@ export type CheckoutProblem =
   | "BAD_CHANGE";
 
 export const CHECKOUT_MESSAGES: Record<CheckoutProblem, string> = {
+  DELIVERY_NOT_SET: "This business isn't taking orders yet.",
   EMPTY_CART: "Your cart is empty.",
   MERCHANT_CLOSED: "This restaurant is closed right now.",
   ITEM_UNAVAILABLE: "Some items just sold out. Remove them to continue.",
@@ -131,7 +133,10 @@ export function checkoutQuote(i: CheckoutInput): CheckoutQuote {
     problems.push("ITEM_UNAVAILABLE");
 
   const distanceKm = roundUpKm(haversineKm(merchant.location, i.pin));
-  if (settings.deliveryFee.mode === "PER_BARANGAY") {
+  const feeRule = settings.deliveryFee;
+  // D-061: a new business has no delivery fee yet — checkout stays closed until the owner sets it.
+  if (!feeRule) problems.push("DELIVERY_NOT_SET");
+  else if (feeRule.mode === "PER_BARANGAY") {
     if (!i.barangayFee || !i.barangayFee.isActive) problems.push("BARANGAY_NOT_LISTED");
   } else if (!isWithinRadius(settings.serviceArea.center, i.pin, settings.serviceArea.radiusKm)) {
     problems.push("OUTSIDE_AREA");
@@ -161,11 +166,9 @@ export function checkoutQuote(i: CheckoutInput): CheckoutQuote {
   if (i.claimFreeGift && canClaimGift && items.length)
     items = [...items, giftItem(settings, i.products)];
 
-  const fee = computeDeliveryFee({
-    rule: settings.deliveryFee,
-    distanceKm,
-    barangayFee: i.barangayFee,
-  });
+  const fee = feeRule
+    ? computeDeliveryFee({ rule: feeRule, distanceKm, barangayFee: i.barangayFee })
+    : ({ ok: false } as const);
   const maxPoints = maxRedeemablePoints(loyalty, customer.loyalty.points, subtotal);
   let pricing: OrderPricing | null = null;
   if (fee.ok) {
@@ -315,7 +318,7 @@ export function placeOrder(i: PlaceOrderInput): PlaceOrderResult {
     pointsDiscount: p.pointsDiscount,
     discountTotal: p.discountTotal,
     total: p.total,
-    deliveryFeeSnapshot: i.settings.deliveryFee,
+    deliveryFeeSnapshot: i.settings.deliveryFee!, // checkoutQuote blocks DELIVERY_NOT_SET above
     paymentMethod: "COD",
     paymentStatus: "UNPAID",
     changeFor: i.changeFor,

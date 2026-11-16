@@ -1,5 +1,14 @@
 import { describe, expect, it } from "vitest";
-import { checkPassword, checkSlug, isHexColor, isValidEmail, slugify, suggestSlugs } from "./index";
+import {
+  brandTint,
+  checkPassword,
+  checkSlug,
+  isHexColor,
+  isValidEmail,
+  shortNameFor,
+  slugify,
+  suggestSlugs,
+} from "./index";
 
 describe("signup helpers", () => {
   it("slugifies business names", () => {
@@ -36,5 +45,18 @@ describe("signup helpers", () => {
     expect(checkPassword("longenough1")).toBeNull();
     expect(isHexColor("#E4572E")).toBe(true);
     expect(isHexColor("E4572E")).toBe(false);
+  });
+});
+
+describe("new business defaults", () => {
+  it("short name fits the home screen (BL-15.6)", () => {
+    expect(shortNameFor("Kain Express")).toBe("Kain Express");
+    expect(shortNameFor("FastBite Delivery")).toBe("FastBite");
+    expect(shortNameFor("Supercalifragilistic Eats")).toBe("Supercalifra");
+  });
+  it("background is a light tint of the brand color", () => {
+    expect(brandTint("#E4572E")).toMatch(/^#[0-9A-F]{6}$/);
+    expect(brandTint("#000000", 0.5)).toBe("#808080");
+    expect(brandTint("#ffffff")).toBe("#FFFFFF");
   });
 });

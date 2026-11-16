@@ -16,12 +16,14 @@ import { useConsole } from "@/lib/use-console";
 
 type PeriodKey = "today" | "7d" | "month" | "lastMonth";
 
-const ruleLabel = (r: RiderPayRule) =>
-  r.mode === "DAILY"
-    ? `${formatPeso(r.dailyRate)} / day`
-    : r.mode === "COMMISSION"
-      ? `${r.percent}% of fee`
-      : `${formatPeso(r.ratePerDelivery)} / delivery`;
+const ruleLabel = (r: RiderPayRule | undefined) =>
+  !r
+    ? "Not set"
+    : r.mode === "DAILY"
+      ? `${formatPeso(r.dailyRate)} / day`
+      : r.mode === "COMMISSION"
+        ? `${r.percent}% of fee`
+        : `${formatPeso(r.ratePerDelivery)} / delivery`;
 
 /** S-120 — what each rider earned in a period (OWN-012, BL-8). Payouts happen outside the app. */
 export default function RiderPayReportPage() {

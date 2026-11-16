@@ -2,34 +2,52 @@
 
 import { useParams } from "next/navigation";
 import type { RiderPayRule } from "@chowlane/types";
-import { effectiveRiderPayRule, formatPeso, offerFor } from "@chowlane/lib";
-import { useSession } from "@chowlane/mocks/react";
+import { effectiveRiderPayRule, offerFor, riderPayRuleLabel } from "@chowlane/lib";
+import { useRiderIdentity } from "./identity";
 import { useMockStore } from "./store";
 
 /**
- * Everything a rider screen needs: tenant + settings (live from the mock store), the signed-in rider,
- * their effective pay rule, current offer, active order and open shift. Phase 2: Supabase session + queries.
+ * Everything a rider screen needs. The signed-in rider comes from Supabase (mobile number + password, Q-30);
+ * screens still read tenant, settings, orders and shifts from the mock store until Milestone 2.6, so `me` is the
+ * mock rider with the same mobile number. `live` is the rider as stored in Supabase.
  */
 export function useRider() {
   const { tenant: slug } = useParams<{ tenant: string }>();
   const db = useMockStore();
-  const session = useSession(`rider:${slug}`);
+  const auth = useRiderIdentity();
+  const live = auth.identity?.rider;
   const tenant = db.tenants.find((t) => t.slug === slug)!;
-  const settings = db.tenantSettings.find((s) => s.tenantId === tenant.id)!;
-  const me = db.riders.find((r) => r.id === session.staffId && r.tenantId === tenant.id);
-  const rule = effectiveRiderPayRule(settings.riderPay, me?.payOverride);
+  const settings = db.tenantSettings.find((s) => s.tenantId === tenant?.id)!;
+  const me =
+    live?.status === "ACTIVE"
+      ? db.riders.find((r) => r.tenantId === tenant?.id && r.phone === live.phone)
+      : undefined;
+  const session = { ready: auth.ready, staffId: me?.id ?? null, signOut: auth.signOut };
+  const rule = effectiveRiderPayRule(settings?.riderPay, me?.payOverride);
   const offer = me ? offerFor(db.orders, me.id) : undefined;
   const active = me?.activeOrderId ? db.orders.find((o) => o.id === me.activeOrderId) : undefined;
   const shift = me?.currentShiftId ? db.shifts.find((s) => s.id === me.currentShiftId) : undefined;
-  return { slug, base: `/${slug}`, db, tenant, settings, me, rule, offer, active, shift, session };
+  return {
+    slug,
+    base: `/${slug}`,
+    db,
+    tenant,
+    settings,
+    me,
+    live,
+    hasMockData: Boolean(tenant),
+    rule,
+    offer,
+    active,
+    shift,
+    session,
+  };
 }
 
 export { useNow, useTicker } from "@chowlane/ui";
 export { newId } from "@chowlane/mocks/store";
 
-/** "₱500 per day", "80% of the delivery fee", "₱40 per delivery". */
-export function payRuleLabel(rule: RiderPayRule): string {
-  if (rule.mode === "DAILY") return `${formatPeso(rule.dailyRate)} per day`;
-  if (rule.mode === "COMMISSION") return `${rule.percent}% of the delivery fee`;
-  return `${formatPeso(rule.ratePerDelivery)} per delivery`;
+/** How this rider is paid, e.g. "₱500 per day" (lib). */
+export function payRuleLabel(rule: RiderPayRule | undefined): string {
+  return rule ? riderPayRuleLabel(rule) : "not set yet — ask your admin";
 }
