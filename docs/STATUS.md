@@ -26,6 +26,16 @@
 - **Hosted project**: Supabase `ChowLane` (Singapore) linked; Facebook provider enabled. Migrations **not pushed** yet.
 - Open: **Q-36** — email confirmation for new owners (currently none).
 
+## Resume here (next session)
+State on 2026-11-17: branch `phase-2`, everything committed (2.1 `3e2132a`, 2.2 `0c51996`, 2.3 `73a8f30`), nothing
+pushed, migrations not applied to the hosted project.
+
+1. Start Docker Desktop, then `pnpm db:start` (local Supabase on 553xx; `pnpm db:reset` reloads demo data).
+2. If ports 3000–3004 are busy, stop leftover Node dev servers first (Next allows one dev server per app).
+3. `pnpm dev` → console http://localhost:3001/fastbite (`marco@fastbite.ph` / `demo1234`), rider :3002, customer
+   :3003, platform :3004 (`owner@chowlane.app`), landing :3000. Invite emails: http://127.0.0.1:55324.
+4. Decide **Q-36** (owner email confirmation), then say "go" for **Milestone 2.4**.
+
 ## Next up (in order)
 1. **You**: answer Q-36 (or accept: add email confirmation before launch).
 2. Claude: **Milestone 2.4 Console on real data** — settings (business, area, pricing, rider pay, dispatch, loyalty),
