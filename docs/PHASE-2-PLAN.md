@@ -1,6 +1,6 @@
 # ChowLane — Phase 2 Plan: Supabase Backend
 
-> Created 2026-11-15 · Status: **planned — waiting for accounts** (see "Before we start")
+> Created 2026-11-15 · Status: **in progress — 2.1 Setup ✅ (local), 2.2 next**; Q-30…Q-35 answered (D-055); hosted project still to create (see "Before we start")
 > Input: `DATA-MODEL.md` **v1 (frozen)**, `BUSINESS-LOGIC.md`, `packages/lib` (tested rules), the 65 Phase 1 screens.
 
 ## Goal
@@ -24,11 +24,11 @@ Live rider location, push notifications and Google Maps road distance stay in **
 
 | # | What | Why | Give Claude |
 |---|---|---|---|
-| 1 | **Supabase project** — region **Southeast Asia (Singapore)**, free tier is fine to start | Database, auth, storage, realtime | Project URL + anon key in a local `.env.local` (never paste keys in chat; never share the service-role key) |
-| 2 | **Supabase CLI** login on this computer (`npx supabase login`) | Migrations, local dev database, type generation | — |
-| 3 | **Meta developer app** with "Facebook Login" | Customer "Continue with Facebook" (CUS-001) | App ID + secret go into Supabase → Auth → Providers (you paste them there) |
+| 1 | ✅ **Supabase project** — region **Southeast Asia (Singapore)**, free tier is fine to start | Database, auth, storage, realtime | Project URL + anon key in a local `.env.local` (never paste keys in chat; never share the service-role key) |
+| 2 | ✅ **Supabase CLI** login on this computer (`npx supabase login`) | Migrations, local dev database, type generation | — |
+| 3 | ✅ **Meta developer app** with "Facebook Login" | Customer "Continue with Facebook" (CUS-001) | App ID + secret go into Supabase → Auth → Providers (you paste them there) |
 | 4 | **Vercel account** connected to this repo (GitHub) | HTTPS preview URLs for the 5 apps; phone install test | — |
-| 5 | Decide **Q-30…Q-35** below (defaults are proposed) | Auth and hosting choices | Answers in chat |
+| 5 | ✅ Decide **Q-30…Q-35** below — defaults accepted 2026-11-17 (D-055) | Auth and hosting choices | — |
 
 ## Architecture
 
@@ -89,7 +89,7 @@ per role × table.
 |---|---|---|
 | Owner | email + password (signup creates the tenant via `create_tenant` function) | |
 | Admin | email invite (Edge Function using the admin API) → sets password | INVITED → ACTIVE on first login |
-| Rider | **Q-30** — proposed: phone + password set by the admin (no SMS cost in MVP); phone OTP later | |
+| Rider | phone + password set by the admin (Q-30, D-055); phone OTP later | |
 | Customer | **Facebook** (Supabase provider); customer row created per tenant on first visit | |
 | Platform admin | email + password, rows created manually | |
 
@@ -133,7 +133,7 @@ Images are resized in the browser before upload (`photoToDataUrl` → Blob).
 | 2.7 | Platform & billing | platform admin on real data, suspend, billing config, monthly statement job | F-11, F-12 on real data |
 | 2.8 | Deploy & exit | Vercel previews (HTTPS), PWA install on phones (F-10), remove prototype helpers, e2e tests (Playwright) for the main flows, exit review | exit criteria met |
 
-## Open questions (added to DECISIONS.md)
+## Open questions (answered 2026-11-17 — defaults accepted, D-055)
 
 | # | Question | Proposed |
 |---|---|---|

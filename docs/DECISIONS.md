@@ -1,6 +1,6 @@
 # ChowLane — Decisions & Open Questions
 
-> Last updated: 2026-11-15
+> Last updated: 2026-11-17
 
 ## Decision log
 
@@ -60,11 +60,13 @@
 | D-052 | 2026-11-15 | Installing the PWAs on real phones (F-10) needs HTTPS → a preview deployment (e.g. Vercel) or a tunnel; scheduled as part of the walkthrough | 🟨 Proposed |
 | D-053 | 2026-11-15 | **Phase 1 signed off.** User walked F-01…F-05 (no changes) and chose to skip F-06…F-15 (clickable, browser-tested during the build). F-10 (phone install) moves to Phase 2.8. **DATA-MODEL frozen as v1.** | ✅ Confirmed |
 | D-054 | 2026-11-15 | **Phase 2 plan** (docs/PHASE-2-PLAN.md): Supabase (Singapore), new `packages/db`, multi-row actions as Postgres functions, RLS with `has_perm()`, `packages/lib` stays the rule source, 8 milestones 2.1…2.8 | 🟨 Proposed |
+| D-055 | 2026-11-17 | **Phase 2 defaults accepted** (answers Q-30…Q-35): rider login = phone + password set by the admin (OTP later); one Facebook login with a separate customer profile per tenant; SMS provider decided in Phase 3; subdomains per app for the MVP (custom tenant domains Phase 4); Supabase free tier in Singapore while building, Pro before launch; customer ID images deleted 90 days after review, verification record kept | ✅ Confirmed |
+| D-056 | 2026-11-17 | **Milestone 2.1 setup choices**: Supabase CLI as a pinned root dev dependency (`pnpm db:*` scripts); local stack in Docker; each app reads `NEXT_PUBLIC_SUPABASE_URL` / `NEXT_PUBLIC_SUPABASE_ANON_KEY` from its own `.env.local`, written by `pnpm db:env`; `@chowlane/db` is source-only like the other packages (`createServerSupabase` / `createBrowserSupabase` via `@supabase/ssr`, generated `Database` types); `/api/health` in console, rider, customer, platform; GitHub Actions CI runs format, lint, typecheck, test, build | ✅ Done |
 | D-030 | 2026-11-15 | **Cash remittance**: at time out the rider remits net cash (collected from customers − paid at stores); Admin records amount received; business absorbs store price differences | ✅ Confirmed |
 
 ## Open questions
 
-> Q-01…Q-29 answered. Q-30…Q-35 are new for Phase 2 (proposed defaults in PHASE-2-PLAN.md).
+> All open questions answered (Q-01…Q-35). Q-30…Q-35 answered 2026-11-17 by accepting the Phase 2 defaults (D-055).
 
 | # | Question | Affects | Answer |
 |---|---|---|---|
@@ -97,9 +99,9 @@
 | Q-28 | Free gift: is it tied to one menu item/merchant (claimable only on orders from that merchant), or a generic gift the rider buys at any store? | BL-14.3b | ✅ **Optional link to a menu item**; if linked, claimable only on that merchant's orders (D-037) |
 | Q-29 | Do loyalty points expire? | BL-14.9 | ✅ **No expiry** in MVP (D-037) |
 | Q-19 | Rider location only updates while the rider app is open (PWA limit). OK, or is background tracking a must (would need a native rider app later)? | D-016, BL-9.5 | ✅ Accepted — location only while app open (D-016) |
-| Q-30 | Rider login: phone + one-time SMS code, or phone + password set by the admin? | Auth | Proposed: password set by admin for MVP (no SMS cost); OTP later |
-| Q-31 | Customer account: separate per tenant, or one account across tenants? | Data, auth | Proposed: one Facebook login, separate customer profile per tenant |
-| Q-32 | SMS provider (rider OTP, notifications)? | Phase 3 | Proposed: decide in Phase 3 (e.g. Semaphore) |
-| Q-33 | Hosting: one domain with paths or subdomains per app? | Deploy | Proposed: subdomains for MVP; custom tenant domains in Phase 4 |
-| Q-34 | Supabase plan & region? | Infra | Proposed: free tier while building, Singapore region; Pro before launch |
-| Q-35 | How long to keep customer ID photos (Data Privacy Act)? | Privacy | Proposed: delete images 90 days after review; keep the record |
+| Q-30 | Rider login: phone + one-time SMS code, or phone + password set by the admin? | Auth | ✅ **Phone + password set by the admin** for MVP; phone OTP later (D-055) |
+| Q-31 | Customer account: separate per tenant, or one account across tenants? | Data, auth | ✅ **One Facebook login, separate customer profile per tenant** (D-055) |
+| Q-32 | SMS provider (rider OTP, notifications)? | Phase 3 | ✅ **Decide in Phase 3** (e.g. Semaphore) (D-055) |
+| Q-33 | Hosting: one domain with paths or subdomains per app? | Deploy | ✅ **Subdomains per app** for MVP; custom tenant domains in Phase 4 (D-055) |
+| Q-34 | Supabase plan & region? | Infra | ✅ **Free tier while building, Singapore**; Pro before launch (D-055) |
+| Q-35 | How long to keep customer ID photos (Data Privacy Act)? | Privacy | ✅ **Delete ID images 90 days after review**; keep the verification record (D-055) |

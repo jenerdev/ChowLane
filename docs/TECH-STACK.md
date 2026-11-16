@@ -30,6 +30,10 @@
 | lucide-react | 1.73.0 | Icons (stroke 1.75) |
 | Font | **Geist** via `next/font/google` (`--font-geist`) in every app | D-041, docs/DESIGN.md |
 | Serwist | `@serwist/turbopack` + `serwist` 9.5.13, `esbuild` 0.28.2 | PWA service worker (D-035) |
+| Supabase CLI | `supabase` 3.1.0 (root dev dependency) | `pnpm db:start` / `db:stop` / `db:status` / `db:reset` / `db:env` / `db:types` — D-056 |
+| Supabase JS | `@supabase/supabase-js` 2.119.0, `@supabase/ssr` 0.12.7 | In `@chowlane/db` only |
+| Docker Desktop | dev machine | Runs the local Supabase stack |
+| GitHub Actions | `.github/workflows/ci.yml` | format → lint → typecheck → test → build on push / PR |
 
 pnpm 12 runs dependency install scripts only when allowed: see `allowBuilds` in `pnpm-workspace.yaml`.
 
@@ -52,9 +56,12 @@ chowlane/
     pwa/          → shared PWA helpers: per-tenant manifest builder, service worker config
     types/        → domain types (= docs/DATA-MODEL.md)
     mocks/        → Phase 1 mock data + seeded scenarios
+    db/           → Supabase access (Phase 2): typed server/browser clients, env check, generated types
     lib/          → shared logic: delivery-fee calculator, rider-pay calculator,
                     order status machine, permission checks
     config/       → shared tsconfig, eslint, tailwind preset
+  supabase/       → config.toml, migrations, seed (Phase 2)
+  scripts/        → db-env.mjs (writes apps/*/.env.local)
   turbo.json
   pnpm-workspace.yaml
 ```
@@ -119,6 +126,22 @@ order in each status) so every screen can be reviewed. Live cross-app sync comes
 | Geo queries (service area, nearest rider) | **PostGIS** extension |
 | Hosting | Vercel (5 Next.js apps) + Supabase cloud |
 | Payments | **None for MVP — Cash on Delivery only** (D-019). Post-MVP: PayMongo or Xendit for GCash / Maya / card |
+
+## Local Supabase (Phase 2 — D-056)
+
+1. Start Docker Desktop, then `pnpm db:start` (first run pulls the images). ChowLane uses ports **553xx**
+   (API `http://127.0.0.1:55321`, DB `55322`, Studio `http://127.0.0.1:55323`, Mailpit `55324`) so it can run beside
+   other local Supabase projects on the default 543xx ports.
+2. `pnpm db:env` writes `NEXT_PUBLIC_SUPABASE_URL` + `NEXT_PUBLIC_SUPABASE_ANON_KEY` into `apps/{console,rider,customer,platform}/.env.local`
+   (git-ignored). For the hosted project: set both variables in the shell and run `pnpm db:env -- --from-env`, or copy
+   `.env.example`. Never put the service-role key in an app.
+3. `pnpm dev` → `GET /api/health` on ports 3001–3004 returns `{ ok: true }` when the app reaches Supabase.
+4. After a migration: `pnpm db:reset` (re-applies migrations + seed) and `pnpm db:types` (regenerates
+   `packages/db/src/database.types.ts`; commit it).
+
+Apps import `createServerSupabase()` from `@chowlane/db/server` (Server Components / Actions / Route Handlers, user
+session → RLS) and `createBrowserSupabase()` from `@chowlane/db/browser` (Client Components). Env values are read
+lazily, so `pnpm build` works without a database.
 
 ## Map provider — options (decided: Google Maps for Phase 3)
 

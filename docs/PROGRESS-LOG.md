@@ -12,6 +12,27 @@
 
 ---
 
+## 2026-11-17 — Phase 2 started · Milestone 2.1 Setup ✅ (local)
+
+**Done:** User accepted the Phase 2 defaults for Q-30…Q-35 (D-055). Supabase CLI 3.1.0 added (root dev dependency,
+`pnpm db:*` scripts); `supabase init` with local ports moved to 553xx because another project (`chatbot-poc`) holds
+the 543xx defaults. New `packages/db` (env check, server/browser clients via `@supabase/ssr`, generated types,
+health check, 5 tests). `/api/health` in console, rider, customer, platform. `scripts/db-env.mjs` writes each app's
+`.env.local`; `.env.example`; turbo build env keys; GitHub Actions CI.
+
+**Verified:** build ✅ lint ✅ typecheck ✅ tests ✅ (79) format ✅; `pnpm dev` → `/api/health` on 3001–3004 returns
+`{ ok: true }` against local Supabase.
+
+**Changed docs:** DECISIONS (Q-30…Q-35 answered, D-054 confirmed, D-055, D-056), TECH-STACK (versions, layout, "Local
+Supabase"), ROADMAP (Phase 2 🟨, 2.1 ✅), PHASE-2-PLAN (status, answers), STATUS.
+
+**Hosted:** user created the Supabase project (`ChowLane`, Singapore) and Meta app; CLI logged in and repo linked
+(`supabase link`, ref `ouoahwedxslvhnsegqqh`). Facebook provider then enabled by the user (verified via `/auth/v1/authorize`).
+
+**Stopped at / Next:** Uncommitted. Next: Milestone 2.2 (schema, RLS, seed, RLS tests) on the local stack. 
+
+---
+
 ## 2026-11-15 — Phase 1 signed off · Phase 2 planned
 
 **Done:** User skipped the rest of the walkthrough → Phase 1 signed off (D-053): WALKTHROUGH.md sign-off filled,

@@ -6,6 +6,7 @@ const nextConfig: NextConfig = {
   devIndicators: false,
   transpilePackages: [
     "@chowlane/ui",
+    "@chowlane/db",
     "@chowlane/lib",
     "@chowlane/mocks",
     "@chowlane/types",
