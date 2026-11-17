@@ -25,6 +25,11 @@
 > Adjusting a customer's points saves the reason in their history. The verification queue shows live submissions;
 > approving / rejecting an ID comes with live ordering (2.5).
 
+> **Phase 2.5:** F-06, F-07, the approve / reject / cancel steps of F-08 / F-09 and using rewards in F-15 run on
+> Supabase: a customer orders (first order with ID photos), the console reviews the ID and approves / rejects /
+> cancels the order, and the customer sees the change within ~20 s. Rejecting an ID rejects the waiting order and
+> gives back coupon uses and points. Sending a live order to a rider (and earning rewards on delivery) comes in 2.6.
+
 ## F-01b Owner / Admin logs in  ✅ Signed off 2026-11-15
 1. Console link `…/<slug>` while signed out → redirected to `/<slug>/login` (tenant-branded)
 2. Email + password → **Log in** → console home. Errors: unknown email, invite not accepted, account turned off

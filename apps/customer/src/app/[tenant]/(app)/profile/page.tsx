@@ -17,14 +17,12 @@ import {
   toast,
 } from "@chowlane/ui";
 import { useCurrentLocation } from "@/lib/location";
-import { useMockStore } from "@/lib/store";
-import { newId, useCustomer } from "@/lib/use-customer";
+import { useCustomer } from "@/lib/use-customer";
 
 /** S-309 — profile: Facebook name/photo, phone, addresses, ID status, log out (CUS-010, CUS-012). */
 export default function ProfilePage() {
   const router = useRouter();
-  const { me, base, slug, signOut, settings } = useCustomer();
-  const patch = useMockStore((s) => s.patch);
+  const { me, base, slug, signOut, settings, supabase, reload, tenant } = useCustomer();
   const here = useCurrentLocation(slug);
   const [phone, setPhone] = useState(me?.phone ? formatPhMobile(me.phone) : "");
   const [phoneError, setPhoneError] = useState<string>();
@@ -74,11 +72,13 @@ export default function ProfilePage() {
         <h2 className="text-[15px] font-semibold">Mobile number</h2>
         <form
           className="flex gap-2"
-          onSubmit={(e) => {
+          onSubmit={async (e) => {
             e.preventDefault();
             const n = normalizePhMobile(phone);
             if (!n) return setPhoneError("Enter a PH mobile number, like 0917 123 4567.");
-            patch("customers", me.id, { phone: n });
+            const { error } = await supabase.from("customers").update({ phone: n }).eq("id", me.id);
+            if (error) return setPhoneError(error.message);
+            await reload();
             setPhone(formatPhMobile(n));
             setPhoneError(undefined);
             toast("Number saved");
@@ -132,11 +132,14 @@ export default function ProfilePage() {
                   type="button"
                   aria-label={`Remove ${a.label}`}
                   className="rounded-full p-2 text-muted-foreground hover:bg-muted hover:text-foreground"
-                  onClick={() =>
-                    patch("customers", me.id, {
-                      addresses: me.addresses.filter((x) => x.id !== a.id),
-                    })
-                  }
+                  onClick={async () => {
+                    const { error } = await supabase
+                      .from("customer_addresses")
+                      .delete()
+                      .eq("id", a.id);
+                    if (error) toast(error.message, "error");
+                    await reload();
+                  }}
                 >
                   <Trash2 className="size-4" />
                 </button>
@@ -163,24 +166,24 @@ export default function ProfilePage() {
         <SheetContent title="Add an address" description="Saved at your current location.">
           <form
             className="flex flex-col gap-4"
-            onSubmit={(e) => {
+            onSubmit={async (e) => {
               e.preventDefault();
               if (!addr.line1.trim() || !addr.barangay.trim() || !addr.cityMunicipality.trim())
                 return;
-              patch("customers", me.id, {
-                addresses: [
-                  ...me.addresses,
-                  {
-                    id: newId("a"),
-                    label: addr.label.trim() || "Home",
-                    line1: addr.line1.trim(),
-                    barangay: addr.barangay.trim(),
-                    cityMunicipality: addr.cityMunicipality.trim(),
-                    province: "",
-                    location: here ?? settings.serviceArea.center,
-                  },
-                ],
+              const at = here ?? settings.serviceArea.center;
+              const { error } = await supabase.from("customer_addresses").insert({
+                tenant_id: tenant.id,
+                customer_id: me.id,
+                label: addr.label.trim() || "Home",
+                line1: addr.line1.trim(),
+                barangay: addr.barangay.trim(),
+                city_municipality: addr.cityMunicipality.trim(),
+                province: "",
+                location_lat: at.lat,
+                location_lng: at.lng,
               });
+              if (error) return toast(error.message, "error");
+              await reload();
               toast("Address saved");
               setAdding(false);
               setAddr({ label: "Home", line1: "", barangay: "", cityMunicipality: "" });

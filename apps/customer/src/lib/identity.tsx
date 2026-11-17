@@ -1,11 +1,9 @@
 "use client";
 
-import { createContext, useCallback, useContext, useEffect, type ReactNode } from "react";
-import { EMPTY_LOYALTY } from "@chowlane/lib";
+import { createContext, useCallback, useContext, type ReactNode } from "react";
 import type { PublicTenant } from "@chowlane/db";
 import { useAuthIdentity, type AppSupabase } from "@chowlane/db/react";
 import type { User } from "@supabase/supabase-js";
-import { useMockStore } from "./store";
 
 /** The signed-in customer of this tenant (one row per tenant per login — Q-31). */
 export type CustomerIdentity = {
@@ -48,43 +46,8 @@ export function CustomerIdentityProvider({
   );
   const auth = useAuthIdentity("customer", resolve);
   return (
-    <IdentityContext.Provider value={{ ...auth, tenant }}>
-      <MockCustomerSync />
-      {children}
-    </IdentityContext.Provider>
+    <IdentityContext.Provider value={{ ...auth, tenant }}>{children}</IdentityContext.Provider>
   );
-}
-
-/**
- * Screens still run on the mock store until Milestone 2.5: make sure a mock customer with the same Facebook id
- * exists (a brand-new customer isn't in the demo data yet).
- */
-function MockCustomerSync() {
-  const ctx = useContext(IdentityContext)!;
-  const id = ctx.identity;
-  const slug = ctx.tenant.slug;
-  const mockTenant = useMockStore((s) => s.tenants).find((t) => t.slug === slug);
-  const exists = useMockStore((s) => s.customers).some(
-    (c) => c.tenantId === mockTenant?.id && c.facebookId === id?.facebookId,
-  );
-  const insert = useMockStore((s) => s.insert);
-  useEffect(() => {
-    if (!id || !mockTenant || exists) return;
-    insert("customers", {
-      id: `c-${id.customerId}`,
-      tenantId: mockTenant.id,
-      facebookId: id.facebookId,
-      name: id.name,
-      avatarUrl: id.avatarUrl,
-      verificationStatus: "UNVERIFIED",
-      verificationHistory: [],
-      locationPermission: "UNKNOWN",
-      addresses: [],
-      loyalty: EMPTY_LOYALTY,
-      createdAt: new Date().toISOString(),
-    });
-  }, [id, mockTenant, exists, insert]);
-  return null;
 }
 
 export function useCustomerIdentity(): Ctx {

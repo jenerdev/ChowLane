@@ -7,7 +7,9 @@ import { isOfferExpired, needsRider } from "@chowlane/lib";
 import { Badge, EmptyState, Input, PageHeader, Tabs, TabsList, TabsTrigger } from "@chowlane/ui";
 import { OrderRow } from "@/components/order-row";
 import { RequirePermission } from "@/components/require-permission";
-import { useConsole } from "@/lib/use-console";
+import { loadOrderList } from "@/lib/orders";
+import { useConsole, useNow } from "@/lib/use-console";
+import { useAutoReload, useLive } from "@/lib/use-live";
 
 const GROUPS: Record<string, OrderStatus[]> = {
   approve: ["PENDING_APPROVAL"],
@@ -16,7 +18,7 @@ const GROUPS: Record<string, OrderStatus[]> = {
   closed: ["REJECTED", "CANCELLED"],
 };
 
-/** S-102 — orders by stage (ADM-003). */
+/** S-102 — orders by stage (ADM-003). Live since 2.5; refreshes every 20 s until Realtime (2.6). */
 export default function OrdersPage() {
   return (
     <RequirePermission perm="orders.view">
@@ -26,24 +28,22 @@ export default function OrdersPage() {
 }
 
 function Orders() {
-  const { db, tenant, base } = useConsole();
+  const { live, base } = useConsole();
   const [tab, setTab] = useState<keyof typeof GROUPS>("approve");
   const [q, setQ] = useState("");
-  const now = new Date().toISOString();
-  const orders = db.orders
-    .filter((o) => o.tenantId === tenant.id)
-    .sort((a, b) => Date.parse(b.createdAt) - Date.parse(a.createdAt));
-  const name = (id: string) => db.customers.find((c) => c.id === id)?.name ?? "Customer";
-  const store = (id: string) => db.merchants.find((m) => m.id === id)?.name ?? "Store";
-  const list = orders
-    .filter((o) => GROUPS[tab]!.includes(o.status))
-    .filter((o) =>
-      `${o.orderNumber} ${name(o.customerId)} ${store(o.merchantId)}`
+  const now = new Date(useNow()).toISOString();
+  const data = useLive(`orders:${live.id}`, (sb) => loadOrderList(sb, live.id));
+  useAutoReload(data.reload);
+  const rows = data.data ?? [];
+  const list = rows
+    .filter((r) => GROUPS[tab]!.includes(r.order.status))
+    .filter((r) =>
+      `${r.order.orderNumber} ${r.customer.name} ${r.merchant}`
         .toLowerCase()
         .includes(q.trim().toLowerCase()),
     );
   const count = (k: keyof typeof GROUPS) =>
-    orders.filter((o) => GROUPS[k]!.includes(o.status)).length;
+    rows.filter((r) => GROUPS[k]!.includes(r.order.status)).length;
 
   return (
     <>
@@ -68,7 +68,12 @@ function Orders() {
           />
         </div>
       </div>
-      {list.length === 0 ? (
+      {data.error ? (
+        <p role="alert" className="mb-3 text-sm text-danger">
+          Couldn&apos;t load orders: {data.error}
+        </p>
+      ) : null}
+      {data.loading ? null : list.length === 0 ? (
         <EmptyState
           icon={<ReceiptText />}
           title={
@@ -81,18 +86,16 @@ function Orders() {
         />
       ) : (
         <ul className="divide-y rounded-card border">
-          {list.map((o) => (
+          {list.map(({ order: o, customer, merchant }) => (
             <OrderRow
               key={o.id}
               order={o}
               href={`${base}/orders/${o.id}`}
-              customer={name(o.customerId)}
-              merchant={store(o.merchantId)}
+              customer={customer.name}
+              merchant={merchant}
               now={now}
               extra={
-                o.status === "PENDING_APPROVAL" &&
-                db.customers.find((c) => c.id === o.customerId)?.verificationStatus ===
-                  "PENDING" ? (
+                o.status === "PENDING_APPROVAL" && customer.verificationStatus === "PENDING" ? (
                   <Badge tone="warning">ID to verify</Badge>
                 ) : needsRider(o) ? (
                   <Badge tone="danger">Needs rider</Badge>

@@ -185,7 +185,8 @@ const VIEWS: { view: string; base: string; where: string }[] = [
 ];
 
 // ------------------------------------------------------------------ writes
-type Write = { who: Key; sql: string; expect: string; label: string };
+/** `undo`: roll the statement back after checking it, so later checks see the seeded data (2.5 order functions). */
+type Write = { who: Key; sql: string; expect: string; label: string; undo?: boolean };
 const WRITES: Write[] = [
   // settings: column groups need their own permission (trigger tenant_settings_guard)
   {
@@ -525,6 +526,132 @@ const WRITES: Write[] = [
     expect: "42501",
     sql: `insert into storage.objects (bucket_id, name) values ('tenant-logos', 'logo.png')`,
   },
+  // ordering (2.5)
+  {
+    who: "cust1",
+    label: "customers can't call place_order directly (server action only)",
+    undo: true,
+    expect: "42501",
+    sql: `select public.place_order('{}'::jsonb)`,
+  },
+  {
+    who: "cust1",
+    label: "a customer looks up a coupon by code (BL-13.5)",
+    undo: true,
+    expect: "ok:1",
+    sql: `select * from public.check_coupon(${FB}, 'welcome20')`,
+  },
+  {
+    who: "anon",
+    label: "anonymous can't look up coupons",
+    undo: true,
+    expect: "42501",
+    sql: `select * from public.check_coupon(${FB}, 'WELCOME20')`,
+  },
+  {
+    who: "cust2",
+    label: "a customer cancels their own order while it waits for approval (BL-4.2)",
+    undo: true,
+    expect: "ok:1",
+    sql: `select public.cancel_order_by_customer((select id from public.orders where customer_id = ${C2} and status = 'PENDING_APPROVAL' limit 1))`,
+  },
+  {
+    who: "cust1",
+    label: "a customer can't cancel someone else's order",
+    undo: true,
+    expect: "42501",
+    sql: `select public.cancel_order_by_customer((select id from public.orders where customer_id = ${C2} limit 1))`,
+  },
+  {
+    who: "cust1",
+    label: "a customer can't cancel once the order is on its way (BL-4.2)",
+    undo: true,
+    expect: "P0001",
+    sql: `select public.cancel_order_by_customer((select id from public.orders where customer_id = ${C1} and status = 'AT_MERCHANT' limit 1))`,
+  },
+  {
+    who: "cust1",
+    label: "a verified customer can't send another ID (BL-3.6)",
+    undo: true,
+    expect: "P0001",
+    sql: `select public.submit_verification(${FB}, 'PASSPORT', ${FB} || '/' || ${C1} || '/a.jpg', ${FB} || '/' || ${C1} || '/b.jpg')`,
+  },
+  {
+    who: "fbOwner",
+    label: "approve a verified customer's waiting order (ADM-002)",
+    undo: true,
+    expect: "ok:1",
+    sql: `select public.approve_order((select id from public.orders where customer_id = ${C1} and status = 'PENDING_APPROVAL' limit 1))`,
+  },
+  {
+    who: "fbOwner",
+    label: "a first order waits for the ID check (BL-3.5)",
+    undo: true,
+    expect: "P0001",
+    sql: `select public.approve_order((select id from public.orders where customer_id = ${C2} and status = 'PENDING_APPROVAL' limit 1))`,
+  },
+  {
+    who: "keAdmin",
+    label: "another tenant's admin can't approve FastBite orders",
+    undo: true,
+    expect: "42501",
+    sql: `select public.approve_order((select id from public.orders where customer_id = ${C1} and status = 'PENDING_APPROVAL' limit 1))`,
+  },
+  {
+    who: "fbOwner",
+    label: "rejecting an order needs a reason",
+    undo: true,
+    expect: "22023",
+    sql: `select public.reject_order((select id from public.orders where customer_id = ${C1} and status = 'PENDING_APPROVAL' limit 1), ' ')`,
+  },
+  {
+    who: "fbOwner",
+    label: "a delivered order can't be cancelled",
+    undo: true,
+    expect: "P0001",
+    sql: `select public.cancel_order((select id from public.orders where tenant_id = ${FB} and status = 'DELIVERED' limit 1), 'Too late')`,
+  },
+  {
+    who: "fbOwner",
+    label: "customers.verify approves a pending ID (ADM-001)",
+    undo: true,
+    expect: "ok:1",
+    sql: `select public.verify_customer(${C2})`,
+  },
+  {
+    who: "cust2",
+    label: "a customer can't verify themselves",
+    undo: true,
+    expect: "42501",
+    sql: `select public.verify_customer(${C2})`,
+  },
+  {
+    who: "cust1",
+    label: "a customer uploads ID photos into their own folder",
+    undo: true,
+    expect: "ok:1",
+    sql: `insert into storage.objects (bucket_id, name) values ('id-documents', ${FB} || '/' || ${C1} || '/id-1.jpg')`,
+  },
+  {
+    who: "cust1",
+    label: "a customer can't upload into another customer's ID folder",
+    undo: true,
+    expect: "42501",
+    sql: `insert into storage.objects (bucket_id, name) values ('id-documents', ${FB} || '/' || ${C2} || '/id-1.jpg')`,
+  },
+  {
+    who: "fbOwner",
+    label: "customers.verify rejects a pending ID with a reason",
+    expect: "ok:1",
+    sql: `select public.reject_customer(${C2}, 'ID is expired')`,
+  },
+  {
+    who: "fbOwner",
+    label: "rejecting the ID also rejected the waiting order (BL-3.5)",
+    expect: "ok:1",
+    sql: `select 1 from public.orders where customer_id = ${C2} and status = 'REJECTED'
+          and reject_reason = 'Customer verification rejected' limit 1`,
+  },
   {
     who: "fbOwner",
     label: "owner removes an admin; their history stays (BL-2.6)",
@@ -583,7 +710,7 @@ for (const [key, table] of nonEmpty) {
 lines.push("", "-- ---------------------------------------------------------------- writes");
 for (const w of WRITES) {
   count++;
-  const result = `tests.rls_exec(${as(P[w.who])}, ${lit(w.sql)})`;
+  const result = `tests.rls_exec(${as(P[w.who])}, ${lit(w.sql)}, ${w.undo ? "true" : "false"})`;
   if (w.expect === "ok:>0") {
     lines.push(`select matches(${result}, '^ok:[1-9]', ${lit(`${P[w.who].label}: ${w.label}`)});`);
   } else {
@@ -636,7 +763,7 @@ end
 $fn$;
 
 -- Runs a write as a user: 'ok:<rows affected>' or the SQLSTATE of the error. Changes stay in this transaction.
-create or replace function tests.rls_exec(p_auth uuid, p_sql text) returns text
+create or replace function tests.rls_exec(p_auth uuid, p_sql text, p_undo boolean default false) returns text
 language plpgsql as $fn$
 declare n bigint; r text;
 begin
@@ -645,9 +772,16 @@ begin
          else json_build_object('sub', p_auth, 'role', 'authenticated')::text end, true);
   perform set_config('role', case when p_auth is null then 'anon' else 'authenticated' end, true);
   begin
-    execute p_sql;
-    get diagnostics n = row_count;
-    r := 'ok:' || n;
+    begin
+      execute p_sql;
+      get diagnostics n = row_count;
+      r := 'ok:' || n;
+      if p_undo then
+        raise exception 'undo' using errcode = 'TSTUN';  -- roll this statement back, keep the result
+      end if;
+    exception when sqlstate 'TSTUN' then
+      null;
+    end;
   exception when others then
     r := sqlstate;
   end;

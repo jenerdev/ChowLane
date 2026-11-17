@@ -80,7 +80,7 @@ export default function CheckoutPage() {
       return;
     }
     if (needsId) router.push(`${c.base}/checkout/verify-id`);
-    else c.place();
+    else void c.place();
   }
 
   return (
@@ -351,7 +351,7 @@ export default function CheckoutPage() {
             Choose your barangay to see the delivery fee.
           </p>
         ) : null}
-        <Button size="lg" block disabled={blocked} onClick={submit}>
+        <Button size="lg" block disabled={blocked || c.busy} onClick={submit}>
           {needsId
             ? "Continue — verify your ID"
             : `Place order · ${q.pricing ? formatPeso(q.pricing.total) : ""}`}

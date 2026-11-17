@@ -12,6 +12,38 @@
 
 ---
 
+## 2026-11-18 — Milestone 2.5 Ordering ✅
+
+**Done:** Migration `ordering.sql`: `place_order` (service role; re-checks coupon limits under a row lock, balances,
+verification, item totals, max order; order number per BL-4.6; APPROVED only for a verified customer with
+auto-approve), `check_coupon`, `cancel_order_by_customer`, `submit_verification`, `verify_customer`,
+`reject_customer` (auto-rejects the waiting order), `approve_order` / `reject_order` / `cancel_order`, shared
+`private.close_order` / `release_promos` (coupon use + points / rewards back), and the private `id-documents` bucket.
+`@chowlane/db`: `toOrder`, `toPublicSettings`, `toPlaceOrderPayload`. Customer app: no mock store left —
+`CustomerDataProvider` loads menu, settings, the customer, orders and rewards from Supabase (refresh every 20 s with a
+live order); checkout places orders through `placeOrderAction` (server action, lib pricing on server-side data); ID
+photos upload to Storage; cancel, ID re-submission, profile phone / addresses and the location flag write to
+Supabase. Console: orders list + detail live with approve / reject / cancel (assigning riders waits for 2.6), ID
+approve / reject live with signed photo URLs, order links from customers / riders / verification open live orders.
+`db:env` now gives the customer app the server-only key. The RLS test helper can roll a check back (`undo`).
+
+**Found & fixed while testing:** the ID upload policy compared the customer's name instead of the file path (a bare
+`name` inside a subquery on `customers`) — now `objects.name`; the verify-ID page flashed "already verified" while the
+new order page opened.
+
+**Verified:** build ✅ lint ✅ typecheck ✅ tests ✅ (91 unit) RLS ✅ (332 pgTAP) format ✅; browser: new customer → location →
+Burger Barn → coupon check (minimum not met, right message) → ID photos → order FB-10233; console shows the ID photos
+(signed URLs), approves the ID and the order; customer sees "Confirmed"; a second order skips the ID step and is
+cancelled by the customer; no console errors.
+
+**Changed docs:** DECISIONS (D-067), REQUIREMENTS (BE: 47 ✅ · 5 🟨), SCREENS (live notes), BUSINESS-LOGIC (change log, no
+rule change), DATA-MODEL (ID photo paths), TECH-STACK (service key apps, buckets), USER-FLOWS (2.5 note), ROADMAP
+(2.5 ✅), PHASE-2-PLAN, STATUS.
+
+**Stopped at / Next:** Uncommitted on `phase-2`. Next: Milestone 2.6 Dispatch & delivery (waiting for the user's go).
+
+---
+
 ## 2026-11-18 — Milestone 2.4 Console on real data ✅
 
 **Done:** User accepted the Q-36 default (D-065: no email step while building, email confirmation before launch) and

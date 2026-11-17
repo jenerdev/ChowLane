@@ -27,8 +27,9 @@
 
 ## apps/console (Owner & Admin)
 > **Live on Supabase (Phase 2):** S-118, S-119, S-107–S-109 (2.3); **2.4:** S-101 home, S-104/S-105 verification
-> (view — approve/reject in 2.5), S-106 customers (+ points adjust), S-111–S-117, S-122, S-123, S-125–S-128, and the
-> dispatch-mode switch on S-121. Still on mock data: orders (S-102, S-103), dispatch lists, map, cash, rider pay report.
+> (view), S-106 customers (+ points adjust), S-111–S-117, S-122, S-123, S-125–S-128, and the dispatch-mode switch on
+> S-121; **2.5:** S-102/S-103 orders (approve / reject / cancel; assigning riders in 2.6), ID approve / reject on S-105.
+> Still on mock data: dispatch lists, map, cash, rider pay report (2.6).
 
 | # | Screen | Route | Reqs | Perm | Status |
 |---|---|---|---|---|---|
@@ -76,6 +77,9 @@
 | S-206 | Profile | `/[tenant]/profile` | RID-009 | ✅ |
 
 ## apps/customer (branded per tenant)
+> **Live on Supabase since 2.5:** every screen (menu, cart, checkout → `place_order`, ID upload to private Storage,
+> tracking with 20-second refresh, cancel, rewards, profile). No mock data left in this app.
+
 | # | Screen | Route | Reqs | Status |
 |---|---|---|---|---|
 | S-300 | Splash + Continue with Facebook | `/[tenant]/login` | CUS-001 | ✅ |

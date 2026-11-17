@@ -1661,11 +1661,33 @@ export type Database = {
         Args: { p_customer: string; p_note: string; p_points: number };
         Returns: number;
       };
+      approve_order: { Args: { p_order: string }; Returns: undefined };
       auth_login_status: {
         Args: { p_email: string };
         Returns: {
           in_use: boolean;
           user_id: string;
+        }[];
+      };
+      cancel_order: { Args: { p_order: string; p_reason: string }; Returns: undefined };
+      cancel_order_by_customer: { Args: { p_order: string }; Returns: undefined };
+      check_coupon: {
+        Args: { p_code: string; p_tenant: string };
+        Returns: {
+          code: string;
+          description: string;
+          id: string;
+          is_active: boolean;
+          max_discount: number;
+          max_uses: number;
+          min_order_subtotal: number;
+          my_uses: number;
+          per_customer_limit: number;
+          percent_off: number;
+          type: Database["public"]["Enums"]["coupon_type"];
+          used_count: number;
+          valid_from: string;
+          valid_until: string;
         }[];
       };
       create_tenant: {
@@ -1695,6 +1717,19 @@ export type Database = {
       is_valid_delivery_fee: { Args: { r: Json }; Returns: boolean };
       is_valid_loyalty: { Args: { l: Json }; Returns: boolean };
       is_valid_rider_pay: { Args: { r: Json }; Returns: boolean };
+      place_order: { Args: { p: Json }; Returns: Json };
+      reject_customer: { Args: { p_customer: string; p_reason: string }; Returns: undefined };
+      reject_order: { Args: { p_order: string; p_reason: string }; Returns: undefined };
+      submit_verification: {
+        Args: {
+          p_id_front_url: string;
+          p_id_type: Database["public"]["Enums"]["id_type"];
+          p_selfie_with_id_url: string;
+          p_tenant: string;
+        };
+        Returns: string;
+      };
+      verify_customer: { Args: { p_customer: string }; Returns: undefined };
     };
     Enums: {
       active_status: "ACTIVE" | "INACTIVE";

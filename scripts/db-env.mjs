@@ -1,4 +1,4 @@
-// Writes the Supabase URL + anon key (and, for landing + console, the server-only service-role key) into each
+// Writes the Supabase URL + anon key (and, for landing, console and customer, the server-only service-role key) into each
 // app's .env.local. Other lines in those files are kept.
 // Usage: pnpm db:env               → reads `supabase status -o env` (local Docker stack must be running)
 //        pnpm db:env -- --from-env → copies NEXT_PUBLIC_SUPABASE_URL / _ANON_KEY / SUPABASE_SERVICE_ROLE_KEY from
@@ -9,7 +9,7 @@ import { join } from "node:path";
 
 const APPS = ["landing", "console", "rider", "customer", "platform"];
 // Only apps whose server actions use the Auth admin API (signup, invites, rider passwords). Never NEXT_PUBLIC_.
-const SERVICE_APPS = ["landing", "console"];
+const SERVICE_APPS = ["landing", "console", "customer"];
 const MANAGED = [
   "NEXT_PUBLIC_SUPABASE_URL",
   "NEXT_PUBLIC_SUPABASE_ANON_KEY",

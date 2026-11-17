@@ -5,11 +5,9 @@ import Link from "next/link";
 import { Check, Gift, Phone, ReceiptText } from "lucide-react";
 import {
   canCancel,
-  cancelOrder,
   customerStatusMessage,
   formatDateTime,
   formatPeso,
-  promoRefunds,
   trackingSteps,
 } from "@chowlane/lib";
 import {
@@ -26,15 +24,12 @@ import {
   toast,
 } from "@chowlane/ui";
 import { PriceLines } from "@/components/price-lines";
-import { useMockStore } from "@/lib/store";
-import { newId, useCustomer } from "@/lib/use-customer";
+import { useCustomer } from "@/lib/use-customer";
 
-/** S-307 — order status & tracking (CUS-007, CUS-008, CUS-015). Phase 3: live updates via Realtime. */
+/** S-307 — order status & tracking (CUS-007, CUS-008, CUS-015). Refreshes every 20 s (Realtime in 2.6). */
 export default function OrderTrackingPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
-  const { db, me, tenant, base } = useCustomer();
-  const patch = useMockStore((s) => s.patch);
-  const insert = useMockStore((s) => s.insert);
+  const { db, me, tenant, base, supabase, reload } = useCustomer();
   const [confirm, setConfirm] = useState(false);
   const order = db.orders.find((o) => o.id === id && o.customerId === me?.id);
   if (!me) return null;
@@ -57,23 +52,11 @@ export default function OrderTrackingPage({ params }: { params: Promise<{ id: st
   const live = ["ASSIGNED", "AT_MERCHANT", "PICKED_UP"].includes(order.status);
   const idRejected = order.status === "REJECTED" && me.verificationStatus === "REJECTED";
 
-  function cancel() {
-    const now = new Date().toISOString();
-    const r = cancelOrder(order!, me!.id, "CUSTOMER", "Cancelled by customer", now);
-    if (!r.ok) {
-      toast(r.reason, "error");
-      return;
-    }
-    patch("orders", order!.id, r.order);
-    const refund = promoRefunds(order!, me!, now);
-    patch("customers", me!.id, { loyalty: refund.loyalty });
-    for (const t of refund.transactions) insert("loyaltyTransactions", { id: newId("lt"), ...t });
-    if (order!.couponId) {
-      const red = db.couponRedemptions.find((x) => x.orderId === order!.id && !x.released);
-      if (red) patch("couponRedemptions", red.id, { released: true });
-      const cp = db.coupons.find((x) => x.id === order!.couponId);
-      if (cp) patch("coupons", cp.id, { usedCount: Math.max(0, cp.usedCount - 1) });
-    }
+  /** BL-4.2: only while waiting for approval; coupon use, points and rewards are given back (server). */
+  async function cancel() {
+    const { error } = await supabase.rpc("cancel_order_by_customer", { p_order: order!.id });
+    if (error) return toast(error.message, "error");
+    await reload();
     toast("Order cancelled");
   }
 

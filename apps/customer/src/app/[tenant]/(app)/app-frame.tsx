@@ -21,7 +21,7 @@ export function AppFrame({
   children: ReactNode;
 }) {
   const router = useRouter();
-  const { me, ready, tenant, settings, base, db, signedIn } = useCustomer();
+  const { me, ready, tenant, settings, base, db, signedIn, error } = useCustomer();
   const { count } = useCart(initial.slug);
 
   useEffect(() => {
@@ -33,7 +33,7 @@ export function AppFrame({
     if (!ready) return;
     if (!signedIn) router.replace(`/${initial.slug}/login`);
     else if (!me)
-      return; // business not in the demo data yet — notice below
+      return; // couldn't load — notice below
     else if (me.locationPermission !== "GRANTED") router.replace(`/${initial.slug}/location`);
   }, [ready, me, signedIn, router, initial.slug]);
 
@@ -94,8 +94,8 @@ export function AppFrame({
         ) : ready && signedIn && !me ? (
           <EmptyState
             icon={<Hourglass />}
-            title="You're logged in"
-            description={`${t.businessName} opens for orders here soon. Check back in a little while.`}
+            title="Couldn't load your account"
+            description={error ?? "Check your connection and try again."}
           />
         ) : null}
       </AppShell>

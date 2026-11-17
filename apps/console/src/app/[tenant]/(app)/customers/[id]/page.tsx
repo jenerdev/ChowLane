@@ -55,7 +55,7 @@ const TX_LABEL: Record<string, string> = {
 };
 
 function Detail({ id }: { id: string }) {
-  const { live, base, can, supabase, db } = useConsole();
+  const { live, base, can, supabase } = useConsole();
   const settings = useSettings();
   const data = useLive(`customer:${id}`, async (sb) => {
     const [customer] = await loadCustomers(sb, live.id, { ids: [id] });
@@ -104,11 +104,6 @@ function Detail({ id }: { id: string }) {
 
   const now = new Date().toISOString();
   const { orders, tx } = data.data!;
-  // The order screen still runs on mock data (until 2.5–2.6): open the same order by its number.
-  const orderHref = (orderNumber: string) => {
-    const mock = db.orders.find((o) => o.orderNumber === orderNumber);
-    return mock ? `${base}/orders/${mock.id}` : `${base}/orders`;
-  };
   const l = settings.data.loyalty;
 
   async function saveAdjustment() {
@@ -206,7 +201,7 @@ function Detail({ id }: { id: string }) {
                   <OrderRow
                     key={o.id}
                     order={o}
-                    href={orderHref(o.orderNumber)}
+                    href={`${base}/orders/${o.id}`}
                     customer={c.name}
                     merchant={o.merchant}
                     now={now}

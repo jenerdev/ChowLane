@@ -137,7 +137,8 @@ order in each status) so every screen can be reviewed. Live cross-app sync comes
    other local Supabase projects on the default 543xx ports.
 2. `pnpm db:env` writes `NEXT_PUBLIC_SUPABASE_URL` + `NEXT_PUBLIC_SUPABASE_ANON_KEY` into `apps/{console,rider,customer,platform}/.env.local`
    (git-ignored). For the hosted project: set both variables in the shell and run `pnpm db:env -- --from-env`, or copy
-   `.env.example`. Never put the service-role key in an app.
+   `.env.example`. The server-only `SUPABASE_SERVICE_ROLE_KEY` goes only to landing, console and customer (server
+   actions; never `NEXT_PUBLIC_`, never in a browser bundle).
 3. `pnpm dev` → `GET /api/health` on ports 3001–3004 returns `{ ok: true }` when the app reaches Supabase.
 4. After a migration: `pnpm db:reset` (re-applies migrations + seed) and `pnpm db:types` (regenerates
    `packages/db/src/database.types.ts`; commit it).
@@ -159,7 +160,9 @@ order in each status) so every screen can be reviewed. Live cross-app sync comes
 - `@chowlane/db/tenant` → `getPublicTenant(slug)` (cached per request) for layouts, manifests and icons.
 - `@chowlane/db/mappers` → DB rows → `@chowlane/types` shapes.
 - Server actions with the Auth admin API: `apps/landing/src/lib/signup-actions.ts` (signup),
-  `apps/console/src/lib/team-actions.ts` (invites, rider logins). They check `has_permission` first.
+  `apps/console/src/lib/team-actions.ts` (invites, rider logins) check `has_permission` first;
+  `apps/customer/src/lib/order-actions.ts` (place order, 2.5) takes the customer from the session.
+- Storage buckets (2.4–2.5): `tenant-logos` (public), `id-documents` (private, signed URLs).
 - Customer Facebook login (hosted): `signInWithOAuth` → `/[tenant]/auth/callback` (code exchange). Add each app's
   callback / invite URLs to Supabase Auth → URL configuration when deploying (2.8).
 

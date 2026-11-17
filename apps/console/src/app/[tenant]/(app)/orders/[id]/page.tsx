@@ -6,7 +6,6 @@ import { Gift, ReceiptText, ShieldAlert } from "lucide-react";
 import type { ActorType } from "@chowlane/types";
 import {
   canCancel,
-  canReassign,
   cashNeededAtStore,
   formatDateTime,
   formatPeso,
@@ -29,11 +28,11 @@ import {
   PageHeader,
   VerificationBadge,
 } from "@chowlane/ui";
-import { AssignRiderSheet } from "@/components/assign-rider-sheet";
 import { ReasonSheet } from "@/components/reason-sheet";
 import { RequirePermission } from "@/components/require-permission";
-import { useConsole } from "@/lib/use-console";
-import { useOrderActions } from "@/lib/use-order-actions";
+import { loadOrderDetail, useOrderOps } from "@/lib/orders";
+import { useConsole, useNow } from "@/lib/use-console";
+import { useAutoReload, useLive } from "@/lib/use-live";
 
 const ACTOR: Record<ActorType, string> = {
   CUSTOMER: "Customer",
@@ -43,7 +42,10 @@ const ACTOR: Record<ActorType, string> = {
   SYSTEM: "Automatic",
 };
 
-/** S-103 — order detail with approve / reject / assign / cancel, timeline and assignment history (ADM-002…004, ADM-007, ADM-011). */
+/**
+ * S-103 — order detail with approve / reject / cancel, timeline and assignment history (ADM-002, ADM-003, ADM-007,
+ * ADM-011). Live since 2.5; assigning riders moves with dispatch (2.6).
+ */
 export default function OrderDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
   return (
@@ -75,20 +77,26 @@ function Line({
 }
 
 function OrderDetail({ id }: { id: string }) {
-  const { db, tenant, base, can, settings } = useConsole();
-  const actions = useOrderActions();
+  const { live, base, can } = useConsole();
+  const ops = useOrderOps();
   const [reject, setReject] = useState(false);
   const [cancel, setCancel] = useState(false);
-  const [assign, setAssign] = useState(false);
-  const order = db.orders.find((o) => o.id === id && o.tenantId === tenant.id);
-  if (!order) return <EmptyState icon={<ReceiptText />} title="Order not found" />;
+  const nowMs = useNow();
+  const data = useLive(`order:${id}`, (sb) => loadOrderDetail(sb, live.id, id));
+  useAutoReload(data.reload);
+  if (data.loading) return null;
+  if (!data.data)
+    return <EmptyState icon={<ReceiptText />} title="Order not found" description={data.error} />;
+  const { order, customer, riders } = data.data;
+  const merchant = { name: data.data.merchant };
 
-  const now = new Date().toISOString();
-  const customer = db.customers.find((c) => c.id === order.customerId)!;
-  const merchant = db.merchants.find((m) => m.id === order.merchantId)!;
-  const rider = db.riders.find((r) => r.id === order.riderId);
-  const offerRider = db.riders.find((r) => r.id === order.pendingOffer?.riderId);
-  const riderName = (rid: string) => db.riders.find((r) => r.id === rid)?.name ?? "Rider";
+  const now = new Date(nowMs).toISOString();
+  const rider = riders.find((r) => r.id === order.riderId);
+  const offerRider = riders.find((r) => r.id === order.pendingOffer?.riderId);
+  const riderName = (rid: string) => riders.find((r) => r.id === rid)?.name ?? "Rider";
+  const act = async (done: Promise<boolean>) => {
+    if (await done) await data.reload();
+  };
   const waitingVerification =
     order.status === "PENDING_APPROVAL" && customer.verificationStatus !== "VERIFIED";
 
@@ -131,65 +139,29 @@ function OrderDetail({ id }: { id: string }) {
                   <Button variant="outline" onClick={() => setReject(true)}>
                     Reject
                   </Button>
-                  <Button onClick={() => actions.approve(order)}>Approve</Button>
+                  <Button onClick={() => void act(ops.approve(order.id))}>Approve</Button>
                 </div>
               ) : null}
             </>
           ) : order.status === "APPROVED" && order.pendingOffer ? (
-            isOfferExpired(order, now) ? (
-              <>
-                <div>
-                  <p className="text-sm font-medium">
-                    {offerRider?.name ?? "The rider"} didn&apos;t answer in time
-                  </p>
-                  <p className="text-[13px] text-muted-foreground">
-                    The offer expired {timeAgo(order.pendingOffer.expiresAt, now)}. In the live app
-                    this happens automatically.
-                  </p>
-                </div>
-                <Button onClick={() => actions.simulateResponse(order, "TIMED_OUT")}>
-                  Mark as no response
-                </Button>
-              </>
-            ) : (
-              <>
-                <div>
-                  <p className="text-sm font-medium">
-                    Waiting for {offerRider?.name ?? "the rider"} to accept
-                  </p>
-                  <p className="text-[13px] text-muted-foreground">
-                    Offered {timeAgo(order.pendingOffer.offeredAt, now)} ·{" "}
-                    {order.pendingOffer.by === "AUTO" ? "auto-assigned" : "assigned by admin"}
-                  </p>
-                </div>
-                <div className="flex flex-wrap gap-2">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => actions.simulateResponse(order, "REJECTED", "TOO_FAR")}
-                  >
-                    Simulate: rider declines
-                  </Button>
-                  <Button size="sm" onClick={() => actions.simulateResponse(order, "ACCEPTED")}>
-                    Simulate: rider accepts
-                  </Button>
-                </div>
-              </>
-            )
+            <div>
+              <p className="text-sm font-medium">
+                {isOfferExpired(order, now)
+                  ? `${offerRider?.name ?? "The rider"} didn't answer in time`
+                  : `Waiting for ${offerRider?.name ?? "the rider"} to accept`}
+              </p>
+              <p className="text-[13px] text-muted-foreground">
+                Offered {timeAgo(order.pendingOffer.offeredAt, now)} ·{" "}
+                {order.pendingOffer.by === "AUTO" ? "auto-assigned" : "assigned by admin"}
+              </p>
+            </div>
           ) : needsRider(order) ? (
-            <>
-              <div>
-                <p className="text-sm font-medium">Needs a rider</p>
-                <p className="text-[13px] text-muted-foreground">
-                  {settings.dispatchMode === "AUTO"
-                    ? "No online rider accepted yet."
-                    : "Dispatch is manual — pick a rider."}
-                </p>
-              </div>
-              {can("orders.assign") ? (
-                <Button onClick={() => setAssign(true)}>Assign rider</Button>
-              ) : null}
-            </>
+            <div>
+              <p className="text-sm font-medium">Needs a rider</p>
+              <p className="text-[13px] text-muted-foreground">
+                Assigning riders on live orders switches on with dispatch in the next update.
+              </p>
+            </div>
           ) : (
             <p className="text-sm">{ORDER_STATUS_LABELS[order.status]}.</p>
           )}
@@ -366,16 +338,6 @@ function OrderDetail({ id }: { id: string }) {
                   {order.pendingOffer ? `Offered to ${offerRider?.name}` : "Not assigned"}
                 </span>
               )}
-              {can("orders.assign") && canReassign(order.status) && !needsRider(order) ? (
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="self-start"
-                  onClick={() => setAssign(true)}
-                >
-                  {rider || order.pendingOffer ? "Reassign" : "Assign rider"}
-                </Button>
-              ) : null}
             </CardContent>
           </Card>
           {can("orders.cancel") && canCancel(order.status, "ADMIN") ? (
@@ -403,7 +365,7 @@ function OrderDetail({ id }: { id: string }) {
         ]}
         confirmLabel="Reject order"
         destructive
-        onSubmit={(r) => actions.reject(order, r)}
+        onSubmit={(r) => void act(ops.reject(order.id, r))}
       />
       <ReasonSheet
         open={cancel}
@@ -418,9 +380,8 @@ function OrderDetail({ id }: { id: string }) {
         ]}
         confirmLabel="Cancel order"
         destructive
-        onSubmit={(r) => actions.cancel(order, r)}
+        onSubmit={(r) => void act(ops.cancel(order.id, r))}
       />
-      <AssignRiderSheet order={order} open={assign} onOpenChange={setAssign} />
     </>
   );
 }

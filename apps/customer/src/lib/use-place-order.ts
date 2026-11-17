@@ -1,55 +1,83 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import type { BarangayFee, Coupon } from "@chowlane/types";
-import {
-  CHECKOUT_MESSAGES,
-  nextOrderNumber,
-  normalizeCouponCode,
-  offerOrder,
-  pickAutoRider,
-  placeOrder,
-  ridersWithOpenOffers,
-  type NewVerification,
-} from "@chowlane/lib";
+import { normalizeCouponCode } from "@chowlane/lib";
+import type { VerificationUpload } from "@chowlane/db/mappers";
 import { toast } from "@chowlane/ui";
 import { useCart } from "./cart";
 import { useCheckoutDraft } from "./checkout-draft";
 import { useCurrentLocation } from "./location";
-import { useMockStore } from "./store";
-import { newId, useCustomer } from "./use-customer";
+import { placeOrderAction } from "./order-actions";
+import { useCustomer } from "./use-customer";
 
-/** Builds the checkout input from cart + draft, and places the order with all its bookkeeping. */
+type CouponLookup = { code: string; coupon?: Coupon; myUses: number };
+
+/**
+ * Builds the checkout quote input from cart + draft (shown live on the checkout screen) and places the order through
+ * the server (`placeOrderAction`), which prices it again with the same rules on server-side data.
+ */
 export function useCheckout() {
   const router = useRouter();
   const ctx = useCustomer();
-  const { db, tenant, settings, me, slug, base } = ctx;
+  const { db, tenant, settings, me, slug, base, supabase, reload } = ctx;
   const { cart, clear: clearCart } = useCart(slug);
   const { draft, clear: clearDraft } = useCheckoutDraft(slug);
   const here = useCurrentLocation(slug);
-  const insert = useMockStore((s) => s.insert);
-  const patch = useMockStore((s) => s.patch);
+  const [busy, setBusy] = useState(false);
+
+  // Coupons aren't readable by customers: look the typed code up with check_coupon (BL-13.5).
+  const code = normalizeCouponCode(draft.couponCode);
+  const [lookup, setLookup] = useState<CouponLookup>();
+  useEffect(() => {
+    if (!code || lookup?.code === code) return;
+    let stale = false;
+    void supabase.rpc("check_coupon", { p_tenant: tenant.id, p_code: code }).then(({ data }) => {
+      if (stale) return;
+      const row = data?.[0];
+      setLookup({
+        code,
+        myUses: row?.my_uses ?? 0,
+        coupon: row
+          ? {
+              id: row.id,
+              tenantId: tenant.id,
+              code: row.code,
+              description: row.description ?? undefined,
+              type: row.type,
+              percentOff: row.percent_off ?? undefined,
+              maxDiscount: row.max_discount ?? undefined,
+              minOrderSubtotal: row.min_order_subtotal ?? undefined,
+              maxUses: row.max_uses,
+              usedCount: row.used_count,
+              perCustomerLimit: row.per_customer_limit,
+              validFrom: row.valid_from,
+              validUntil: row.valid_until,
+              isActive: row.is_active,
+              createdBy: "",
+              createdAt: row.valid_from,
+            }
+          : undefined,
+      });
+    });
+    return () => {
+      stale = true;
+    };
+  }, [code, lookup?.code, supabase, tenant.id]);
+  const coupon = code && lookup?.code === code ? lookup.coupon : undefined;
 
   const merchant = db.merchants.find((m) => m.id === cart.merchantId);
-  const products = db.products.filter((p) => p.tenantId === tenant.id);
-  const fallback = me?.addresses[0]?.location ?? settings.serviceArea.center;
-  const current = here ?? fallback;
+  const products = db.products;
+  const fallback = me?.addresses[0]?.location ?? settings?.serviceArea.center;
+  const current = here ?? fallback!;
   const pin = draft.pin ?? current;
-  const code = normalizeCouponCode(draft.couponCode);
-  const coupon: Coupon | undefined = code
-    ? db.coupons.find((c) => c.tenantId === tenant.id && c.code === code)
-    : undefined;
-  const customerCouponUses = coupon
-    ? db.couponRedemptions.filter(
-        (r) => r.couponId === coupon.id && r.customerId === me?.id && !r.released,
-      ).length
-    : 0;
   const barangayFee: BarangayFee | undefined = db.barangayFees.find(
-    (b) => b.id === draft.barangayFeeId && b.tenantId === tenant.id,
+    (b) => b.id === draft.barangayFeeId,
   );
 
   const input =
-    merchant && me
+    merchant && me && settings
       ? {
           lines: cart.lines,
           products,
@@ -60,7 +88,7 @@ export function useCheckout() {
           barangayFee,
           couponCode: code || undefined,
           coupon,
-          customerCouponUses,
+          customerCouponUses: lookup?.myUses ?? 0,
           useFreeDeliveryReward: draft.useFreeDelivery,
           claimFreeGift: draft.claimGift,
           pointsToRedeem: draft.usePoints ? draft.points : 0,
@@ -69,61 +97,44 @@ export function useCheckout() {
         }
       : null;
 
-  function place(verification?: NewVerification) {
-    if (!input || !me) return false;
-    const orderId = newId("o");
-    const addressText = [
-      draft.addressText.trim(),
-      barangayFee ? `${barangayFee.barangay}, ${barangayFee.cityMunicipality}` : null,
-    ]
-      .filter(Boolean)
-      .join(", ");
-    const r = placeOrder({
-      ...input,
-      now: new Date().toISOString(),
-      tenantId: tenant.id,
-      orderId,
-      orderNumber: nextOrderNumber(
-        db.orders.filter((o) => o.tenantId === tenant.id).map((o) => o.orderNumber),
-        slug,
-      ),
-      addressText,
-      notes: draft.notes,
-      verification: verification ? { ...verification, id: newId("v") } : undefined,
-    });
-    if (!r.ok) {
-      toast(r.reason ?? CHECKOUT_MESSAGES[r.problems[0]!], "error");
-      return false;
-    }
-    let order = r.order;
-    // Auto-approved + AUTO dispatch → offer to the nearest free rider (BL-5.5), like the console does.
-    if (r.autoApproved && settings.dispatchMode === "AUTO") {
-      const riders = db.riders.filter((x) => x.tenantId === tenant.id);
-      const rider = pickAutoRider(riders, merchant!.location, ridersWithOpenOffers(db.orders));
-      if (rider) {
-        const o = offerOrder(
-          order,
-          rider.id,
-          "AUTO",
-          undefined,
-          order.createdAt,
-          settings.riderResponseTimeoutSec,
-        );
-        if (o.ok) order = o.order;
+  async function place(verification?: VerificationUpload) {
+    if (!input || !merchant || busy) return false;
+    setBusy(true);
+    try {
+      const addressText = [
+        draft.addressText.trim(),
+        barangayFee ? `${barangayFee.barangay}, ${barangayFee.cityMunicipality}` : null,
+      ]
+        .filter(Boolean)
+        .join(", ");
+      const r = await placeOrderAction({
+        tenantId: tenant.id,
+        merchantId: merchant.id,
+        lines: cart.lines,
+        pin,
+        addressText,
+        notes: draft.notes,
+        barangayFeeId: barangayFee?.id,
+        couponCode: code || undefined,
+        useFreeDelivery: draft.useFreeDelivery,
+        claimGift: draft.claimGift,
+        points: draft.usePoints ? draft.points : 0,
+        changeFor: draft.changeFor,
+        verification,
+      });
+      if (!r.ok) {
+        toast(r.error, "error");
+        return false;
       }
+      clearCart();
+      clearDraft();
+      await reload();
+      toast(r.autoApproved ? "Order confirmed!" : "Order placed");
+      router.replace(`${base}/orders/${r.orderId}`);
+      return true;
+    } finally {
+      setBusy(false);
     }
-    insert("orders", order);
-    patch("customers", me.id, r.customer);
-    if (r.redemption && coupon) {
-      insert("couponRedemptions", { id: newId("cr"), ...r.redemption });
-      patch("coupons", coupon.id, { usedCount: r.couponUsedCount! });
-    }
-    for (const t of r.transactions) insert("loyaltyTransactions", { id: newId("lt"), ...t });
-    clearCart();
-    clearDraft();
-    toast(r.autoApproved ? "Order confirmed!" : "Order placed");
-    router.replace(`${base}/orders/${order.id}`);
-    return true;
   }
 
   return {
@@ -138,5 +149,6 @@ export function useCheckout() {
     barangayFee,
     input,
     place,
+    busy,
   };
 }

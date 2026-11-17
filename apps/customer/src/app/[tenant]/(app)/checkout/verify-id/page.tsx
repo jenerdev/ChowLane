@@ -1,22 +1,23 @@
 "use client";
 
+import { useState } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { needsIdForOrder } from "@chowlane/lib";
 import { PageHeader, toast } from "@chowlane/ui";
 import { IdForm } from "@/components/id-form";
-import { useMockStore } from "@/lib/store";
+import { uploadIdPhotos } from "@/lib/id-upload";
 import { useCheckout } from "@/lib/use-place-order";
-import { newId } from "@/lib/use-customer";
 
 /**
  * S-306 — first-order ID (CUS-006) and re-submission after a rejection (CUS-012, `?resubmit=1`).
- * With an order: the ID is sent together with the order. Re-submit: only the ID.
+ * With an order: the ID is sent together with the order. Re-submit: only the ID (submit_verification).
+ * Photos go to the private id-documents bucket first (2.5).
  */
 export default function VerifyIdPage() {
   const router = useRouter();
   const resubmit = useSearchParams().get("resubmit") === "1";
   const c = useCheckout();
-  const patch = useMockStore((s) => s.patch);
+  const [sending, setSending] = useState(false);
   if (!c.me) return null;
   const me = c.me;
   const rejected = me.verificationStatus === "REJECTED" ? me.verification?.rejectReason : undefined;
@@ -41,7 +42,7 @@ export default function VerifyIdPage() {
           Your last ID wasn&apos;t accepted: {rejected}
         </p>
       ) : null}
-      {!resubmit && !needsIdForOrder(me) ? (
+      {!resubmit && !needsIdForOrder(me) && !sending ? (
         <p className="text-sm text-muted-foreground">
           Your ID is already verified or being checked — go back to checkout to place your order.
         </p>
@@ -49,18 +50,32 @@ export default function VerifyIdPage() {
         <IdForm
           accepted={c.settings.acceptedIdTypes}
           submitLabel={resubmit ? "Send ID" : "Send ID & place order"}
-          onSubmit={(v) => {
-            if (resubmit) {
-              const ver = { ...v, id: newId("v"), submittedAt: new Date().toISOString() };
-              patch("customers", me.id, {
-                verificationStatus: "PENDING",
-                verification: ver,
-                verificationHistory: [...me.verificationHistory, ver],
-              });
-              toast("ID sent — we'll check it soon");
-              router.replace(`${c.base}/profile`);
-            } else {
-              c.place(v);
+          busy={sending || c.busy}
+          onSubmit={async (v) => {
+            setSending(true);
+            try {
+              const upload = await uploadIdPhotos(c.supabase, c.tenant.id, me.id, v);
+              if (resubmit) {
+                const { error } = await c.supabase.rpc("submit_verification", {
+                  p_tenant: c.tenant.id,
+                  p_id_type: upload.idType,
+                  p_id_front_url: upload.idFrontUrl,
+                  p_selfie_with_id_url: upload.selfieWithIdUrl,
+                });
+                if (error) {
+                  setSending(false);
+                  return toast(error.message, "error");
+                }
+                await c.reload();
+                toast("ID sent — we'll check it soon");
+                router.replace(`${c.base}/profile`);
+              } else if (await c.place(upload)) {
+                return; // stay "sending" while the order page opens (no flash of the verified note)
+              }
+              setSending(false);
+            } catch (e) {
+              toast(e instanceof Error ? e.message : String(e), "error");
+              setSending(false);
             }
           }}
         />

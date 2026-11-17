@@ -5,7 +5,6 @@ import { useRouter } from "next/navigation";
 import { MapPin, MapPinOff } from "lucide-react";
 import { Button } from "@chowlane/ui";
 import { requestPosition, saveCurrentLocation } from "@/lib/location";
-import { useMockStore } from "@/lib/store";
 import { useCustomer } from "@/lib/use-customer";
 
 type State = "ask" | "asking" | "denied" | "unavailable";
@@ -13,31 +12,36 @@ type State = "ask" | "asking" | "denied" | "unavailable";
 /** S-301 — customers can only order with location allowed (CUS-002, BL-3.2). */
 export default function LocationGate() {
   const router = useRouter();
-  const { me, ready, base, slug, settings } = useCustomer();
-  const patch = useMockStore((s) => s.patch);
+  const { me, ready, base, slug, settings, supabase, reload } = useCustomer();
+  // BL-3.2: the customer row remembers whether location was allowed (own profile field).
+  const setPermission = async (v: "GRANTED" | "DENIED") => {
+    if (!me) return;
+    await supabase.from("customers").update({ location_permission: v }).eq("id", me.id);
+    await reload();
+  };
   const [state, setState] = useState<State>("ask");
 
   useEffect(() => {
     if (ready && !me) router.replace(`${base}/login`);
   }, [ready, me, router, base]);
 
-  const done = (p: { lat: number; lng: number }) => {
+  const done = async (p: { lat: number; lng: number }) => {
     saveCurrentLocation(slug, p);
-    if (me) patch("customers", me.id, { locationPermission: "GRANTED" });
+    await setPermission("GRANTED");
     router.replace(base);
   };
 
   async function ask() {
     setState("asking");
     try {
-      done(await requestPosition());
+      await done(await requestPosition());
     } catch (e) {
       const denied =
         typeof e === "object" &&
         e !== null &&
         "code" in e &&
         (e as GeolocationPositionError).code === 1;
-      if (denied && me) patch("customers", me.id, { locationPermission: "DENIED" });
+      if (denied) await setPermission("DENIED");
       setState(denied ? "denied" : "unavailable");
     }
   }
@@ -95,7 +99,7 @@ export default function LocationGate() {
         {state === "denied" || state === "unavailable" ? (
           <Button
             variant="ghost"
-            onClick={() => done(me?.addresses[0]?.location ?? settings.serviceArea.center)}
+            onClick={() => void done(me?.addresses[0]?.location ?? settings.serviceArea.center)}
           >
             Prototype: use a sample location
           </Button>

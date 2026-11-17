@@ -43,7 +43,7 @@ const hours = (a: string, b: string | undefined, nowMs: number) =>
   (((b ? Date.parse(b) : nowMs) - Date.parse(a)) / 3_600_000).toFixed(1);
 
 function Detail({ id }: { id: string }) {
-  const { live, base, can, db } = useConsole();
+  const { live, base, can } = useConsole();
   const nowMs = useNow();
   const data = useLive(`rider:${id}`, async (sb) => {
     const rider = must(
@@ -82,10 +82,6 @@ function Detail({ id }: { id: string }) {
     shiftTimeIns: shifts.filter((s) => Date.parse(s.timeIn) >= weekAgo).map((s) => s.timeIn),
   });
   const active = orders.find((o) => o.id === r.activeOrderId);
-  // The order screen still runs on mock data (until 2.5–2.6): open the same order by its number.
-  const activeMockId = active
-    ? db.orders.find((o) => o.orderNumber === active.order_number)?.id
-    : undefined;
   const toRemit = shifts
     .filter((s) => s.remitStatus === "PENDING")
     .reduce((sum, s) => sum + s.expectedRemit, 0);
@@ -133,11 +129,9 @@ function Detail({ id }: { id: string }) {
             </div>
             <div className="flex items-center gap-3">
               <OrderStatusBadge status={active.status} />
-              {activeMockId ? (
-                <Button variant="outline" size="sm" asChild>
-                  <Link href={`${base}/orders/${activeMockId}`}>Open</Link>
-                </Button>
-              ) : null}
+              <Button variant="outline" size="sm" asChild>
+                <Link href={`${base}/orders/${active.id}`}>Open</Link>
+              </Button>
             </div>
           </CardContent>
         </Card>

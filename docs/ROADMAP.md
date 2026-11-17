@@ -39,7 +39,7 @@ before the backend is designed.
 | 2.2 Schema, RLS & seed | migrations, RLS + helper functions, seed from mocks, RLS tests | ✅ 2026-11-17 |
 | 2.3 Auth | owner signup, staff invites, platform admin, rider login, customer Facebook (+ Admins/Roles/Riders screens live — D-059) | ✅ 2026-11-17 |
 | 2.4 Console on real data | settings, catalog, team, coupons, loyalty, customers, riders (D-066) | ✅ 2026-11-18 |
-| 2.5 Ordering | catalog, checkout → `place_order`, ID upload & verification, tracking | ⬜ |
+| 2.5 Ordering | catalog, checkout → `place_order`, ID upload & verification, tracking (D-067) | ✅ 2026-11-18 |
 | 2.6 Dispatch & delivery | approve → offer → accept → deliver, expiry job, realtime, cash | ⬜ |
 | 2.7 Platform & billing | platform admin, suspend, billing config, statement job | ⬜ |
 | 2.8 Deploy & exit | Vercel HTTPS previews, PWA install (F-10), remove prototype helpers, e2e tests | ⬜ |

@@ -297,6 +297,7 @@ PENDING_APPROVAL ──admin approves──▶ APPROVED ──offered (auto/manu
 ## Change log
 | Date | Rule | Change |
 |---|---|---|
+| 2026-11-18 | — (no rule change) | Milestone 2.5: ordering rules enforced server-side as written — BL-3.3/3.5/3.6/3.7, BL-4.1/4.2/4.6, BL-11.5, BL-13.3/13.4/13.7, BL-14.7 (`place_order` and order functions, D-067) |
 | 2026-11-18 | BL-14.8 (note) | Milestone 2.4: points adjustment runs server-side (`adjust_points`) with the existing rules — reason required, balance never below 0; no rule change |
 | 2026-11-17 | BL-2.9, BL-6.7, BL-7.12, BL-15.6, BL-15.7 (new) | Milestone 2.3 auth: invites, rider password login, new business starts without fee / pay (D-061), short name + tint, signup rollback |
 | 2026-11-17 | BL-2.4 (note), BL-2.7, BL-2.8, BL-6.6, BL-7.11 (new) | Phase 2.2 database: server-side permissions via RLS; settings permission groups and rider ↔ customer visibility written down as enforced; rider phone and barangay uniqueness; new rules confirmed by the user |

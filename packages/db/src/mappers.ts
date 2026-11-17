@@ -13,6 +13,7 @@ import type {
   LoyaltySettings,
   LoyaltyTransaction,
   Merchant,
+  Order,
   PermissionKey,
   Product,
   Rider,
@@ -44,6 +45,11 @@ export type VerificationRow = Tables["verifications"]["Row"];
 export type LoyaltyRow = Tables["loyalty_transactions"]["Row"];
 export type BillingRow = Tables["tenant_billing"]["Row"];
 export type StatementRow = Tables["billing_statements"]["Row"];
+export type OrderRow = Tables["orders"]["Row"];
+export type OrderItemRow = Tables["order_items"]["Row"];
+export type OrderEventRow = Tables["order_events"]["Row"];
+export type AttemptRow = Tables["assignment_attempts"]["Row"];
+export type PublicSettingsRow = Database["public"]["Views"]["tenant_settings_public"]["Row"];
 
 const u = <T>(v: T | null): T | undefined => (v === null ? undefined : v);
 const latLng = (lat: number | null, lng: number | null) =>
@@ -356,5 +362,177 @@ export function toBillingStatement(r: StatementRow): BillingStatement {
     paidAt: u(r.paid_at),
     note: u(r.note),
     createdAt: r.created_at,
+  };
+}
+
+/** Checkout settings as customers see them (no rider pay or dispatch — tenant_settings_public). */
+export function toPublicSettings(r: PublicSettingsRow): TenantSettings {
+  return {
+    tenantId: r.tenant_id,
+    serviceArea: {
+      center: { lat: r.service_area_lat, lng: r.service_area_lng },
+      radiusKm: Number(r.service_area_radius_km),
+    },
+    deliveryFee: (r.delivery_fee ?? undefined) as DeliveryFeeRule | undefined,
+    riderPay: undefined,
+    autoApproveVerifiedCustomers: r.auto_approve_verified_customers,
+    dispatchMode: "MANUAL",
+    riderResponseTimeoutSec: 60,
+    acceptedIdTypes: r.accepted_id_types,
+    maxOrderSubtotal: r.max_order_subtotal,
+    pinAdjustRadiusM: r.pin_adjust_radius_m,
+    loyalty: r.loyalty as unknown as LoyaltySettings,
+  };
+}
+
+/** An order with its items, timeline and rider offers (child rows of any order; filtered by order id here). */
+export function toOrder(
+  r: OrderRow,
+  items: OrderItemRow[] = [],
+  events: OrderEventRow[] = [],
+  attempts: AttemptRow[] = [],
+): Order {
+  return {
+    id: r.id,
+    tenantId: r.tenant_id,
+    orderNumber: r.order_number,
+    customerId: r.customer_id,
+    merchantId: r.merchant_id,
+    riderId: u(r.rider_id),
+    status: r.status,
+    items: items
+      .filter((i) => i.order_id === r.id)
+      .sort((a, b) => a.line_no - b.line_no)
+      .map((i) => ({
+        productId: i.product_id ?? "",
+        name: i.name,
+        unitPrice: i.unit_price,
+        storeUnitPrice: u(i.store_unit_price),
+        qty: i.qty,
+        lineTotal: i.line_total,
+        isUnavailable: i.is_unavailable || undefined,
+        isFreeGift: i.is_free_gift || undefined,
+      })),
+    deliveryLocation: { lat: r.delivery_location_lat, lng: r.delivery_location_lng },
+    deliveryAddressText: r.delivery_address_text,
+    notes: u(r.notes),
+    distanceKm: Number(r.distance_km),
+    deliveryBarangayFeeId: u(r.delivery_barangay_fee_id),
+    subtotal: r.subtotal,
+    deliveryFee: r.delivery_fee,
+    couponId: u(r.coupon_id),
+    couponCode: u(r.coupon_code),
+    couponDiscount: r.coupon_discount,
+    usedFreeDeliveryReward: r.used_free_delivery_reward,
+    usedFreeGiftReward: r.used_free_gift_reward,
+    freeDeliveryDiscount: r.free_delivery_discount,
+    pointsRedeemed: r.points_redeemed,
+    pointsDiscount: r.points_discount,
+    discountTotal: r.discount_total,
+    total: r.total,
+    pointsEarned: u(r.points_earned),
+    deliveryFeeSnapshot: r.delivery_fee_snapshot as unknown as DeliveryFeeRule,
+    riderEarning: u(r.rider_earning),
+    paymentMethod: "COD",
+    paymentStatus: r.payment_status,
+    changeFor: u(r.change_for),
+    cashCollectedAt: u(r.cash_collected_at),
+    storeAmountPaid: u(r.store_amount_paid),
+    storeReceiptPhotoUrl: u(r.store_receipt_photo_url),
+    approvedBy: u(r.approved_by),
+    pendingOffer:
+      r.offer_rider_id && r.offer_offered_at && r.offer_expires_at && r.offer_by
+        ? {
+            riderId: r.offer_rider_id,
+            offeredAt: r.offer_offered_at,
+            expiresAt: r.offer_expires_at,
+            by: r.offer_by,
+            staffId: u(r.offer_staff_id),
+          }
+        : undefined,
+    assignmentAttempts: attempts
+      .filter((a) => a.order_id === r.id)
+      .sort((a, b) => Date.parse(a.offered_at) - Date.parse(b.offered_at))
+      .map((a) => ({
+        riderId: a.rider_id,
+        by: a.by,
+        staffId: u(a.staff_id),
+        offeredAt: a.offered_at,
+        respondedAt: u(a.responded_at),
+        response: u(a.response),
+        rejectReason: u(a.reject_reason),
+        rejectNote: u(a.reject_note),
+      })),
+    rejectReason: u(r.reject_reason),
+    cancelReason: u(r.cancel_reason),
+    proofOfDelivery:
+      r.proof_photo_url || r.proof_note
+        ? { photoUrl: u(r.proof_photo_url), note: u(r.proof_note) }
+        : undefined,
+    timeline: events
+      .filter((e) => e.order_id === r.id)
+      .sort((a, b) => Date.parse(a.at) - Date.parse(b.at))
+      .map((e) => ({
+        status: e.status,
+        actorType: e.actor_type,
+        actorId: u(e.actor_id),
+        at: e.at,
+        note: u(e.note),
+      })),
+    createdAt: r.created_at,
+  };
+}
+
+/** ID photos sent with a first order: storage paths in the id-documents bucket. */
+export type VerificationUpload = {
+  idType: Verification["idType"];
+  idFrontUrl: string;
+  selfieWithIdUrl: string;
+};
+
+/**
+ * The `place_order` payload from an order priced by packages/lib (placeOrder). The database sets the order id,
+ * number, status and timeline itself and re-checks coupon limits, balances and totals.
+ */
+export function toPlaceOrderPayload(o: Order, verification?: VerificationUpload): Json {
+  return {
+    tenant_id: o.tenantId,
+    customer_id: o.customerId,
+    merchant_id: o.merchantId,
+    delivery_location_lat: o.deliveryLocation.lat,
+    delivery_location_lng: o.deliveryLocation.lng,
+    delivery_address_text: o.deliveryAddressText,
+    notes: o.notes ?? null,
+    distance_km: o.distanceKm,
+    delivery_barangay_fee_id: o.deliveryBarangayFeeId ?? null,
+    subtotal: o.subtotal,
+    delivery_fee: o.deliveryFee,
+    coupon_id: o.couponId ?? null,
+    coupon_discount: o.couponDiscount,
+    used_free_delivery_reward: o.usedFreeDeliveryReward,
+    free_delivery_discount: o.freeDeliveryDiscount,
+    used_free_gift_reward: o.usedFreeGiftReward,
+    points_redeemed: o.pointsRedeemed,
+    points_discount: o.pointsDiscount,
+    discount_total: o.discountTotal,
+    total: o.total,
+    change_for: o.changeFor ?? null,
+    items: o.items.map((i) => ({
+      product_id:
+        i.isFreeGift && !i.productId.match(/^[0-9a-f-]{36}$/) ? null : i.productId || null,
+      name: i.name,
+      unit_price: i.unitPrice,
+      store_unit_price: i.storeUnitPrice ?? null,
+      qty: i.qty,
+      line_total: i.lineTotal,
+      is_free_gift: Boolean(i.isFreeGift),
+    })),
+    verification: verification
+      ? {
+          id_type: verification.idType,
+          id_front_url: verification.idFrontUrl,
+          selfie_with_id_url: verification.selfieWithIdUrl,
+        }
+      : null,
   };
 }

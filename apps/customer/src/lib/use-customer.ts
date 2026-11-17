@@ -1,47 +1,45 @@
 "use client";
 
 import { useParams } from "next/navigation";
-import { useStoreHydrated as useSharedStoreHydrated } from "@chowlane/mocks/react";
+import { useCustomerData, type CustomerData } from "./customer-data";
 import { useCustomerIdentity } from "./identity";
-import { useMockStore } from "./store";
 
-/** true once this browser's saved demo data has loaded (avoids redirecting new customers to login). */
-export function useStoreHydrated(): boolean {
-  return useSharedStoreHydrated(useMockStore);
-}
+const EMPTY: Omit<CustomerData, "settings"> = {
+  merchants: [],
+  products: [],
+  barangayFees: [],
+  orders: [],
+  riders: [],
+  loyaltyTransactions: [],
+};
 
 /**
- * Everything a customer screen needs. The login is Supabase (Facebook; local demo logins — D-060) and the
- * customer row per business comes from `ensure_customer`; screens still read tenant, settings, menu and orders
- * from the mock store until Milestone 2.5, so `me` is the mock customer with the same Facebook id.
+ * Everything a customer screen needs (Supabase since 2.5): the business (`tenant`, from the server), its checkout
+ * settings, the menu, and the signed-in customer (`me`) with their orders and rewards. `db` holds the lists, already
+ * limited to this business and this customer by RLS. Call `reload()` after a change.
  */
 export function useCustomer() {
   const { tenant: slug } = useParams<{ tenant: string }>();
-  const db = useMockStore();
-  const hydrated = useStoreHydrated();
   const auth = useCustomerIdentity();
-  const tenant = db.tenants.find((t) => t.slug === slug)!;
-  const settings = db.tenantSettings.find((s) => s.tenantId === tenant?.id)!;
-  const live = auth.identity;
-  const me = live
-    ? db.customers.find((c) => c.tenantId === tenant?.id && c.facebookId === live.facebookId)
-    : undefined;
+  const { data, loaded, reload, error } = useCustomerData();
+  const signedIn = Boolean(auth.identity);
   return {
     slug,
     base: `/${slug}`,
-    db,
-    tenant,
-    settings,
-    me,
-    live,
-    /** signed in (Supabase) — `me` can lag one render behind while the mock record is created */
-    signedIn: Boolean(live),
-    ready: auth.ready && hydrated && (!live || Boolean(me) || !tenant),
+    tenant: auth.tenant,
+    db: data ?? { ...EMPTY, settings: undefined },
+    settings: data?.settings as CustomerData["settings"],
+    me: data?.me,
+    live: auth.identity,
+    signedIn,
+    /** session checked and this business's data loaded */
+    ready: auth.ready && (loaded || Boolean(error)),
+    error,
     supabase: auth.supabase,
+    reload,
     refresh: auth.refresh,
     signOut: auth.signOut,
   };
 }
 
 export { useNow } from "@chowlane/ui";
-export { newId } from "@chowlane/mocks/store";

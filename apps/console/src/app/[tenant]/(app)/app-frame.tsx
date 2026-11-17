@@ -24,9 +24,9 @@ type Item = NavItem & { perm?: PermissionKey };
 
 /**
  * Screens already on Supabase — they work for a business that has no Phase 1 mock data (D-059). Since 2.4: home,
- * riders, customers, merchants, coupons and all settings. Orders, dispatch, cash, map and reports follow in 2.5–2.6.
+ * riders, customers, merchants, coupons and all settings; 2.5: orders. Dispatch, cash, map and reports follow in 2.6.
  */
-const LIVE_ROUTES = /^\/[^/]+(\/?$|\/(riders|customers|merchants|coupons|settings)(\/|$))/;
+const LIVE_ROUTES = /^\/[^/]+(\/?$|\/(orders|riders|customers|merchants|coupons|settings)(\/|$))/;
 
 /** Shell + navigation for signed-in pages (redirects to /login when signed out — LND-004). */
 export function AppFrame({ tenant: t, children }: { tenant: PublicTenant; children: ReactNode }) {
@@ -98,7 +98,7 @@ export function AppFrame({ tenant: t, children }: { tenant: PublicTenant; childr
           <EmptyState
             icon={<Hourglass />}
             title="This screen moves to live data soon"
-            description="Your business is set up. Orders, dispatch and cash switch to your live data once customers can order."
+            description="Your business is set up. Dispatch, cash and reports switch to your live data in the next update."
           />
         )}
       </AppShell>

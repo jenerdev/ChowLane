@@ -15,7 +15,7 @@
 | FND-003 | Shared design system in `packages/ui` | P | ✅ | — |
 | FND-004 | Tenant theming (business name, logo, primary color) in customer & rider apps | P | ✅ | ✅ |
 | FND-005 | Typed mock data + seeded scenarios matching DATA-MODEL.md | P | ✅ | — |
-| FND-006 | Shared business logic in `packages/lib` (fee calc, rider pay calc, order status machine, permission check) | P | ✅ | ⬜ |
+| FND-006 | Shared business logic in `packages/lib` (fee calc, rider pay calc, order status machine, permission check) | P | ✅ | 🟨 |
 | FND-007 | Dev-only role/scenario switcher for walkthroughs | P | ✅ | — |
 | FND-008 | **Every tenant app (console, rider, customer) is installable as a PWA** | U | ✅ | — |
 | FND-009 | Per-tenant manifest: tenant name, icon, theme color, scope `/[tenant]/` | P | ✅ | ✅ |
@@ -61,17 +61,17 @@
 
 | ID | Requirement | Src | UI | BE |
 |---|---|---|---|---|
-| ADM-001 | Customer verification queue: view ID + **selfie with ID** side by side (+ Facebook photo, previous submissions), **approve / reject** first-time customers (reject needs reason) | U | ✅ | 🟨 |
-| ADM-002 | **Approve / reject orders** (reject needs reason) | U | ✅ | ⬜ |
-| ADM-003 | **Monitor orders**: list with status filters, order detail with timeline | U | ✅ | ⬜ |
+| ADM-001 | Customer verification queue: view ID + **selfie with ID** side by side (+ Facebook photo, previous submissions), **approve / reject** first-time customers (reject needs reason) | U | ✅ | ✅ |
+| ADM-002 | **Approve / reject orders** (reject needs reason) | U | ✅ | ✅ |
+| ADM-003 | **Monitor orders**: list with status filters, order detail with timeline | U | ✅ | ✅ |
 | ADM-004 | **Manually assign / reassign** an order to an online rider; "Needs rider" list of rejected/unassigned orders | U | ✅ | ⬜ |
 | ADM-010 | **Dispatch mode** switch AUTO / MANUAL (Owner or Admin) | U | ✅ | ✅ |
-| ADM-011 | Order assignment history (offers, accepts, rejects + reasons) on order detail | P | ✅ | ⬜ |
+| ADM-011 | Order assignment history (offers, accepts, rejects + reasons) on order detail | P | ✅ | 🟨 |
 | ADM-013 | Customer loyalty: balances, progress, history; manual points adjustment (reason) | P | ✅ | ✅ |
 | ADM-012 | **Cash remittances**: list of shifts with expected cash; record amount received; flag short / over | U | ✅ | ⬜ |
 | ADM-005 | **Monitor riders**: timed-in/out status, current order, location on map | U | ✅ | 🟨 |
 | ADM-006 | **Riders CRUD** (name, phone, vehicle, plate, pay override, active/inactive) | U | ✅ | ✅ |
-| ADM-007 | Cancel an order with reason | P | ✅ | ⬜ |
+| ADM-007 | Cancel an order with reason | P | ✅ | ✅ |
 | ADM-008 | Dashboard overview (pending approvals, active orders, riders on shift) | P | ✅ | ✅ |
 | ADM-009 | Customers list & detail | P | ✅ | ✅ |
 
@@ -100,20 +100,20 @@
 | ID | Requirement | Src | UI | BE |
 |---|---|---|---|---|
 | CUS-001 | **Sign up / log in with Facebook** | U | ✅ | ✅ |
-| CUS-002 | **Location gate**: customer can only order if they allow current-location tracking | U | ✅ | ⬜ |
-| CUS-003 | Branded home with merchants | P | ✅ | ⬜ |
-| CUS-004 | Merchant page with products; cart (one merchant per cart) | P | ✅ | ⬜ |
-| CUS-005 | Checkout: delivery location (current location pin), **barangay** (picked from list in PER_BARANGAY mode), notes, fee breakdown, **payment = Cash on Delivery** with optional "change for" amount | U | ✅ | ⬜ |
-| CUS-006 | **First order requires ID**: pick ID type (valid PH IDs incl. school ID) + **photo of ID** + **selfie holding the ID** | U | ✅ | ⬜ |
-| CUS-007 | "Waiting for approval" state for verification + order approval; rejection message | P | ✅ | ⬜ |
-| CUS-008 | **Track order status** (timeline + rider on map) | U | ✅ | ⬜ |
-| CUS-009 | Order history | P | ✅ | ⬜ |
-| CUS-011 | Tracking shows updated total if rider marks items unavailable | P | ✅ | ⬜ |
-| CUS-013 | Checkout: enter **coupon code** → validation message or discount line | U | ✅ | ⬜ |
-| CUS-014 | **Rewards**: see points, progress to free delivery / free gift; use free-delivery reward, claim free gift, pay with points at checkout | U | ✅ | ⬜ |
-| CUS-015 | Order details & tracking show discount lines and points earned | P | ✅ | ⬜ |
-| CUS-012 | Rejected customer sees reason and can **re-submit a new ID** | U | ✅ | ⬜ |
-| CUS-010 | Profile (name/photo from Facebook, phone, saved addresses) | P | ✅ | ⬜ |
+| CUS-002 | **Location gate**: customer can only order if they allow current-location tracking | U | ✅ | ✅ |
+| CUS-003 | Branded home with merchants | P | ✅ | ✅ |
+| CUS-004 | Merchant page with products; cart (one merchant per cart) | P | ✅ | ✅ |
+| CUS-005 | Checkout: delivery location (current location pin), **barangay** (picked from list in PER_BARANGAY mode), notes, fee breakdown, **payment = Cash on Delivery** with optional "change for" amount | U | ✅ | ✅ |
+| CUS-006 | **First order requires ID**: pick ID type (valid PH IDs incl. school ID) + **photo of ID** + **selfie holding the ID** | U | ✅ | ✅ |
+| CUS-007 | "Waiting for approval" state for verification + order approval; rejection message | P | ✅ | ✅ |
+| CUS-008 | **Track order status** (timeline + rider on map) | U | ✅ | 🟨 |
+| CUS-009 | Order history | P | ✅ | ✅ |
+| CUS-011 | Tracking shows updated total if rider marks items unavailable | P | ✅ | 🟨 |
+| CUS-013 | Checkout: enter **coupon code** → validation message or discount line | U | ✅ | ✅ |
+| CUS-014 | **Rewards**: see points, progress to free delivery / free gift; use free-delivery reward, claim free gift, pay with points at checkout | U | ✅ | ✅ |
+| CUS-015 | Order details & tracking show discount lines and points earned | P | ✅ | ✅ |
+| CUS-012 | Rejected customer sees reason and can **re-submit a new ID** | U | ✅ | ✅ |
+| CUS-010 | Profile (name/photo from Facebook, phone, saved addresses) | P | ✅ | ✅ |
 
 ## PLT — Platform Admin console (ChowLane owner)
 
@@ -132,4 +132,4 @@
 
 **Totals:** 89 requirements (FND 13 · LND 4 · OWN 19 · ADM 13 · RID 15 · CUS 15 · PLT 10) — 88 have a Phase 1 UI part (FND-013 is backend only)
 
-**Backend (Phase 2):** 31 ✅ · 2 🟨 after Milestone 2.4 (2.3: logins, signup, tenant branding & manifests, admins/roles, riders CRUD; 2.4: console settings, merchants & menus, barangay fees, coupons, loyalty settings + points adjustment, customers, verification queue view, billing view, home). ADM-001 approve/reject and ADM-010 auto-dispatch behaviour come with ordering (2.5) and dispatch (2.6).
+**Backend (Phase 2):** 47 ✅ · 5 🟨 after Milestone 2.5 (2.5: customer app on Supabase — menu, cart, checkout via `place_order`, ID upload + review, tracking, cancel, rewards, profile; console orders with approve / reject / cancel. Earlier: 2.3: logins, signup, tenant branding & manifests, admins/roles, riders CRUD; 2.4: console settings, merchants & menus, barangay fees, coupons, loyalty settings + points adjustment, customers, verification queue view, billing view, home).. Rider assignment, AUTO offers, rider steps, live rider map and Realtime come with dispatch (2.6).
