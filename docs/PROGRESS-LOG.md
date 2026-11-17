@@ -40,7 +40,7 @@ cancelled by the customer; no console errors.
 rule change), DATA-MODEL (ID photo paths), TECH-STACK (service key apps, buckets), USER-FLOWS (2.5 note), ROADMAP
 (2.5 ✅), PHASE-2-PLAN, STATUS.
 
-**Stopped at / Next:** Uncommitted on `phase-2`. Next: Milestone 2.6 Dispatch & delivery (waiting for the user's go).
+**Stopped at / Next:** Committed on `phase-2` (`dee74ac`). Next: Milestone 2.6 Dispatch & delivery (waiting for the user's go).
 
 ---
 
