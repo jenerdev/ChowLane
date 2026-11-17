@@ -6,7 +6,9 @@ import { ID_TYPE_LABELS } from "@chowlane/types";
 import { timeAgo } from "@chowlane/lib";
 import { Avatar, Badge, EmptyState, PageHeader } from "@chowlane/ui";
 import { RequirePermission } from "@/components/require-permission";
+import { loadCustomers } from "@/lib/customers";
 import { useConsole } from "@/lib/use-console";
+import { must, useLive } from "@/lib/use-live";
 
 /** S-104 — first-time customers waiting for ID verification, oldest first (ADM-001). */
 export default function VerifyQueuePage() {
@@ -18,15 +20,26 @@ export default function VerifyQueuePage() {
 }
 
 function Queue() {
-  const { db, tenant, base } = useConsole();
+  const { live, base } = useConsole();
   const now = new Date().toISOString();
-  const list = db.customers
-    .filter((c) => c.tenantId === tenant.id && c.verificationStatus === "PENDING" && c.verification)
+  const data = useLive(`verify-queue:${live.id}`, async (sb) => {
+    const [customers, waiting] = await Promise.all([
+      loadCustomers(sb, live.id, { status: "PENDING" }),
+      sb
+        .from("orders")
+        .select("customer_id")
+        .eq("tenant_id", live.id)
+        .eq("status", "PENDING_APPROVAL"),
+    ]);
+    return { customers, waiting: must(waiting).map((o) => o.customer_id) };
+  });
+  const list = (data.data?.customers ?? [])
+    .filter((c) => c.verification)
     .sort(
       (a, b) => Date.parse(a.verification!.submittedAt) - Date.parse(b.verification!.submittedAt),
     );
-  const hasOrder = (id: string) =>
-    db.orders.some((o) => o.customerId === id && o.status === "PENDING_APPROVAL");
+  const hasOrder = (id: string) => (data.data?.waiting ?? []).includes(id);
+  if (data.loading) return null;
 
   return (
     <>
@@ -39,7 +52,7 @@ function Queue() {
         <EmptyState
           icon={<BadgeCheck />}
           title="All caught up"
-          description="No IDs waiting for review."
+          description={data.error ?? "No IDs waiting for review."}
         />
       ) : (
         <ul className="divide-y rounded-card border">

@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import type { Centavos, DeliveryFeeMode, DeliveryFeeRule } from "@chowlane/types";
+import type { Centavos, DeliveryFeeMode, DeliveryFeeRule, TenantSettings } from "@chowlane/types";
 import { computeDeliveryFee, formatPeso } from "@chowlane/lib";
 import {
   Button,
@@ -17,9 +17,11 @@ import {
   SwitchRow,
   toast,
 } from "@chowlane/ui";
+import { LiveGate } from "@/components/live-gate";
 import { RequirePermission } from "@/components/require-permission";
-import { useMockStore } from "@/lib/store";
+import { useSaveSettings, useSettings } from "@/lib/settings";
 import { useConsole } from "@/lib/use-console";
+import { useLive } from "@/lib/use-live";
 
 /** S-116 — delivery fee mode + order rules (OWN-005, OWN-011, OWN-013, BL-7.2). */
 export default function PricingSettings() {
@@ -33,8 +35,28 @@ export default function PricingSettings() {
 type PerKm = { baseFee?: Centavos; ratePerKm?: Centavos; includedKm?: number; minFee?: Centavos };
 
 function Pricing() {
-  const { settings, db, tenant, base } = useConsole();
-  const setTenantRow = useMockStore((s) => s.setTenantRow);
+  const { live } = useConsole();
+  const state = useSettings();
+  const barangays = useLive(`barangay-count:${live.id}`, async (sb) => {
+    const res = await sb
+      .from("barangay_fees")
+      .select("id", { count: "exact", head: true })
+      .eq("tenant_id", live.id)
+      .eq("is_active", true);
+    if (res.error) throw new Error(res.error.message);
+    return res.count ?? 0;
+  });
+  return (
+    <LiveGate state={state}>
+      {(s) => <PricingForm settings={s} barangays={barangays.data ?? 0} />}
+    </LiveGate>
+  );
+}
+
+function PricingForm({ settings, barangays }: { settings: TenantSettings; barangays: number }) {
+  const { base } = useConsole();
+  const saveSettings = useSaveSettings();
+  const [busy, setBusy] = useState(false);
   const fee = settings.deliveryFee;
   // A new business has no fee yet (D-061): the form starts on per km with example values.
   const [mode, setMode] = useState<DeliveryFeeMode>(fee?.mode ?? "PER_KM");
@@ -47,7 +69,6 @@ function Pricing() {
   const [maxOrder, setMaxOrder] = useState<Centavos | undefined>(settings.maxOrderSubtotal);
   const [autoApprove, setAutoApprove] = useState(settings.autoApproveVerifiedCustomers);
   const [km, setKm] = useState<number | undefined>(4);
-  const barangays = db.barangayFees.filter((b) => b.tenantId === tenant.id && b.isActive).length;
 
   const rule: DeliveryFeeRule | null =
     mode === "FIXED"
@@ -196,15 +217,16 @@ function Pricing() {
 
       <SaveBar>
         <Button
-          disabled={!canSave}
-          onClick={() => {
-            setTenantRow("tenantSettings", {
-              ...settings,
+          disabled={!canSave || busy}
+          onClick={async () => {
+            setBusy(true);
+            const error = await saveSettings({
               deliveryFee: rule!,
               maxOrderSubtotal: maxOrder!,
               autoApproveVerifiedCustomers: autoApprove,
             });
-            toast("Delivery fee saved");
+            setBusy(false);
+            toast(error ? `Couldn't save: ${error}` : "Delivery fee saved");
           }}
         >
           Save changes

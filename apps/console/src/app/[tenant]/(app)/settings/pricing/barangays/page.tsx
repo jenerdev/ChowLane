@@ -4,6 +4,7 @@ import { useState } from "react";
 import { MapPinned, Plus } from "lucide-react";
 import type { BarangayFee, Centavos } from "@chowlane/types";
 import { formatPeso } from "@chowlane/lib";
+import { toBarangayFee } from "@chowlane/db/mappers";
 import {
   Badge,
   Button,
@@ -19,8 +20,9 @@ import {
   toast,
 } from "@chowlane/ui";
 import { RequirePermission } from "@/components/require-permission";
-import { useMockStore } from "@/lib/store";
-import { newId, useConsole } from "@/lib/use-console";
+import { useSettings } from "@/lib/settings";
+import { useConsole } from "@/lib/use-console";
+import { must, useLive } from "@/lib/use-live";
 
 /** S-122 — price list for PER_BARANGAY delivery fees (OWN-014). */
 export default function BarangaysPage() {
@@ -40,14 +42,15 @@ type Draft = {
 };
 
 function Barangays() {
-  const { db, tenant, settings, base } = useConsole();
-  const insert = useMockStore((s) => s.insert);
-  const patch = useMockStore((s) => s.patch);
-  const list = db.barangayFees
-    .filter((b) => b.tenantId === tenant.id)
-    .sort(
-      (a, b) => Number(b.isActive) - Number(a.isActive) || a.barangay.localeCompare(b.barangay),
-    );
+  const { live, base, supabase } = useConsole();
+  const settings = useSettings().data;
+  const data = useLive(`barangays:${live.id}`, async (sb) =>
+    must(await sb.from("barangay_fees").select("*").eq("tenant_id", live.id)).map(toBarangayFee),
+  );
+  const list = (data.data ?? []).sort(
+    (a, b) => Number(b.isActive) - Number(a.isActive) || a.barangay.localeCompare(b.barangay),
+  );
+  const [busy, setBusy] = useState(false);
   const [editing, setEditing] = useState<BarangayFee | "new" | null>(null);
   const [d, setD] = useState<Draft>({
     barangay: "",
@@ -73,7 +76,7 @@ function Barangays() {
     );
   };
 
-  function save() {
+  async function save() {
     const e: typeof errors = {};
     if (!d.barangay.trim()) e.barangay = "Enter the barangay.";
     if (!d.cityMunicipality.trim()) e.cityMunicipality = "Enter the city or municipality.";
@@ -89,15 +92,24 @@ function Barangays() {
     if (Object.keys(e).length) return;
     const row = {
       barangay: d.barangay.trim(),
-      cityMunicipality: d.cityMunicipality.trim(),
+      city_municipality: d.cityMunicipality.trim(),
       province: d.province.trim(),
       fee: d.fee!,
-      isActive: d.isActive,
+      is_active: d.isActive,
     };
-    if (editing === "new") insert("barangayFees", { id: newId("bf"), tenantId: tenant.id, ...row });
-    else if (editing) patch("barangayFees", editing.id, row);
+    setBusy(true);
+    const { error } =
+      editing === "new"
+        ? await supabase.from("barangay_fees").insert({ ...row, tenant_id: live.id })
+        : await supabase.from("barangay_fees").update(row).eq("id", editing!.id);
+    setBusy(false);
+    if (error)
+      return setErrors({
+        barangay: error.code === "23505" ? "This barangay is already listed." : error.message,
+      });
     toast(editing === "new" ? "Barangay added" : "Barangay saved");
     setEditing(null);
+    await data.reload();
   }
 
   return (
@@ -106,7 +118,7 @@ function Barangays() {
         back={{ href: `${base}/settings/pricing`, label: "Delivery fee" }}
         title="Barangay prices"
         description={
-          settings.deliveryFee?.mode === "PER_BARANGAY"
+          !settings || settings.deliveryFee?.mode === "PER_BARANGAY"
             ? "Customers pick their barangay at checkout. Only active barangays can order."
             : "Not in use — your delivery fee is set to per kilometer or fixed."
         }
@@ -116,7 +128,7 @@ function Barangays() {
           </Button>
         }
       />
-      {list.length === 0 ? (
+      {data.loading ? null : list.length === 0 ? (
         <EmptyState
           icon={<MapPinned />}
           title="No barangays yet"
@@ -153,7 +165,7 @@ function Barangays() {
             className="flex flex-col gap-4"
             onSubmit={(e) => {
               e.preventDefault();
-              save();
+              void save();
             }}
           >
             <Field label="Barangay" htmlFor="bg-name" error={errors.barangay}>
@@ -200,7 +212,9 @@ function Barangays() {
                 />
               }
             />
-            <Button type="submit">{editing === "new" ? "Add barangay" : "Save"}</Button>
+            <Button type="submit" disabled={busy}>
+              {editing === "new" ? "Add barangay" : "Save"}
+            </Button>
           </form>
         </SheetContent>
       </Sheet>

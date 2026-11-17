@@ -1,6 +1,6 @@
 # ChowLane — Screen Inventory (Phase 1 tracker)
 
-> Last updated: 2026-11-15
+> Last updated: 2026-11-18
 > All screens are designed **mobile-first** (375px), then scaled up.
 > Console, rider and customer are installable PWAs; all their routes live under `/[tenant]/`.
 > Status: ⬜ Not started · 🟨 In progress · ✅ Done · ⏸️ Blocked
@@ -26,6 +26,10 @@
 | S-900 | Phone preview — every app side by side at 360/390/430 px | landing `/preview` | FND-002 | ✅ |
 
 ## apps/console (Owner & Admin)
+> **Live on Supabase (Phase 2):** S-118, S-119, S-107–S-109 (2.3); **2.4:** S-101 home, S-104/S-105 verification
+> (view — approve/reject in 2.5), S-106 customers (+ points adjust), S-111–S-117, S-122, S-123, S-125–S-128, and the
+> dispatch-mode switch on S-121. Still on mock data: orders (S-102, S-103), dispatch lists, map, cash, rider pay report.
+
 | # | Screen | Route | Reqs | Perm | Status |
 |---|---|---|---|---|---|
 | S-100 | Login | `/[tenant]/login` | LND-004 | — | ✅ |

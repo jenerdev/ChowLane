@@ -3,7 +3,6 @@
 import { ReceiptText } from "lucide-react";
 import {
   computeBillingAmount,
-  deliveredInPeriod,
   describeBilling,
   formatDate,
   formatMonth,
@@ -12,6 +11,7 @@ import {
   manilaMonthRange,
   STATEMENT_STATUS_LABELS,
 } from "@chowlane/lib";
+import { toBillingStatement, toTenantBilling } from "@chowlane/db/mappers";
 import {
   Badge,
   Card,
@@ -23,6 +23,7 @@ import {
 } from "@chowlane/ui";
 import { RequirePermission } from "@/components/require-permission";
 import { useConsole } from "@/lib/use-console";
+import { must, useLive } from "@/lib/use-live";
 
 /** S-123 — the tenant's ChowLane plan and monthly statements, read-only (OWN-016, BL-10.6). */
 export default function BillingSettingsPage() {
@@ -34,17 +35,36 @@ export default function BillingSettingsPage() {
 }
 
 function Billing() {
-  const { db, tenant, base } = useConsole();
+  const { live, base } = useConsole();
   const now = new Date(useNow()).toISOString();
-  const billing = db.tenantBilling.find((b) => b.tenantId === tenant.id);
-  const statements = db.billingStatements
-    .filter((s) => s.tenantId === tenant.id)
-    .sort((a, b) => Date.parse(b.periodStart) - Date.parse(a.periodStart));
   const month = manilaMonthRange(now);
-  const delivered = deliveredInPeriod(
-    db.orders.filter((o) => o.tenantId === tenant.id),
-    month,
-  );
+  const data = useLive(`billing:${live.id}:${month.start}`, async (sb) => {
+    const [billing, statements, delivered] = await Promise.all([
+      sb.from("tenant_billing").select("*").eq("tenant_id", live.id).maybeSingle(),
+      sb
+        .from("billing_statements")
+        .select("*")
+        .eq("tenant_id", live.id)
+        .order("period_start", { ascending: false }),
+      // BL-10.5: delivered orders in this Manila month (same bounds as deliveredInPeriod)
+      sb
+        .from("orders")
+        .select("id", { count: "exact", head: true })
+        .eq("tenant_id", live.id)
+        .eq("status", "DELIVERED")
+        .gte("created_at", month.start)
+        .lte("created_at", month.end),
+    ]);
+    if (delivered.error) throw new Error(delivered.error.message);
+    const b = must(billing);
+    return {
+      billing: b ? toTenantBilling(b) : undefined,
+      statements: must(statements).map(toBillingStatement),
+      delivered: delivered.count ?? 0,
+    };
+  });
+  if (data.loading) return null;
+  const { billing, statements = [], delivered = 0 } = data.data ?? {};
 
   return (
     <>

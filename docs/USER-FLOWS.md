@@ -20,6 +20,11 @@
 > F-11 (platform admin) are real Supabase logins. New in F-03: the invited admin opens the email link →
 > `/[tenant]/invite` → sets a password → lands in the console (BL-2.6).
 
+> **Phase 2.4:** after signup the owner finishes setup on live data — the home checklist, settings, merchants & menus,
+> coupons and loyalty all save to Supabase, so a new business no longer sees "moves to live data soon" there.
+> Adjusting a customer's points saves the reason in their history. The verification queue shows live submissions;
+> approving / rejecting an ID comes with live ordering (2.5).
+
 ## F-01b Owner / Admin logs in  ✅ Signed off 2026-11-15
 1. Console link `…/<slug>` while signed out → redirected to `/<slug>/login` (tenant-branded)
 2. Email + password → **Log in** → console home. Errors: unknown email, invite not accepted, account turned off

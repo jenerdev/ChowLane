@@ -4,9 +4,11 @@ import { useState } from "react";
 import Link from "next/link";
 import { ChevronRight, Plus, Ticket } from "lucide-react";
 import { COUPON_STATUS_LABELS, couponStatus, formatDate, type CouponStatus } from "@chowlane/lib";
+import { toCoupon } from "@chowlane/db/mappers";
 import { Badge, Button, EmptyState, PageHeader, Tabs, TabsList, TabsTrigger } from "@chowlane/ui";
 import { RequirePermission } from "@/components/require-permission";
 import { useConsole } from "@/lib/use-console";
+import { must, useLive } from "@/lib/use-live";
 import { couponSummary, STATUS_TONE } from "./coupon-utils";
 
 /** S-125 — coupons with status and usage (OWN-017, OWN-018). */
@@ -21,11 +23,13 @@ export default function CouponsPage() {
 type Filter = "current" | "ended";
 
 function Coupons() {
-  const { db, tenant, base } = useConsole();
+  const { live, base } = useConsole();
   const [filter, setFilter] = useState<Filter>("current");
   const now = new Date().toISOString();
-  const all = db.coupons
-    .filter((c) => c.tenantId === tenant.id)
+  const data = useLive(`coupons:${live.id}`, async (sb) =>
+    must(await sb.from("coupons").select("*").eq("tenant_id", live.id)).map(toCoupon),
+  );
+  const all = (data.data ?? [])
     .map((c) => ({ c, status: couponStatus(c, now) }))
     .sort((a, b) => Date.parse(b.c.validFrom) - Date.parse(a.c.validFrom));
   const isCurrent = (s: CouponStatus) => s === "ACTIVE" || s === "SCHEDULED";
@@ -56,7 +60,12 @@ function Coupons() {
           </TabsTrigger>
         </TabsList>
       </Tabs>
-      {list.length === 0 ? (
+      {data.error ? (
+        <p role="alert" className="mb-3 text-sm text-danger">
+          Couldn&apos;t load coupons: {data.error}
+        </p>
+      ) : null}
+      {data.loading ? null : list.length === 0 ? (
         <EmptyState
           icon={<Ticket />}
           title={filter === "current" ? "No active coupons" : "Nothing here"}

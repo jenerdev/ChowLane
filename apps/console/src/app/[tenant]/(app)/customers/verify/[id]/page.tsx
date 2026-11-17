@@ -1,11 +1,10 @@
 "use client";
 
-import { use, useState } from "react";
+import { use } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import { UserRound } from "lucide-react";
 import { ID_TYPE_LABELS } from "@chowlane/types";
-import { formatDateTime, ID_REJECT_REASONS } from "@chowlane/lib";
+import { formatDateTime } from "@chowlane/lib";
 import {
   Avatar,
   Badge,
@@ -17,10 +16,10 @@ import {
   VerificationBadge,
 } from "@chowlane/ui";
 import { IdImage } from "@/components/id-image";
-import { ReasonSheet } from "@/components/reason-sheet";
 import { RequirePermission } from "@/components/require-permission";
+import { loadCustomers } from "@/lib/customers";
 import { useConsole } from "@/lib/use-console";
-import { useOrderActions } from "@/lib/use-order-actions";
+import { must, useLive } from "@/lib/use-live";
 
 /** S-105 — compare the ID with the selfie and the Facebook photo, then approve or reject (ADM-001, BL-3). */
 export default function VerifyDetailPage({ params }: { params: Promise<{ id: string }> }) {
@@ -33,14 +32,36 @@ export default function VerifyDetailPage({ params }: { params: Promise<{ id: str
 }
 
 function Review({ id }: { id: string }) {
-  const router = useRouter();
-  const { db, tenant, base } = useConsole();
-  const actions = useOrderActions();
-  const [reject, setReject] = useState(false);
-  const c = db.customers.find((x) => x.id === id && x.tenantId === tenant.id);
-  if (!c || !c.verification) return <EmptyState icon={<UserRound />} title="Nothing to review" />;
+  const { live, base, db } = useConsole();
+  const data = useLive(`verify:${id}`, async (sb) => {
+    const [customer] = await loadCustomers(sb, live.id, { ids: [id] });
+    if (!customer) return null;
+    const waiting = must(
+      await sb
+        .from("orders")
+        .select("order_number")
+        .eq("customer_id", id)
+        .eq("status", "PENDING_APPROVAL")
+        .limit(1),
+    );
+    return { customer, waitingOrder: waiting[0]?.order_number };
+  });
+  if (data.loading) return null;
+  const c = data.data?.customer;
+  if (!c || !c.verification)
+    return <EmptyState icon={<UserRound />} title="Nothing to review" description={data.error} />;
   const v = c.verification;
-  const order = db.orders.find((o) => o.customerId === c.id && o.status === "PENDING_APPROVAL");
+  // The order screen still runs on mock data (until 2.5–2.6): open the same order by its number.
+  const waitingNumber = data.data?.waitingOrder;
+  const mockOrder = waitingNumber
+    ? db.orders.find((o) => o.orderNumber === waitingNumber)
+    : undefined;
+  const order = waitingNumber
+    ? {
+        orderNumber: waitingNumber,
+        href: mockOrder ? `${base}/orders/${mockOrder.id}` : `${base}/orders`,
+      }
+    : undefined;
   const past = c.verificationHistory.filter((h) => h.id !== v.id);
 
   return (
@@ -73,18 +94,16 @@ function Review({ id }: { id: string }) {
       </p>
 
       {c.verificationStatus === "PENDING" ? (
-        <div className="mt-6 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
-          <Button variant="outline" onClick={() => setReject(true)}>
-            Reject ID
-          </Button>
-          <Button
-            onClick={() => {
-              actions.approveCustomer(c);
-              router.push(order ? `${base}/orders/${order.id}` : `${base}/customers/verify`);
-            }}
-          >
-            Approve ID{order ? " & review order" : ""}
-          </Button>
+        <div className="mt-6 flex flex-col gap-2 sm:items-end">
+          <div className="flex flex-col-reverse gap-2 sm:flex-row">
+            <Button variant="outline" disabled>
+              Reject ID
+            </Button>
+            <Button disabled>Approve ID{order ? " & review order" : ""}</Button>
+          </div>
+          <p className="text-[13px] text-muted-foreground">
+            Approving and rejecting IDs switches on with live ordering in the next update.
+          </p>
         </div>
       ) : null}
 
@@ -128,7 +147,7 @@ function Review({ id }: { id: string }) {
         <p className="mt-6 text-sm">
           Waiting order:{" "}
           <Link
-            href={`${base}/orders/${order.id}`}
+            href={order.href}
             className="underline decoration-border underline-offset-4 hover:decoration-foreground"
           >
             {order.orderNumber}
@@ -136,20 +155,6 @@ function Review({ id }: { id: string }) {
           — it is rejected automatically if you reject the ID.
         </p>
       ) : null}
-
-      <ReasonSheet
-        open={reject}
-        onOpenChange={setReject}
-        title="Reject this ID?"
-        description="The customer sees the reason and can send a new ID."
-        presets={ID_REJECT_REASONS}
-        confirmLabel="Reject ID"
-        destructive
-        onSubmit={(r) => {
-          actions.rejectCustomer(c, r);
-          router.push(`${base}/customers/verify`);
-        }}
-      />
     </>
   );
 }

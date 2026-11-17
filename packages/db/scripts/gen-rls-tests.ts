@@ -470,6 +470,61 @@ const WRITES: Write[] = [
     expect: "ok:0",
     sql: `delete from public.staff_users where tenant_id = ${FB} and type = 'ADMIN'`,
   },
+  // console functions & storage (2.4)
+  {
+    who: "fbOwner",
+    label: "loyalty.manage adjusts points with a reason (BL-14.8)",
+    expect: "ok:1",
+    sql: `select public.adjust_points(${C1}, 10, 'Late delivery apology')`,
+  },
+  {
+    who: "fbOwner",
+    label: "a points adjustment needs a reason (BL-14.8)",
+    expect: "22023",
+    sql: `select public.adjust_points(${C1}, 10, '  ')`,
+  },
+  {
+    who: "fbOwner",
+    label: "points can't go below 0",
+    expect: "23514",
+    sql: `select public.adjust_points(${C1}, -1000000, 'Too much')`,
+  },
+  {
+    who: "keAdmin",
+    label: "another tenant's admin can't adjust FastBite points",
+    expect: "42501",
+    sql: `select public.adjust_points(${C1}, 10, 'X')`,
+  },
+  {
+    who: "cust1",
+    label: "a customer can't adjust their own points",
+    expect: "42501",
+    sql: `select public.adjust_points(${C1}, 10, 'X')`,
+  },
+  {
+    who: "pqOwner",
+    label: "a suspended business can't adjust points (BL-10.8)",
+    expect: "42501",
+    sql: `select public.adjust_points((select id from public.customers where tenant_id = ${PQ} limit 1), 1, 'X')`,
+  },
+  {
+    who: "fbOwner",
+    label: "settings.business uploads a logo to its own folder",
+    expect: "ok:1",
+    sql: `insert into storage.objects (bucket_id, name) values ('tenant-logos', ${FB} || '/logo-test.png')`,
+  },
+  {
+    who: "keAdmin",
+    label: "another tenant's admin can't upload into FastBite's logo folder",
+    expect: "42501",
+    sql: `insert into storage.objects (bucket_id, name) values ('tenant-logos', ${FB} || '/logo-x.png')`,
+  },
+  {
+    who: "fbOwner",
+    label: "a logo outside a tenant folder is refused",
+    expect: "42501",
+    sql: `insert into storage.objects (bucket_id, name) values ('tenant-logos', 'logo.png')`,
+  },
   {
     who: "fbOwner",
     label: "owner removes an admin; their history stays (BL-2.6)",

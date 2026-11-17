@@ -200,6 +200,7 @@ Not a model change: how v1 is stored in Supabase (`supabase/migrations/`). Colum
 | `Order.proofOfDelivery` | `orders.proof_photo_url`, `proof_note` |
 | `TenantBilling` | `tenant_billing` (one row per tenant) |
 | Logins | `auth_user_id` on `platform_admins`, `staff_users`, `riders`, `customers` (one customer row per tenant — Q-31) |
+| `Tenant.logoUrl` | public URL of a file in the `tenant-logos` Storage bucket, path `<tenant id>/logo-<time>.png` (2.4, D-066) |
 
 Public read-only views: `tenants_public`, `tenant_settings_public` (no rider pay), `products_public` (no store price).
 Types: `packages/db/src/database.types.ts` (generated, `pnpm db:types`); `schema-sync.test.ts` checks the enums match

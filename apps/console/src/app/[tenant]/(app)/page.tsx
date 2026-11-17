@@ -1,70 +1,126 @@
 "use client";
 
 import Link from "next/link";
-import { Check, ChevronRight, Circle } from "lucide-react";
+import { Check, ChevronRight, Circle, CircleAlert } from "lucide-react";
 import { checklistProgress, setupChecklist } from "@chowlane/lib";
+import {
+  toMerchant,
+  toProduct,
+  toRider,
+  toStaffUser,
+  toTenantSettings,
+} from "@chowlane/db/mappers";
 import {
   Card,
   CardContent,
   CardHeader,
   CardTitle,
+  EmptyState,
   PageHeader,
   Progress,
   Stat,
   cn,
 } from "@chowlane/ui";
 import { useConsole } from "@/lib/use-console";
+import { must, useLive } from "@/lib/use-live";
 
 /** S-101 — console home: setup checklist (until done) + today's numbers (OWN-001, ADM-008). */
 export default function ConsoleHome() {
-  const { db, tenant, settings, me, can, base } = useConsole();
-  const of = <T extends { tenantId: string }>(rows: T[]) =>
-    rows.filter((r) => r.tenantId === tenant.id);
+  const { live: tenant, me, can, base } = useConsole();
+  // Live since 2.4. Counts come from Supabase (RLS); a count the user can't see stays 0 and isn't shown.
+  const data = useLive(`home:${tenant.id}`, async (sb) => {
+    const count = async (
+      q: PromiseLike<{ count: number | null; error: { message: string } | null }>,
+    ) => {
+      const res = await q;
+      if (res.error) throw new Error(res.error.message);
+      return res.count ?? 0;
+    };
+    const head = { count: "exact" as const, head: true };
+    const [settings, barangays, merchants, products, riders, staff, counts] = await Promise.all([
+      sb.from("tenant_settings").select("*").eq("tenant_id", tenant.id).single(),
+      count(
+        sb
+          .from("barangay_fees")
+          .select("id", head)
+          .eq("tenant_id", tenant.id)
+          .eq("is_active", true),
+      ),
+      sb.from("merchants").select("*").eq("tenant_id", tenant.id),
+      sb.from("products").select("*").eq("tenant_id", tenant.id),
+      sb.from("riders").select("*").eq("tenant_id", tenant.id),
+      sb.from("staff_users").select("*").eq("tenant_id", tenant.id),
+      Promise.all([
+        count(
+          sb
+            .from("orders")
+            .select("id", head)
+            .eq("tenant_id", tenant.id)
+            .eq("status", "PENDING_APPROVAL"),
+        ),
+        count(
+          sb
+            .from("customers")
+            .select("id", head)
+            .eq("tenant_id", tenant.id)
+            .eq("verification_status", "PENDING"),
+        ),
+        count(
+          sb
+            .from("orders")
+            .select("id", head)
+            .eq("tenant_id", tenant.id)
+            .in("status", ["APPROVED", "ASSIGNED", "AT_MERCHANT", "PICKED_UP"]),
+        ),
+        count(
+          sb.from("riders").select("id", head).eq("tenant_id", tenant.id).eq("is_on_shift", true),
+        ),
+        count(
+          sb
+            .from("shifts")
+            .select("id", head)
+            .eq("tenant_id", tenant.id)
+            .eq("remit_status", "PENDING"),
+        ),
+      ]),
+    ]);
+    return {
+      settings: toTenantSettings(must(settings)),
+      barangays,
+      merchants: must(merchants).map(toMerchant),
+      products: must(products).map(toProduct),
+      riders: must(riders).map(toRider),
+      staff: must(staff).map(toStaffUser),
+      counts,
+    };
+  });
+  if (data.loading) return null;
+  if (!data.data)
+    return <EmptyState icon={<CircleAlert />} title="Couldn't load" description={data.error} />;
+  const d = data.data;
 
   const steps = setupChecklist({
     slug: tenant.slug,
     logoUrl: tenant.logoUrl,
-    serviceAreaConfirmed: Boolean(settings.serviceArea),
-    deliveryFeeMode: settings.deliveryFee?.mode,
-    barangayCount: of(db.barangayFees).filter((b) => b.isActive).length,
-    riderPayMode: settings.riderPay?.mode,
-    merchants: of(db.merchants),
-    products: of(db.products),
-    riders: of(db.riders),
-    staff: of(db.staff),
+    serviceAreaConfirmed: Boolean(d.settings.serviceArea),
+    deliveryFeeMode: d.settings.deliveryFee?.mode,
+    barangayCount: d.barangays,
+    riderPayMode: d.settings.riderPay?.mode,
+    merchants: d.merchants,
+    products: d.products,
+    riders: d.riders,
+    staff: d.staff,
   });
   const progress = checklistProgress(steps);
   const showSetup = can("settings.business") && !progress.complete;
 
-  const orders = of(db.orders);
+  const [toApprove, toVerify, active, onShift, cash] = d.counts;
   const stats = [
-    {
-      label: "Orders to approve",
-      value: orders.filter((o) => o.status === "PENDING_APPROVAL").length,
-      perm: "orders.approve" as const,
-    },
-    {
-      label: "Customers to verify",
-      value: of(db.customers).filter((c) => c.verificationStatus === "PENDING").length,
-      perm: "customers.verify" as const,
-    },
-    {
-      label: "Active orders",
-      value: orders.filter((o) =>
-        ["APPROVED", "ASSIGNED", "AT_MERCHANT", "PICKED_UP"].includes(o.status),
-      ).length,
-      perm: "orders.view" as const,
-    },
-    {
-      label: "Riders on shift",
-      value: of(db.riders).filter((r) => r.isOnShift).length,
-      perm: "riders.view" as const,
-    },
-    {
-      label: "Cash to record",
-      value: of(db.shifts).filter((s) => s.remitStatus === "PENDING").length,
-      perm: "cash.manage" as const,
-    },
+    { label: "Orders to approve", value: toApprove, perm: "orders.approve" as const },
+    { label: "Customers to verify", value: toVerify, perm: "customers.verify" as const },
+    { label: "Active orders", value: active, perm: "orders.view" as const },
+    { label: "Riders on shift", value: onShift, perm: "riders.view" as const },
+    { label: "Cash to record", value: cash, perm: "cash.manage" as const },
   ].filter((s) => can(s.perm));
 
   return (

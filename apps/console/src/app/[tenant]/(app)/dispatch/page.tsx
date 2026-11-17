@@ -20,7 +20,7 @@ import {
 } from "@chowlane/ui";
 import { AssignRiderSheet } from "@/components/assign-rider-sheet";
 import { RequirePermission } from "@/components/require-permission";
-import { useMockStore } from "@/lib/store";
+import { useSaveSettings } from "@/lib/settings";
 import { useConsole } from "@/lib/use-console";
 
 /** S-121 — dispatch mode (AUTO / MANUAL) + orders that need a rider (ADM-004, ADM-010, BL-5). */
@@ -34,7 +34,8 @@ export default function DispatchPage() {
 
 function Dispatch() {
   const { db, tenant, base, settings, can } = useConsole();
-  const setTenantRow = useMockStore((s) => s.setTenantRow);
+  // Saved to Supabase and mirrored into this screen's mock data until dispatch moves (2.6).
+  const saveSettings = useSaveSettings();
   const [assigning, setAssigning] = useState<Order | null>(null);
   const now = new Date().toISOString();
   const orders = db.orders.filter((o) => o.tenantId === tenant.id);
@@ -66,9 +67,15 @@ function Dispatch() {
               name="dispatch"
               columns={2}
               value={settings.dispatchMode}
-              onChange={(m) => {
-                setTenantRow("tenantSettings", { ...settings, dispatchMode: m });
-                toast(m === "AUTO" ? "Auto assign is on" : "Manual assign is on");
+              onChange={async (m) => {
+                const error = await saveSettings({ dispatchMode: m });
+                toast(
+                  error
+                    ? `Couldn't save: ${error}`
+                    : m === "AUTO"
+                      ? "Auto assign is on"
+                      : "Manual assign is on",
+                );
               }}
               options={[
                 {

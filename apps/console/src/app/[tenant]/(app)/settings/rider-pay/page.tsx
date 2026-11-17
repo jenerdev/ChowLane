@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import type { Centavos, RiderPayMode, RiderPayRule } from "@chowlane/types";
+import type { Centavos, RiderPayMode, RiderPayRule, TenantSettings } from "@chowlane/types";
 import { computeRiderPay, formatPeso } from "@chowlane/lib";
 import {
   Button,
@@ -14,8 +14,9 @@ import {
   SaveBar,
   toast,
 } from "@chowlane/ui";
+import { LiveGate } from "@/components/live-gate";
 import { RequirePermission } from "@/components/require-permission";
-import { useMockStore } from "@/lib/store";
+import { useSaveSettings, useSettings } from "@/lib/settings";
 import { useConsole } from "@/lib/use-console";
 
 /** S-117 — how riders are paid (OWN-006, BL-8). Owner-only by default (settings.riderPay). */
@@ -28,8 +29,14 @@ export default function RiderPaySettings() {
 }
 
 function RiderPay() {
-  const { settings, base } = useConsole();
-  const setTenantRow = useMockStore((s) => s.setTenantRow);
+  const state = useSettings();
+  return <LiveGate state={state}>{(s) => <RiderPayForm settings={s} />}</LiveGate>;
+}
+
+function RiderPayForm({ settings }: { settings: TenantSettings }) {
+  const { base } = useConsole();
+  const saveSettings = useSaveSettings();
+  const [busy, setBusy] = useState(false);
   const cur = settings.riderPay;
   // Not set yet on a new business (D-061): the form starts on per delivery.
   const [mode, setMode] = useState<RiderPayMode>(cur?.mode ?? "PER_DELIVERY");
@@ -133,10 +140,12 @@ function RiderPay() {
       </FormSection>
       <SaveBar>
         <Button
-          disabled={!rule}
-          onClick={() => {
-            setTenantRow("tenantSettings", { ...settings, riderPay: rule! });
-            toast("Rider income saved");
+          disabled={!rule || busy}
+          onClick={async () => {
+            setBusy(true);
+            const error = await saveSettings({ riderPay: rule! });
+            setBusy(false);
+            toast(error ? `Couldn't save: ${error}` : "Rider income saved");
           }}
         >
           Save changes

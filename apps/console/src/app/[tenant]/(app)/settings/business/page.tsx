@@ -1,8 +1,9 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { ImagePlus } from "lucide-react";
-import { ID_TYPE_LABELS, ID_TYPES, type IdType } from "@chowlane/types";
+import { ID_TYPE_LABELS, ID_TYPES, type IdType, type TenantSettings } from "@chowlane/types";
 import { readableTextColor } from "@chowlane/lib";
 import { tenantShortName } from "@chowlane/pwa";
 import {
@@ -16,19 +17,23 @@ import {
   SaveBar,
   toast,
 } from "@chowlane/ui";
+import { LiveGate } from "@/components/live-gate";
 import { RequirePermission } from "@/components/require-permission";
+import { useSaveSettings, useSettings } from "@/lib/settings";
 import { useMockStore } from "@/lib/store";
 import { useConsole } from "@/lib/use-console";
 
-/** Resize an image file to a small square data URL so it survives reloads in localStorage. */
-async function toSmallDataUrl(file: File, size = 256): Promise<string> {
+/** Resize an image file to a small square PNG for the logo. */
+async function toSmallPng(file: File, size = 256): Promise<Blob> {
   const bmp = await createImageBitmap(file);
   const canvas = document.createElement("canvas");
   canvas.width = canvas.height = size;
   const ctx = canvas.getContext("2d")!;
   const s = Math.min(bmp.width, bmp.height);
   ctx.drawImage(bmp, (bmp.width - s) / 2, (bmp.height - s) / 2, s, s, 0, 0, size, size);
-  return canvas.toDataURL("image/png");
+  return new Promise((ok, fail) =>
+    canvas.toBlob((b) => (b ? ok(b) : fail(new Error("Couldn't read the image"))), "image/png"),
+  );
 }
 
 /** S-114 — business name, logo, color, accepted IDs (OWN-002, OWN-015). */
@@ -41,31 +46,69 @@ export default function BusinessSettings() {
 }
 
 function Business() {
-  const { tenant, settings, base } = useConsole();
+  const state = useSettings();
+  return <LiveGate state={state}>{(s) => <BusinessForm settings={s} />}</LiveGate>;
+}
+
+/** Live since 2.4: branding on `tenants`, accepted IDs on `tenant_settings`, logo in the tenant-logos bucket. */
+function BusinessForm({ settings }: { settings: TenantSettings }) {
+  const router = useRouter();
+  const { live: tenant, base, supabase, hasMockData, tenant: mockTenant } = useConsole();
   const patch = useMockStore((s) => s.patch);
-  const setTenantRow = useMockStore((s) => s.setTenantRow);
+  const saveSettings = useSaveSettings();
   const [name, setName] = useState(tenant.businessName);
   const [shortName, setShortName] = useState(tenant.shortName);
   const [color, setColor] = useState(tenant.primaryColor);
   const [logo, setLogo] = useState(tenant.logoUrl);
+  const [logoFile, setLogoFile] = useState<Blob>();
   const [ids, setIds] = useState<IdType[]>(settings.acceptedIdTypes);
+  const [busy, setBusy] = useState(false);
   const [errors, setErrors] = useState<{ name?: string; shortName?: string; ids?: string }>({});
 
-  function save() {
+  async function save() {
     const e: typeof errors = {};
     if (name.trim().length < 2) e.name = "Enter your business name.";
     if (!shortName.trim() || shortName.trim().length > 12) e.shortName = "Use 1–12 characters.";
     if (ids.length === 0) e.ids = "Accept at least one ID type.";
     setErrors(e);
     if (Object.keys(e).length) return;
-    patch("tenants", tenant.id, {
-      businessName: name.trim(),
-      shortName: shortName.trim(),
-      primaryColor: color,
-      logoUrl: logo,
-    });
-    setTenantRow("tenantSettings", { ...settings, acceptedIdTypes: ids });
-    toast("Business settings saved");
+    setBusy(true);
+    try {
+      let logoUrl = logo;
+      if (logoFile) {
+        const path = `${tenant.id}/logo-${Date.now()}.png`;
+        const up = await supabase.storage
+          .from("tenant-logos")
+          .upload(path, logoFile, { contentType: "image/png" });
+        if (up.error) return toast(`Couldn't upload the logo: ${up.error.message}`);
+        logoUrl = supabase.storage.from("tenant-logos").getPublicUrl(path).data.publicUrl;
+      }
+      const branding = {
+        businessName: name.trim(),
+        shortName: shortName.trim(),
+        primaryColor: color,
+        logoUrl,
+      };
+      const { error } = await supabase
+        .from("tenants")
+        .update({
+          business_name: branding.businessName,
+          short_name: branding.shortName,
+          primary_color: branding.primaryColor,
+          logo_url: branding.logoUrl,
+        })
+        .eq("id", tenant.id);
+      if (error) return toast(`Couldn't save: ${error.message}`);
+      const idError = await saveSettings({ acceptedIdTypes: ids });
+      if (idError) return toast(`Couldn't save accepted IDs: ${idError}`);
+      if (hasMockData) patch("tenants", mockTenant.id, branding);
+      setLogo(logoUrl);
+      setLogoFile(undefined);
+      toast("Business settings saved");
+      router.refresh(); // the layout reloads the branding (name, logo, color) from Supabase
+    } finally {
+      setBusy(false);
+    }
   }
 
   return (
@@ -78,7 +121,7 @@ function Business() {
         noValidate
         onSubmit={(e) => {
           e.preventDefault();
-          save();
+          void save();
         }}
       >
         <FormSection title="Name" description="Shown on your apps and on customers' home screens.">
@@ -120,7 +163,7 @@ function Business() {
               className="flex size-16 cursor-pointer items-center justify-center overflow-hidden rounded-card border border-dashed text-muted-foreground focus-within:ring-3 focus-within:ring-ring hover:border-zinc-400"
             >
               {logo ? (
-                // eslint-disable-next-line @next/next/no-img-element -- data URL preview
+                // eslint-disable-next-line @next/next/no-img-element -- local preview or Storage URL
                 <img src={logo} alt="Logo" className="size-full object-cover" />
               ) : (
                 <ImagePlus className="size-5" />
@@ -132,7 +175,10 @@ function Business() {
                 className="sr-only"
                 onChange={async (e) => {
                   const f = e.target.files?.[0];
-                  if (f) setLogo(await toSmallDataUrl(f));
+                  if (!f) return;
+                  const png = await toSmallPng(f);
+                  setLogoFile(png);
+                  setLogo(URL.createObjectURL(png)); // preview; uploaded on save
                 }}
               />
             </label>
@@ -142,7 +188,7 @@ function Business() {
               {logo ? (
                 <button
                   type="button"
-                  onClick={() => setLogo("")}
+                  onClick={() => (setLogo(""), setLogoFile(undefined))}
                   className="text-[13px] underline decoration-border underline-offset-4 hover:decoration-foreground"
                 >
                   Remove
@@ -180,7 +226,9 @@ function Business() {
         </FormSection>
 
         <SaveBar>
-          <Button type="submit">Save changes</Button>
+          <Button type="submit" disabled={busy}>
+            Save changes
+          </Button>
         </SaveBar>
       </form>
     </>

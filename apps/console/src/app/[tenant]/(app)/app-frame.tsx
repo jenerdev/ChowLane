@@ -22,8 +22,11 @@ import { useConsole } from "@/lib/use-console";
 
 type Item = NavItem & { perm?: PermissionKey };
 
-/** Screens already on Supabase — they work for a business that has no Phase 1 mock data (D-059). */
-const LIVE_ROUTES = /^\/[^/]+\/(riders(\/|$)|settings\/(admins|roles)$)/;
+/**
+ * Screens already on Supabase — they work for a business that has no Phase 1 mock data (D-059). Since 2.4: home,
+ * riders, customers, merchants, coupons and all settings. Orders, dispatch, cash, map and reports follow in 2.5–2.6.
+ */
+const LIVE_ROUTES = /^\/[^/]+(\/?$|\/(riders|customers|merchants|coupons|settings)(\/|$))/;
 
 /** Shell + navigation for signed-in pages (redirects to /login when signed out — LND-004). */
 export function AppFrame({ tenant: t, children }: { tenant: PublicTenant; children: ReactNode }) {
@@ -95,7 +98,7 @@ export function AppFrame({ tenant: t, children }: { tenant: PublicTenant; childr
           <EmptyState
             icon={<Hourglass />}
             title="This screen moves to live data soon"
-            description="Your business is set up. Riders, admins and roles already work; the other console screens switch to your live data in the next update."
+            description="Your business is set up. Orders, dispatch and cash switch to your live data once customers can order."
           />
         )}
       </AppShell>

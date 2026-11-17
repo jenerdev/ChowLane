@@ -3,7 +3,8 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import type { Merchant } from "@chowlane/types";
+import type { LatLng, Merchant } from "@chowlane/types";
+import { toMerchant } from "@chowlane/db/mappers";
 import { formatPhMobile, normalizePhMobile } from "@chowlane/lib";
 import {
   Button,
@@ -18,19 +19,52 @@ import {
   Switch,
   toast,
 } from "@chowlane/ui";
-import { useMockStore } from "@/lib/store";
-import { newId, useConsole } from "@/lib/use-console";
+import { useConsole } from "@/lib/use-console";
+import { must, useLive } from "@/lib/use-live";
 
 type Draft = Pick<Merchant, "name" | "category" | "address" | "location" | "isOpen" | "status"> & {
   phone: string;
 };
 
-/** S-112 — add or edit a merchant (OWN-003). */
-export function MerchantForm({ merchant }: { merchant?: Merchant }) {
+/** Loads what the merchant form needs: the merchant (when editing), the area center and used categories. */
+export function useMerchantFormData(id?: string) {
+  const { live } = useConsole();
+  return useLive(`merchant-form:${id ?? "new"}`, async (sb) => {
+    const [merchant, settings, all] = await Promise.all([
+      id
+        ? sb.from("merchants").select("*").eq("id", id).eq("tenant_id", live.id).maybeSingle()
+        : { data: null, error: null },
+      sb
+        .from("tenant_settings")
+        .select("service_area_lat, service_area_lng")
+        .eq("tenant_id", live.id)
+        .single(),
+      sb.from("merchants").select("category").eq("tenant_id", live.id),
+    ]);
+    const m = must(merchant);
+    if (id && !m) return null;
+    const s = must(settings);
+    return {
+      merchant: m ? toMerchant(m) : undefined,
+      center: { lat: s.service_area_lat, lng: s.service_area_lng },
+      categories: [...new Set(must(all).map((x) => x.category))],
+    };
+  });
+}
+
+/** S-112 — add or edit a merchant (OWN-003). Live since 2.4. */
+export function MerchantForm({
+  merchant,
+  center,
+  categories,
+}: {
+  merchant?: Merchant;
+  center: LatLng;
+  categories: string[];
+}) {
   const router = useRouter();
-  const { tenant, settings, base, db } = useConsole();
-  const insert = useMockStore((s) => s.insert);
-  const patch = useMockStore((s) => s.patch);
+  const { live: tenant, base, supabase } = useConsole();
+  const [busy, setBusy] = useState(false);
   const [confirmOff, setConfirmOff] = useState(false);
   const [errors, setErrors] = useState<Partial<Record<keyof Draft, string>>>({});
   const [d, setD] = useState<Draft>(
@@ -41,7 +75,7 @@ export function MerchantForm({ merchant }: { merchant?: Merchant }) {
           category: "",
           address: "",
           phone: "",
-          location: settings.serviceArea.center,
+          location: center,
           isOpen: true,
           status: "ACTIVE",
         },
@@ -50,11 +84,7 @@ export function MerchantForm({ merchant }: { merchant?: Merchant }) {
     setD((x) => ({ ...x, [k]: v }));
     setErrors((e) => ({ ...e, [k]: undefined }));
   };
-  const categories = [
-    ...new Set(db.merchants.filter((m) => m.tenantId === tenant.id).map((m) => m.category)),
-  ];
-
-  function save() {
+  async function save() {
     const e: typeof errors = {};
     if (d.name.trim().length < 2) e.name = "Enter the restaurant name.";
     if (!d.category.trim()) e.category = "Enter a category, like Filipino or Burgers.";
@@ -68,25 +98,30 @@ export function MerchantForm({ merchant }: { merchant?: Merchant }) {
       category: d.category.trim(),
       address: d.address.trim(),
       phone: phone!,
-      location: d.location,
-      isOpen: d.isOpen,
+      location_lat: d.location.lat,
+      location_lng: d.location.lng,
+      is_open: d.isOpen,
       status: d.status,
     };
-    if (merchant) {
-      patch("merchants", merchant.id, row);
-      toast("Merchant saved");
-      router.push(`${base}/merchants`);
-    } else {
-      const id = newId("m");
-      insert("merchants", {
-        id,
-        tenantId: tenant.id,
-        photoUrl: "",
-        createdAt: new Date().toISOString(),
-        ...row,
-      });
-      toast("Merchant added — now add its menu");
-      router.push(`${base}/merchants/${id}/products`);
+    setBusy(true);
+    try {
+      if (merchant) {
+        const { error } = await supabase.from("merchants").update(row).eq("id", merchant.id);
+        if (error) return toast(`Couldn't save: ${error.message}`);
+        toast("Merchant saved");
+        router.push(`${base}/merchants`);
+      } else {
+        const { data, error } = await supabase
+          .from("merchants")
+          .insert({ ...row, tenant_id: tenant.id })
+          .select("id")
+          .single();
+        if (error) return toast(`Couldn't add the merchant: ${error.message}`);
+        toast("Merchant added — now add its menu");
+        router.push(`${base}/merchants/${data.id}/products`);
+      }
+    } finally {
+      setBusy(false);
     }
   }
 
@@ -107,7 +142,7 @@ export function MerchantForm({ merchant }: { merchant?: Merchant }) {
         noValidate
         onSubmit={(e) => {
           e.preventDefault();
-          save();
+          void save();
         }}
       >
         <FormSection title="Details" description="Customers see the name and category.">
@@ -210,7 +245,9 @@ export function MerchantForm({ merchant }: { merchant?: Merchant }) {
           <Button variant="ghost" type="button" onClick={() => router.push(`${base}/merchants`)}>
             Cancel
           </Button>
-          <Button type="submit">{merchant ? "Save changes" : "Add merchant"}</Button>
+          <Button type="submit" disabled={busy}>
+            {merchant ? "Save changes" : "Add merchant"}
+          </Button>
         </SaveBar>
       </form>
       <ConfirmSheet

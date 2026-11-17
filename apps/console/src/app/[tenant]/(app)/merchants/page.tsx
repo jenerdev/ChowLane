@@ -15,9 +15,10 @@ import {
   TabsTrigger,
   toast,
 } from "@chowlane/ui";
+import { toMerchant } from "@chowlane/db/mappers";
 import { RequirePermission } from "@/components/require-permission";
-import { useMockStore } from "@/lib/store";
 import { useConsole } from "@/lib/use-console";
+import { must, useLive } from "@/lib/use-live";
 
 /** S-111 — merchants (restaurants) the business delivers for. No merchant portal (D-006). */
 export default function MerchantsPage() {
@@ -29,16 +30,32 @@ export default function MerchantsPage() {
 }
 
 function Merchants() {
-  const { db, tenant, base } = useConsole();
-  const patch = useMockStore((s) => s.patch);
+  const { live, base, supabase } = useConsole();
   const [q, setQ] = useState("");
   const [tab, setTab] = useState<"ACTIVE" | "INACTIVE">("ACTIVE");
+  const data = useLive(`merchants:${live.id}`, async (sb) => {
+    const [merchants, products] = await Promise.all([
+      sb.from("merchants").select("*").eq("tenant_id", live.id).order("name"),
+      sb.from("products").select("merchant_id").eq("tenant_id", live.id),
+    ]);
+    return {
+      merchants: must(merchants).map(toMerchant),
+      productMerchantIds: must(products).map((p) => p.merchant_id),
+    };
+  });
 
-  const all = db.merchants.filter((m) => m.tenantId === tenant.id);
+  const all = data.data?.merchants ?? [];
   const list = all
     .filter((m) => m.status === tab)
     .filter((m) => `${m.name} ${m.category}`.toLowerCase().includes(q.trim().toLowerCase()));
-  const productCount = (id: string) => db.products.filter((p) => p.merchantId === id).length;
+  const productCount = (id: string) =>
+    (data.data?.productMerchantIds ?? []).filter((x) => x === id).length;
+
+  async function setOpen(id: string, name: string, open: boolean) {
+    const { error } = await supabase.from("merchants").update({ is_open: open }).eq("id", id);
+    toast(error ? `Couldn't save: ${error.message}` : `${name} is now ${open ? "open" : "closed"}`);
+    await data.reload();
+  }
 
   return (
     <>
@@ -76,7 +93,12 @@ function Merchants() {
         </div>
       </div>
 
-      {list.length === 0 ? (
+      {data.error ? (
+        <p role="alert" className="mb-3 text-sm text-danger">
+          Couldn&apos;t load merchants: {data.error}
+        </p>
+      ) : null}
+      {data.loading ? null : list.length === 0 ? (
         <EmptyState
           icon={<Store />}
           title={
@@ -124,10 +146,7 @@ function Merchants() {
                   <Switch
                     checked={m.isOpen}
                     aria-label={`${m.name} open`}
-                    onCheckedChange={(v) => {
-                      patch("merchants", m.id, { isOpen: v });
-                      toast(`${m.name} is now ${v ? "open" : "closed"}`);
-                    }}
+                    onCheckedChange={(v) => void setOpen(m.id, m.name, v)}
                   />
                 </label>
               ) : (

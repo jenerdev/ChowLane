@@ -12,6 +12,32 @@
 
 ---
 
+## 2026-11-18 — Milestone 2.4 Console on real data ✅
+
+**Done:** User accepted the Q-36 default (D-065: no email step while building, email confirmation before launch) and
+said go for 2.4. Migration `console.sql`: `adjust_points` (BL-14.8 — loyalty.manage, reason required, balance ≥ 0,
+ledger + balance in one transaction) and the public `tenant-logos` bucket (write: `settings.business`, files under
+`<tenant id>/`). `@chowlane/db` mappers for merchants, products, barangay fees, coupons (+ `fromCoupon`),
+redemptions, customers (+ addresses, verifications), loyalty ledger, billing, statements, and `fromTenantSettings`
+(partial settings update). Console: `useSettings` / `useSaveSettings`, `loadCustomers`, `LiveGate`. On Supabase now:
+home (setup checklist + counters), all settings screens (business & logo upload, area, delivery fee, barangays, rider
+income, loyalty, billing view), dispatch-mode switch, merchants + menus, coupons (+ uses), customers list/detail with
+points adjustment, verification queue/detail (view). D-066 records the transition rules (settings mirrored into a
+demo business's mock store; order links open the mock order by number; ID approve/reject moves with ordering in 2.5).
+
+**Verified:** build ✅ lint ✅ typecheck ✅ tests ✅ (91 unit: lib 62 · mocks 16 · db 13) RLS ✅ (314 pgTAP) format ✅;
+browser (FastBite owner): home counts, merchant open toggle persists, add merchant → add menu item, customer detail +
+adjust points (+25, reason in history), verification queue, coupon list/detail/uses and saving a used coupon, delivery
+fee → fixed persists, loyalty save, billing view, logo upload → Storage URL in the sidebar; no console errors.
+
+**Changed docs:** DECISIONS (D-065, D-066, Q-36 answered), REQUIREMENTS (BE: 31 ✅ · 2 🟨), SCREENS (live note),
+BUSINESS-LOGIC (BL-14.8 note), DATA-MODEL (logo storage mapping), USER-FLOWS (2.4 note), ROADMAP (2.4 ✅),
+PHASE-2-PLAN, STATUS.
+
+**Stopped at / Next:** Uncommitted on `phase-2`. Next: Milestone 2.5 Ordering (waiting for the user's go).
+
+---
+
 ## 2026-11-17 — Milestone 2.3 Auth ✅
 
 **Done:** User approved BL-2.7/2.8/6.6/7.11 and chose: Admins/Roles/Riders screens move in 2.3 (D-059), local

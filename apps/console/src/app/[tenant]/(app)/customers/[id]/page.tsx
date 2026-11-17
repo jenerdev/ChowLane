@@ -5,6 +5,7 @@ import Link from "next/link";
 import { UserRound } from "lucide-react";
 import { ID_TYPE_LABELS } from "@chowlane/types";
 import { formatDate, formatDateTime, formatPhMobile } from "@chowlane/lib";
+import { toLoyaltyTransaction } from "@chowlane/db/mappers";
 import {
   Avatar,
   Button,
@@ -25,8 +26,10 @@ import {
 } from "@chowlane/ui";
 import { OrderRow } from "@/components/order-row";
 import { RequirePermission } from "@/components/require-permission";
-import { useMockStore } from "@/lib/store";
-import { newId, useConsole } from "@/lib/use-console";
+import { loadCustomers } from "@/lib/customers";
+import { useSettings } from "@/lib/settings";
+import { useConsole } from "@/lib/use-console";
+import { must, useLive } from "@/lib/use-live";
 
 /** S-106 — customer detail: contact, verification, orders, loyalty (+ manual points adjust, ADM-013). */
 export default function CustomerDetailPage({ params }: { params: Promise<{ id: string }> }) {
@@ -52,24 +55,78 @@ const TX_LABEL: Record<string, string> = {
 };
 
 function Detail({ id }: { id: string }) {
-  const { db, tenant, base, settings, can, me } = useConsole();
-  const patch = useMockStore((s) => s.patch);
-  const insert = useMockStore((s) => s.insert);
+  const { live, base, can, supabase, db } = useConsole();
+  const settings = useSettings();
+  const data = useLive(`customer:${id}`, async (sb) => {
+    const [customer] = await loadCustomers(sb, live.id, { ids: [id] });
+    if (!customer) return null;
+    const [orders, tx] = await Promise.all([
+      sb
+        .from("orders")
+        .select("id, order_number, status, total, created_at, merchant:merchants(name)")
+        .eq("customer_id", id)
+        .order("created_at", { ascending: false }),
+      sb
+        .from("loyalty_transactions")
+        .select("*")
+        .eq("customer_id", id)
+        .order("at", { ascending: false })
+        .limit(8),
+    ]);
+    return {
+      customer,
+      // orders.view is needed to see orders; without it the list stays empty
+      orders: (orders.data ?? []).map((o) => ({
+        id: o.id,
+        orderNumber: o.order_number,
+        status: o.status,
+        total: o.total,
+        createdAt: o.created_at,
+        merchant: o.merchant?.name ?? "Store",
+      })),
+      tx: must(tx).map(toLoyaltyTransaction),
+    };
+  });
   const [adjust, setAdjust] = useState(false);
   const [delta, setDelta] = useState<number | undefined>();
   const [note, setNote] = useState("");
-  const c = db.customers.find((x) => x.id === id && x.tenantId === tenant.id);
-  if (!c) return <EmptyState icon={<UserRound />} title="Customer not found" />;
+  const [busy, setBusy] = useState(false);
+  if (data.loading || settings.loading) return null;
+  const c = data.data?.customer;
+  if (!c || !settings.data)
+    return (
+      <EmptyState
+        icon={<UserRound />}
+        title="Customer not found"
+        description={data.error ?? settings.error}
+      />
+    );
 
   const now = new Date().toISOString();
-  const orders = db.orders
-    .filter((o) => o.customerId === c.id)
-    .sort((a, b) => Date.parse(b.createdAt) - Date.parse(a.createdAt));
-  const store = (mid: string) => db.merchants.find((m) => m.id === mid)?.name ?? "Store";
-  const tx = db.loyaltyTransactions
-    .filter((t) => t.customerId === c.id)
-    .sort((a, b) => Date.parse(b.at) - Date.parse(a.at));
-  const l = settings.loyalty;
+  const { orders, tx } = data.data!;
+  // The order screen still runs on mock data (until 2.5–2.6): open the same order by its number.
+  const orderHref = (orderNumber: string) => {
+    const mock = db.orders.find((o) => o.orderNumber === orderNumber);
+    return mock ? `${base}/orders/${mock.id}` : `${base}/orders`;
+  };
+  const l = settings.data.loyalty;
+
+  async function saveAdjustment() {
+    if (!validDelta || !note.trim()) return;
+    setBusy(true);
+    const { error } = await supabase.rpc("adjust_points", {
+      p_customer: c!.id,
+      p_points: delta!,
+      p_note: note.trim(),
+    });
+    setBusy(false);
+    if (error) return toast(`Couldn't adjust points: ${error.message}`);
+    toast(`Points ${delta! > 0 ? "added" : "removed"}`);
+    setAdjust(false);
+    setDelta(undefined);
+    setNote("");
+    await data.reload();
+  }
   const validDelta = delta !== undefined && delta !== 0 && c.loyalty.points + delta >= 0;
 
   return (
@@ -149,9 +206,9 @@ function Detail({ id }: { id: string }) {
                   <OrderRow
                     key={o.id}
                     order={o}
-                    href={`${base}/orders/${o.id}`}
+                    href={orderHref(o.orderNumber)}
                     customer={c.name}
-                    merchant={store(o.merchantId)}
+                    merchant={o.merchant}
                     now={now}
                   />
                 ))}
@@ -219,25 +276,7 @@ function Detail({ id }: { id: string }) {
             className="flex flex-col gap-4"
             onSubmit={(e) => {
               e.preventDefault();
-              if (!validDelta || !note.trim()) return;
-              patch("customers", c.id, {
-                loyalty: { ...c.loyalty, points: c.loyalty.points + delta! },
-              });
-              insert("loyaltyTransactions", {
-                id: newId("lt"),
-                tenantId: tenant.id,
-                customerId: c.id,
-                kind: "POINTS_ADJUSTED",
-                points: delta!,
-                rewards: 0,
-                at: new Date().toISOString(),
-                staffId: me!.id,
-                note: note.trim(),
-              });
-              toast(`Points ${delta! > 0 ? "added" : "removed"}`);
-              setAdjust(false);
-              setDelta(undefined);
-              setNote("");
+              void saveAdjustment();
             }}
           >
             <Field
@@ -258,7 +297,7 @@ function Detail({ id }: { id: string }) {
             >
               <Input id="adj-note" value={note} onChange={(e) => setNote(e.target.value)} />
             </Field>
-            <Button type="submit" disabled={!validDelta || !note.trim()}>
+            <Button type="submit" disabled={!validDelta || !note.trim() || busy}>
               Save
             </Button>
           </form>

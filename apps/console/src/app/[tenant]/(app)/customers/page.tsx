@@ -5,7 +5,9 @@ import Link from "next/link";
 import { ChevronRight, Search, Users } from "lucide-react";
 import { Avatar, Button, EmptyState, Input, PageHeader, VerificationBadge } from "@chowlane/ui";
 import { RequirePermission } from "@/components/require-permission";
+import { loadCustomers } from "@/lib/customers";
 import { useConsole } from "@/lib/use-console";
+import { useLive } from "@/lib/use-live";
 
 /** S-106 — customers (ADM-009). */
 export default function CustomersPage() {
@@ -17,16 +19,24 @@ export default function CustomersPage() {
 }
 
 function Customers() {
-  const { db, tenant, base, can } = useConsole();
+  const { live, base, can } = useConsole();
   const [q, setQ] = useState("");
-  const all = db.customers.filter((c) => c.tenantId === tenant.id);
+  const data = useLive(`customers:${live.id}`, async (sb) => {
+    const [customers, orders] = await Promise.all([
+      loadCustomers(sb, live.id),
+      sb.from("orders").select("customer_id").eq("tenant_id", live.id),
+    ]);
+    // orders.view is needed to see orders; without it the count stays 0
+    return { customers, orderCustomerIds: (orders.data ?? []).map((o) => o.customer_id) };
+  });
+  const all = data.data?.customers ?? [];
   const pending = all.filter((c) => c.verificationStatus === "PENDING").length;
   const list = all
     .filter((c) =>
       `${c.name} ${c.phone ?? ""} ${c.email ?? ""}`.toLowerCase().includes(q.trim().toLowerCase()),
     )
     .sort((a, b) => a.name.localeCompare(b.name));
-  const orders = (id: string) => db.orders.filter((o) => o.customerId === id).length;
+  const orders = (id: string) => (data.data?.orderCustomerIds ?? []).filter((x) => x === id).length;
 
   return (
     <>
@@ -50,7 +60,12 @@ function Customers() {
           className="pl-9"
         />
       </div>
-      {list.length === 0 ? (
+      {data.error ? (
+        <p role="alert" className="mb-3 text-sm text-danger">
+          Couldn&apos;t load customers: {data.error}
+        </p>
+      ) : null}
+      {data.loading ? null : list.length === 0 ? (
         <EmptyState
           icon={<Users />}
           title={q ? "No customers match your search" : "No customers yet"}

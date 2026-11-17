@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import type { Coupon, CouponType } from "@chowlane/types";
+import { fromCoupon, toCoupon } from "@chowlane/db/mappers";
 import {
   checkCouponDraft,
   COUPON_STATUS_LABELS,
@@ -29,19 +30,70 @@ import {
   SwitchRow,
   toast,
 } from "@chowlane/ui";
-import { useMockStore } from "@/lib/store";
-import { newId, useConsole } from "@/lib/use-console";
+import { useConsole } from "@/lib/use-console";
+import { must, useLive } from "@/lib/use-live";
 import { STATUS_TONE } from "./coupon-utils";
 
 type Draft = Omit<Coupon, "id" | "tenantId" | "usedCount" | "createdBy" | "createdAt">;
 
-/** S-126 — create / edit a coupon + its usage (OWN-017, OWN-018, BL-13). */
-export function CouponForm({ coupon }: { coupon?: Coupon }) {
+export type CouponUse = {
+  id: string;
+  orderNumber: string;
+  customerName: string;
+  discount: number;
+  redeemedAt: string;
+  released: boolean;
+};
+
+/** Loads the coupon (when editing), its uses, and the codes already taken in this business. */
+export function useCouponFormData(id?: string) {
+  const { live } = useConsole();
+  return useLive(`coupon-form:${id ?? "new"}`, async (sb) => {
+    const [coupon, codes, uses] = await Promise.all([
+      id
+        ? sb.from("coupons").select("*").eq("id", id).eq("tenant_id", live.id).maybeSingle()
+        : { data: null, error: null },
+      sb.from("coupons").select("id, code").eq("tenant_id", live.id),
+      id
+        ? sb
+            .from("coupon_redemptions")
+            .select("*, order:orders(order_number), customer:customers(name)")
+            .eq("coupon_id", id)
+            .order("redeemed_at", { ascending: false })
+        : { data: [], error: null },
+    ]);
+    const c = must(coupon);
+    if (id && !c) return null;
+    return {
+      coupon: c ? toCoupon(c) : undefined,
+      taken: must(codes)
+        .filter((x) => x.id !== id)
+        .map((x) => x.code),
+      uses: must(uses).map((u): CouponUse => ({
+        id: u.id,
+        orderNumber: u.order?.order_number ?? "Order",
+        customerName: u.customer?.name ?? "Customer",
+        discount: u.discount,
+        redeemedAt: u.redeemed_at,
+        released: u.released,
+      })),
+    };
+  });
+}
+
+/** S-126 — create / edit a coupon + its usage (OWN-017, OWN-018, BL-13). Live since 2.4. */
+export function CouponForm({
+  coupon,
+  taken,
+  uses,
+}: {
+  coupon?: Coupon;
+  taken: string[];
+  uses: CouponUse[];
+}) {
   const router = useRouter();
-  const { db, tenant, base, me } = useConsole();
-  const insert = useMockStore((s) => s.insert);
-  const patch = useMockStore((s) => s.patch);
-  const remove = useMockStore((s) => s.remove);
+  const { live, base, staff, supabase } = useConsole();
+  const [busy, setBusy] = useState(false);
   const used = (coupon?.usedCount ?? 0) > 0;
   const now = new Date();
   const [d, setD] = useState<Draft>(
@@ -59,41 +111,32 @@ export function CouponForm({ coupon }: { coupon?: Coupon }) {
   );
   const [showErrors, setShowErrors] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
-  const taken = db.coupons
-    .filter((c) => c.tenantId === tenant.id && c.id !== coupon?.id)
-    .map((c) => c.code);
   const errors = checkCouponDraft(d, taken);
   const err = (k: keyof typeof errors) => (showErrors ? errors[k] : undefined);
   const set = <K extends keyof Draft>(k: K, v: Draft[K]) => setD((x) => ({ ...x, [k]: v }));
 
-  const uses = db.couponRedemptions.filter((r) => r.couponId === coupon?.id);
-  const customerName = (id: string) => db.customers.find((c) => c.id === id)?.name ?? "Customer";
-  const orderNo = (id: string) => db.orders.find((o) => o.id === id)?.orderNumber ?? id;
-
-  function save() {
+  async function save() {
     setShowErrors(true);
     if (Object.keys(errors).length) return;
-    const row = {
-      ...d,
-      description: d.description?.trim() || undefined,
-      percentOff: d.type === "PERCENT_OFF" ? d.percentOff : undefined,
-      maxDiscount: d.type === "PERCENT_OFF" ? d.maxDiscount : undefined,
-    };
-    if (coupon) {
-      patch("coupons", coupon.id, row);
-      toast("Coupon saved");
-    } else {
-      insert("coupons", {
-        id: newId("cp"),
-        tenantId: tenant.id,
-        usedCount: 0,
-        createdBy: me!.id,
-        createdAt: new Date().toISOString(),
-        ...row,
-      });
-      toast(`Coupon ${row.code} created`);
+    const row = fromCoupon({ ...d, description: d.description?.trim() || undefined });
+    setBusy(true);
+    try {
+      const { error } = coupon
+        ? await supabase.from("coupons").update(row).eq("id", coupon.id)
+        : await supabase
+            .from("coupons")
+            .insert({ ...row, tenant_id: live.id, created_by: staff?.id ?? null });
+      if (error)
+        return toast(
+          error.code === "23505"
+            ? "Another coupon already uses this code."
+            : `Couldn't save: ${error.message}`,
+        );
+      toast(coupon ? "Coupon saved" : `Coupon ${row.code} created`);
+      router.push(`${base}/coupons`);
+    } finally {
+      setBusy(false);
     }
-    router.push(`${base}/coupons`);
   }
 
   const status = coupon ? couponStatus(coupon, now.toISOString()) : null;
@@ -113,7 +156,7 @@ export function CouponForm({ coupon }: { coupon?: Coupon }) {
         noValidate
         onSubmit={(e) => {
           e.preventDefault();
-          save();
+          void save();
         }}
       >
         <FormSection
@@ -269,7 +312,7 @@ export function CouponForm({ coupon }: { coupon?: Coupon }) {
         </FormSection>
 
         {coupon ? (
-          <FormSection title="Uses" description={`${uses.length} recorded in this demo`}>
+          <FormSection title="Uses" description={`${uses.length} recorded`}>
             {uses.length === 0 ? (
               <p className="text-sm text-muted-foreground">No orders have used this coupon yet.</p>
             ) : (
@@ -277,9 +320,9 @@ export function CouponForm({ coupon }: { coupon?: Coupon }) {
                 {uses.map((u) => (
                   <li key={u.id} className="flex items-center gap-3 px-4 py-3 text-sm">
                     <span className="min-w-0 flex-1">
-                      <span className="block font-medium">{orderNo(u.orderId)}</span>
+                      <span className="block font-medium">{u.orderNumber}</span>
                       <span className="block text-[13px] text-muted-foreground">
-                        {customerName(u.customerId)} · {formatDateTime(u.redeemedAt)}
+                        {u.customerName} · {formatDateTime(u.redeemedAt)}
                       </span>
                     </span>
                     {u.released ? <Badge>Given back</Badge> : null}
@@ -306,7 +349,9 @@ export function CouponForm({ coupon }: { coupon?: Coupon }) {
               Delete
             </Button>
           ) : null}
-          <Button type="submit">{coupon ? "Save changes" : "Create coupon"}</Button>
+          <Button type="submit" disabled={busy}>
+            {coupon ? "Save changes" : "Create coupon"}
+          </Button>
         </SaveBar>
       </form>
       <ConfirmSheet
@@ -316,12 +361,19 @@ export function CouponForm({ coupon }: { coupon?: Coupon }) {
         description="It hasn't been used, so it can be deleted. This can't be undone."
         confirmLabel="Delete coupon"
         destructive
-        onConfirm={() => {
-          if (coupon) {
-            remove("coupons", coupon.id);
-            toast("Coupon deleted");
-            router.push(`${base}/coupons`);
-          }
+        onConfirm={async () => {
+          if (!coupon) return;
+          const { data, error } = await supabase
+            .from("coupons")
+            .delete()
+            .eq("id", coupon.id)
+            .select("id");
+          if (error || !data?.length)
+            return toast(
+              `Couldn't delete: ${error?.message ?? "it has been used — turn it off instead"}`,
+            );
+          toast("Coupon deleted");
+          router.push(`${base}/coupons`);
         }}
       />
     </>

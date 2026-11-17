@@ -1,6 +1,6 @@
 # ChowLane — Phase 2 Plan: Supabase Backend
 
-> Created 2026-11-15 · Status: **in progress — 2.1 ✅, 2.2 ✅, 2.3 ✅ (D-059…D-064), 2.4 next**; Q-30…Q-35 answered (D-055); hosted project + Facebook ready
+> Created 2026-11-15 · Status: **in progress — 2.1 ✅, 2.2 ✅, 2.3 ✅ (D-059…D-064), 2.4 ✅ (D-066), 2.5 next**; Q-30…Q-35 answered (D-055); hosted project + Facebook ready
 > Input: `DATA-MODEL.md` **v1 (frozen)**, `BUSINESS-LOGIC.md`, `packages/lib` (tested rules), the 65 Phase 1 screens.
 
 ## Goal

@@ -1,11 +1,19 @@
 # ChowLane — Current Status
 
-> **Read this first every session.** Last updated: 2026-11-17
+> **Read this first every session.** Last updated: 2026-11-18
 
 ## Current phase
 **Phase 2 — Supabase backend** 🟨 (plan: `docs/PHASE-2-PLAN.md`) · Phase 1 UI prototype ✅ signed off 2026-11-15
 
 ## Current state
+- **Milestone 2.4 Console on real data ✅ (2026-11-18)** — D-065, D-066 · uncommitted on `phase-2`:
+  - On Supabase now: console home (setup checklist + counters), every settings screen (business + logo upload to
+    the `tenant-logos` bucket, area, delivery fee, barangays, rider income, loyalty, billing view), dispatch-mode
+    switch, merchants + menus, coupons (+ uses), customers + points adjustment (`adjust_points`), verification queue
+    and detail (view only — approve/reject comes with ordering in 2.5).
+  - Still mock: orders, dispatch lists, live map, cash, rider pay report (2.5–2.6). For demo businesses, settings
+    saves are mirrored into the mock store so those screens agree; order links open the mock order by number.
+  - Tests: 91 unit + **314 RLS**. Browser-tested as the FastBite owner (see PROGRESS-LOG).
 - **Milestone 2.3 Auth ✅ (2026-11-17)** — D-059…D-064 · branch `phase-2` (2.1, 2.2 committed):
   - Real Supabase logins in all apps; mock sessions and the DEV "acting as" switcher are gone.
     - Console: email + password; invited admins set a password from the email link (`/[tenant]/invite`).
@@ -24,23 +32,24 @@
   - Local dev: all apps share `localhost` cookies → `dev`/`start` raise Node's header limit (D-063). Invite emails:
     Mailpit http://127.0.0.1:55324.
 - **Hosted project**: Supabase `ChowLane` (Singapore) linked; Facebook provider enabled. Migrations **not pushed** yet.
-- Open: **Q-36** — email confirmation for new owners (currently none).
+- Q-36 answered (D-065): email confirmation for new owners is added before launch.
 
 ## Resume here (next session)
-State on 2026-11-17: branch `phase-2`, everything committed (2.1 `3e2132a`, 2.2 `0c51996`, 2.3 `73a8f30`), nothing
-pushed, migrations not applied to the hosted project.
+State on 2026-11-18: branch `phase-2`; 2.1–2.3 committed (`3e2132a`, `0c51996`, `73a8f30`), **2.4 not committed yet**;
+nothing pushed, migrations not applied to the hosted project.
 
-1. Start Docker Desktop, then `pnpm db:start` (local Supabase on 553xx; `pnpm db:reset` reloads demo data).
+1. Start Docker Desktop, then `pnpm db:start` (local Supabase on 553xx; `pnpm db:reset` reloads demo data and the
+   2.4 migration).
 2. If ports 3000–3004 are busy, stop leftover Node dev servers first (Next allows one dev server per app).
 3. `pnpm dev` → console http://localhost:3001/fastbite (`marco@fastbite.ph` / `demo1234`), rider :3002, customer
    :3003, platform :3004 (`owner@chowlane.app`), landing :3000. Invite emails: http://127.0.0.1:55324.
-4. Decide **Q-36** (owner email confirmation), then say "go" for **Milestone 2.4**.
+4. Review 2.4, ask Claude to commit, then say "go" for **Milestone 2.5**.
 
 ## Next up (in order)
-1. **You**: answer Q-36 (or accept: add email confirmation before launch).
-2. Claude: **Milestone 2.4 Console on real data** — settings (business, area, pricing, rider pay, dispatch, loyalty),
-   merchants & products, barangay fees, coupons, loyalty adjustments, customers & verification view.
-3. **You** (by 2.8): connect Vercel to the repo (needs a GitHub remote).
+1. **You**: review Milestone 2.4 (console on Supabase) → commit.
+2. Claude: **Milestone 2.5 Ordering** — customer catalog, cart, checkout → `place_order`, ID upload (`id-documents`
+   bucket) + verify / reject (incl. the console approve/reject buttons), tracking, cancel, rewards.
+3. **You** (by 2.8): connect Vercel to the repo (needs a GitHub remote); email sender for owner confirmation (D-065).
 
 ## Blockers
 - None.
@@ -50,9 +59,9 @@ pushed, migrations not applied to the hosted project.
 |---|---|
 | Phase 1 screens (SCREENS.md) | 65 / 65 ✅ (+ S-125 invite page in 2.3) |
 | Requirements — UI (REQUIREMENTS.md) | 88 / 88 ✅ |
-| Requirements — backend (REQUIREMENTS.md) | 11 ✅ · 1 🟨 |
-| Phase 2 milestones (ROADMAP.md) | 3 / 8 (2.1 ✅ 2.2 ✅ 2.3 ✅) |
-| Tests | 88 unit (lib 62 · mocks 16 · db 10) + 305 RLS (pgTAP) |
+| Requirements — backend (REQUIREMENTS.md) | 31 ✅ · 2 🟨 |
+| Phase 2 milestones (ROADMAP.md) | 4 / 8 (2.1 ✅ 2.2 ✅ 2.3 ✅ 2.4 ✅) |
+| Tests | 91 unit (lib 62 · mocks 16 · db 13) + 314 RLS (pgTAP) |
 | Flows signed off (USER-FLOWS.md) | 7 / 17 walked ✅ · 10 skipped (Phase 1 signed off) |
-| Decisions logged (DECISIONS.md) | 65 (D-000…D-064; D-011, D-039 superseded) |
-| Open questions answered | 35 / 36 (Q-36 open) |
+| Decisions logged (DECISIONS.md) | 67 (D-000…D-066; D-011, D-039 superseded) |
+| Open questions answered | 36 / 36 |

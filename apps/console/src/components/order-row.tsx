@@ -13,7 +13,7 @@ export function OrderRow({
   now,
   extra,
 }: {
-  order: Order;
+  order: Pick<Order, "orderNumber" | "status" | "createdAt" | "total">;
   href: string;
   customer: string;
   merchant: string;

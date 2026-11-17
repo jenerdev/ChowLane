@@ -1657,6 +1657,10 @@ export type Database = {
     };
     Functions: {
       accept_staff_invite: { Args: { p_tenant: string }; Returns: string };
+      adjust_points: {
+        Args: { p_customer: string; p_note: string; p_points: number };
+        Returns: number;
+      };
       auth_login_status: {
         Args: { p_email: string };
         Returns: {

@@ -252,7 +252,7 @@ PENDING_APPROVAL ──admin approves──▶ APPROVED ──offered (auto/manu
 - BL-14.5 **[CONFIRMED]** Points can be used to pay for food. **[PROPOSED]** 1 point = tenant-set value (default ₱1); minimum points per redemption (default 50); max % of the food subtotal payable with points (default 50%); points never pay the delivery fee.
 - BL-14.6 **[CONFIRMED]** **One promo per order**: a coupon **or** a free-delivery reward. Points and a free gift can be combined with either.
 - BL-14.7 **[PROPOSED]** Every change is a **loyalty transaction** (earned / redeemed / used / refunded / adjusted). If an order using points or rewards is REJECTED or CANCELLED, they are **refunded**.
-- BL-14.8 **[PROPOSED]** Owner/Admin with `loyalty.manage` can manually adjust a customer's points (reason required). Program settings need `settings.loyalty` (Owner by default).
+- BL-14.8 **[PROPOSED]** Owner/Admin with `loyalty.manage` can manually adjust a customer's points (reason required; the balance can't go below 0 — enforced server-side by `adjust_points` since 2.4). Program settings need `settings.loyalty` (Owner by default).
 - BL-14.9 **[CONFIRMED]** Points don't expire in the MVP.
 - BL-14.10 **[PROPOSED]** The points slider runs from the minimum to the allowed maximum and starts at the maximum when switched on.
 - BL-14.11 **[PROPOSED]** A free gift linked to another restaurant's item is shown but disabled, with an explanation.
@@ -297,6 +297,7 @@ PENDING_APPROVAL ──admin approves──▶ APPROVED ──offered (auto/manu
 ## Change log
 | Date | Rule | Change |
 |---|---|---|
+| 2026-11-18 | BL-14.8 (note) | Milestone 2.4: points adjustment runs server-side (`adjust_points`) with the existing rules — reason required, balance never below 0; no rule change |
 | 2026-11-17 | BL-2.9, BL-6.7, BL-7.12, BL-15.6, BL-15.7 (new) | Milestone 2.3 auth: invites, rider password login, new business starts without fee / pay (D-061), short name + tint, signup rollback |
 | 2026-11-17 | BL-2.4 (note), BL-2.7, BL-2.8, BL-6.6, BL-7.11 (new) | Phase 2.2 database: server-side permissions via RLS; settings permission groups and rider ↔ customer visibility written down as enforced; rider phone and barangay uniqueness; new rules confirmed by the user |
 | 2026-11-15 | All | Initial draft (v0) |

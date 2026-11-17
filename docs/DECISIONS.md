@@ -70,11 +70,13 @@
 | D-062 | 2026-11-17 | **Rider login without SMS (Q-30):** each rider row gets its own Supabase login whose email is derived from the business link + mobile number (`rider-<digits>@<slug>.riders.chowlane.internal`); the rider types number + password, the admin sets/resets the password in the rider form (server action, Auth admin API) | ✅ Done |
 | D-063 | 2026-11-17 | **Sessions:** one Supabase session cookie per app (`chowlane-<app>-auth`), refreshed by each app's `src/proxy.ts`; signup / invites / rider logins are server actions with the service-role key (landing + console only, never in the browser). Locally all apps share `localhost` cookies, so `dev`/`start` raise Node's header limit (`--max-http-header-size=65536`, via cross-env); in production each app has its own subdomain (Q-33) | ✅ Done |
 | D-064 | 2026-11-17 | **Auth server functions:** `create_tenant` (service role only), `accept_staff_invite` (first login links an INVITED row), `ensure_customer` (one customer row per business on first visit), `has_permission` (permission check for server actions), `auth_login_status` (service role; lets "Resend invite" replace an unused invite login). Removing an admin keeps history rows (links set to null) | ✅ Done |
+| D-065 | 2026-11-18 | **Owner email confirmation (Q-36, user accepted the default):** keep signup without an email step during Phase 2 (owner goes straight to the console); **add email confirmation before launch**, once a real email sender is set up (with the Vercel / hosted setup, by 2.8) | ✅ Confirmed |
+| D-066 | 2026-11-18 | **Console on Supabase (2.4):** settings, merchants & menus, barangay fees, coupons, loyalty settings, customers, verification queue (view), billing (view) and home read/write Supabase under RLS; the only new multi-row change is `adjust_points` (BL-14.8, ledger + balance in one transaction, balance ≥ 0). Logos go to the public `tenant-logos` bucket under `<tenant id>/…` (write: `settings.business`). Until orders, dispatch and cash move (2.5–2.6), a settings save is mirrored into the mock store of a demo business and order links open the mock order by its number. ID approve/reject stays on the waiting-order flow and moves with ordering in 2.5 (buttons shown disabled until then) | ✅ Done |
 | D-030 | 2026-11-15 | **Cash remittance**: at time out the rider remits net cash (collected from customers − paid at stores); Admin records amount received; business absorbs store price differences | ✅ Confirmed |
 
 ## Open questions
 
-> Q-01…Q-35 answered (Q-30…Q-35 by accepting the Phase 2 defaults, D-055). **Q-36 open** (from 2.3).
+> Q-01…Q-36 answered (Q-30…Q-35 by accepting the Phase 2 defaults, D-055; Q-36 by accepting the default, D-065). No open questions.
 
 | # | Question | Affects | Answer |
 |---|---|---|---|
@@ -113,4 +115,4 @@
 | Q-33 | Hosting: one domain with paths or subdomains per app? | Deploy | ✅ **Subdomains per app** for MVP; custom tenant domains in Phase 4 (D-055) |
 | Q-34 | Supabase plan & region? | Infra | ✅ **Free tier while building, Singapore**; Pro before launch (D-055) |
 | Q-35 | How long to keep customer ID photos (Data Privacy Act)? | Privacy | ✅ **Delete ID images 90 days after review**; keep the verification record (D-055) |
-| Q-36 | Should a new owner confirm their email before the business is created? | Signup, security | Open — 2.3 creates the login already confirmed (no email step) so the owner goes straight to the console; proposed: add email confirmation before launch (needs a real email sender) |
+| Q-36 | Should a new owner confirm their email before the business is created? | Signup, security | ✅ **No email step while building; add email confirmation before launch** (D-065) |

@@ -4,6 +4,7 @@ import { use, useState } from "react";
 import { Plus, UtensilsCrossed } from "lucide-react";
 import type { Product } from "@chowlane/types";
 import { formatPeso } from "@chowlane/lib";
+import { toMerchant, toProduct } from "@chowlane/db/mappers";
 import {
   Button,
   ConfirmSheet,
@@ -20,8 +21,8 @@ import {
   toast,
 } from "@chowlane/ui";
 import { RequirePermission } from "@/components/require-permission";
-import { useMockStore } from "@/lib/store";
-import { newId, useConsole } from "@/lib/use-console";
+import { useConsole } from "@/lib/use-console";
+import { must, useLive } from "@/lib/use-live";
 
 /** S-113 — menu items and prices of one merchant (OWN-004). */
 export default function ProductsPage({ params }: { params: Promise<{ id: string }> }) {
@@ -44,21 +45,46 @@ type Draft = {
 const empty: Draft = { name: "", category: "", description: "", isAvailable: true };
 
 function Products({ merchantId }: { merchantId: string }) {
-  const { db, tenant, base } = useConsole();
-  const patch = useMockStore((s) => s.patch);
-  const insert = useMockStore((s) => s.insert);
-  const remove = useMockStore((s) => s.remove);
-  const merchant = db.merchants.find((m) => m.id === merchantId && m.tenantId === tenant.id);
-  const products = db.products
-    .filter((p) => p.merchantId === merchantId)
-    .sort((a, b) => a.sortOrder - b.sortOrder);
+  const { live, base, supabase } = useConsole();
+  const data = useLive(`products:${merchantId}`, async (sb) => {
+    const [merchant, products] = await Promise.all([
+      sb.from("merchants").select("*").eq("id", merchantId).eq("tenant_id", live.id).maybeSingle(),
+      sb
+        .from("products")
+        .select("*")
+        .eq("merchant_id", merchantId)
+        .eq("tenant_id", live.id)
+        .order("sort_order"),
+    ]);
+    const m = must(merchant);
+    return m ? { merchant: toMerchant(m), products: must(products).map(toProduct) } : null;
+  });
+  const merchant = data.data?.merchant;
+  const products = data.data?.products ?? [];
 
   const [editing, setEditing] = useState<Product | "new" | null>(null);
   const [d, setD] = useState<Draft>(empty);
   const [errors, setErrors] = useState<Partial<Record<keyof Draft, string>>>({});
   const [confirmDelete, setConfirmDelete] = useState(false);
+  const [busy, setBusy] = useState(false);
 
-  if (!merchant) return <EmptyState icon={<UtensilsCrossed />} title="Merchant not found" />;
+  if (data.loading) return null;
+  if (!merchant)
+    return (
+      <EmptyState icon={<UtensilsCrossed />} title="Merchant not found" description={data.error} />
+    );
+
+  async function setAvailable(p: Product, v: boolean) {
+    const { error } = await supabase.from("products").update({ is_available: v }).eq("id", p.id);
+    toast(
+      error
+        ? `Couldn't save: ${error.message}`
+        : v
+          ? `${p.name} is available`
+          : `${p.name} marked sold out`,
+    );
+    await data.reload();
+  }
 
   const categories = [...new Set(products.map((p) => p.category))];
   const open = (p: Product | "new") => {
@@ -67,7 +93,7 @@ function Products({ merchantId }: { merchantId: string }) {
     setD(p === "new" ? { ...empty, category: categories[0] ?? "" } : { ...p });
   };
 
-  function save() {
+  async function save() {
     const e: typeof errors = {};
     if (d.name.trim().length < 2) e.name = "Enter the item name.";
     if (!d.category.trim()) e.category = "Enter a menu category.";
@@ -79,24 +105,27 @@ function Products({ merchantId }: { merchantId: string }) {
       category: d.category.trim(),
       description: d.description.trim(),
       price: d.price!,
-      storePrice: d.storePrice,
-      isAvailable: d.isAvailable,
+      store_price: d.storePrice ?? null,
+      is_available: d.isAvailable,
     };
-    if (editing === "new") {
-      insert("products", {
-        id: newId("p"),
-        tenantId: tenant.id,
-        merchantId,
-        imageUrl: "",
-        sortOrder: products.length,
-        ...row,
-      });
-      toast("Item added");
-    } else if (editing) {
-      patch("products", editing.id, row);
-      toast("Item saved");
-    }
+    setBusy(true);
+    const { error } =
+      editing === "new"
+        ? await supabase.from("products").insert({
+            ...row,
+            tenant_id: live.id,
+            merchant_id: merchantId,
+            sort_order: products.reduce((n, p) => Math.max(n, p.sortOrder + 1), 0),
+          })
+        : await supabase
+            .from("products")
+            .update(row)
+            .eq("id", (editing as Product).id);
+    setBusy(false);
+    if (error) return setErrors({ name: error.message });
+    toast(editing === "new" ? "Item added" : "Item saved");
     setEditing(null);
+    await data.reload();
   }
 
   return (
@@ -147,10 +176,7 @@ function Products({ merchantId }: { merchantId: string }) {
                         <Switch
                           checked={p.isAvailable}
                           aria-label={`${p.name} available`}
-                          onCheckedChange={(v) => {
-                            patch("products", p.id, { isAvailable: v });
-                            toast(v ? `${p.name} is available` : `${p.name} marked sold out`);
-                          }}
+                          onCheckedChange={(v) => void setAvailable(p, v)}
                         />
                       </label>
                     </li>
@@ -168,7 +194,7 @@ function Products({ merchantId }: { merchantId: string }) {
             className="flex flex-col gap-4"
             onSubmit={(e) => {
               e.preventDefault();
-              save();
+              void save();
             }}
           >
             <Field label="Name" htmlFor="p-name" error={errors.name}>
@@ -244,7 +270,7 @@ function Products({ merchantId }: { merchantId: string }) {
                   Delete
                 </Button>
               ) : null}
-              <Button type="submit" className="ml-auto">
+              <Button type="submit" className="ml-auto" disabled={busy}>
                 {editing === "new" ? "Add item" : "Save"}
               </Button>
             </div>
@@ -259,10 +285,11 @@ function Products({ merchantId }: { merchantId: string }) {
         description="It's removed from the menu. Past orders keep their details."
         confirmLabel="Delete item"
         destructive
-        onConfirm={() => {
+        onConfirm={async () => {
           if (editing && editing !== "new") {
-            remove("products", editing.id);
-            toast("Item deleted");
+            const { error } = await supabase.from("products").delete().eq("id", editing.id);
+            toast(error ? `Couldn't delete: ${error.message}` : "Item deleted");
+            await data.reload();
           }
           setEditing(null);
         }}

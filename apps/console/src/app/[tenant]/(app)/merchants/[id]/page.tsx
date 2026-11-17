@@ -2,22 +2,26 @@
 
 import { use } from "react";
 import { Store } from "lucide-react";
-import { EmptyState } from "@chowlane/ui";
+import { LiveGate } from "@/components/live-gate";
 import { RequirePermission } from "@/components/require-permission";
-import { useConsole } from "@/lib/use-console";
-import { MerchantForm } from "../merchant-form";
+import { MerchantForm, useMerchantFormData } from "../merchant-form";
 
 export default function EditMerchantPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
-  const { db, tenant } = useConsole();
-  const merchant = db.merchants.find((m) => m.id === id && m.tenantId === tenant.id);
   return (
     <RequirePermission perm="merchants.manage">
-      {merchant ? (
-        <MerchantForm key={merchant.id} merchant={merchant} />
-      ) : (
-        <EmptyState icon={<Store />} title="Merchant not found" />
-      )}
+      <Edit id={id} />
     </RequirePermission>
+  );
+}
+
+function Edit({ id }: { id: string }) {
+  const state = useMerchantFormData(id);
+  return (
+    <LiveGate state={state} icon={<Store />} notFound="Merchant not found">
+      {(d) => (
+        <MerchantForm key={id} merchant={d.merchant} center={d.center} categories={d.categories} />
+      )}
+    </LiveGate>
   );
 }

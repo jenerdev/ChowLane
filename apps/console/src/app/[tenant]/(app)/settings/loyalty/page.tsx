@@ -1,7 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import type { LoyaltySettings } from "@chowlane/types";
+import type { LoyaltySettings, Merchant, Product, TenantSettings } from "@chowlane/types";
+import { toMerchant, toProduct } from "@chowlane/db/mappers";
 import { formatPeso } from "@chowlane/lib";
 import {
   Button,
@@ -20,9 +21,11 @@ import {
   SwitchRow,
   toast,
 } from "@chowlane/ui";
+import { LiveGate } from "@/components/live-gate";
 import { RequirePermission } from "@/components/require-permission";
-import { useMockStore } from "@/lib/store";
+import { useSaveSettings, useSettings } from "@/lib/settings";
 import { useConsole } from "@/lib/use-console";
+import { must, useLive } from "@/lib/use-live";
 
 /** S-127 — loyalty program: master switch + rules (OWN-019, BL-14). */
 export default function LoyaltySettingsPage() {
@@ -34,11 +37,46 @@ export default function LoyaltySettingsPage() {
 }
 
 function Loyalty() {
-  const { settings, db, tenant, base } = useConsole();
-  const setTenantRow = useMockStore((s) => s.setTenantRow);
+  const { live } = useConsole();
+  const state = useSettings();
+  const menu = useLive(`loyalty-menu:${live.id}`, async (sb) => {
+    const [merchants, products] = await Promise.all([
+      sb
+        .from("merchants")
+        .select("*")
+        .eq("tenant_id", live.id)
+        .eq("status", "ACTIVE")
+        .order("name"),
+      sb.from("products").select("*").eq("tenant_id", live.id).order("sort_order"),
+    ]);
+    return { merchants: must(merchants).map(toMerchant), products: must(products).map(toProduct) };
+  });
+  return (
+    <LiveGate state={state}>
+      {(s) => (
+        <LoyaltyForm
+          settings={s}
+          merchants={menu.data?.merchants ?? []}
+          products={menu.data?.products ?? []}
+        />
+      )}
+    </LiveGate>
+  );
+}
+
+function LoyaltyForm({
+  settings,
+  merchants,
+  products,
+}: {
+  settings: TenantSettings;
+  merchants: Merchant[];
+  products: Product[];
+}) {
+  const { base } = useConsole();
+  const saveSettings = useSaveSettings();
+  const [busy, setBusy] = useState(false);
   const [l, setL] = useState<LoyaltySettings>(settings.loyalty);
-  const merchants = db.merchants.filter((m) => m.tenantId === tenant.id && m.status === "ACTIVE");
-  const products = db.products.filter((p) => merchants.some((m) => m.id === p.merchantId));
   const p = l.points;
 
   const errors: string[] = [];
@@ -294,13 +332,14 @@ function Loyalty() {
 
       <SaveBar note={errors[0]}>
         <Button
-          disabled={errors.length > 0}
-          onClick={() => {
-            setTenantRow("tenantSettings", {
-              ...settings,
+          disabled={errors.length > 0 || busy}
+          onClick={async () => {
+            setBusy(true);
+            const error = await saveSettings({
               loyalty: { ...l, freeGift: { ...l.freeGift, giftName: l.freeGift.giftName.trim() } },
             });
-            toast("Loyalty program saved");
+            setBusy(false);
+            toast(error ? `Couldn't save: ${error}` : "Loyalty program saved");
           }}
         >
           Save changes

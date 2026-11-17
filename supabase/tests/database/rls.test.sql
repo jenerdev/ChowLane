@@ -2,7 +2,7 @@
 -- Run: pnpm db:test (local Supabase with the seed loaded: pnpm db:reset).
 begin;
 create extension if not exists pgtap with schema extensions;
-select plan(305);
+select plan(314);
 
 create schema if not exists tests;
 
@@ -854,6 +854,15 @@ select is(tests.rls_exec('0d9ada38-4399-54f9-9859-50d2a3255df2'::uuid, $q$select
 select is(tests.rls_exec(null::uuid, $q$select public.ensure_customer('c4a259d0-1f1b-5ad3-91ea-3f12de964763')$q$), '42501', $q$anonymous: anonymous can't create customers$q$);
 select is(tests.rls_exec('0e118346-c0ef-57d8-ace3-2fb7ce30ed26'::uuid, $q$delete from public.staff_users where tenant_id = 'c4a259d0-1f1b-5ad3-91ea-3f12de964763' and type = 'OWNER'$q$), 'ok:0', $q$FastBite owner: the owner can't be removed from the admins screen$q$);
 select is(tests.rls_exec('f250a141-bd68-5365-9622-bf694f6f0627'::uuid, $q$delete from public.staff_users where tenant_id = 'c4a259d0-1f1b-5ad3-91ea-3f12de964763' and type = 'ADMIN'$q$), 'ok:0', $q$Kain Express admin: admin of another tenant can't remove FastBite admins$q$);
+select is(tests.rls_exec('0e118346-c0ef-57d8-ace3-2fb7ce30ed26'::uuid, $q$select public.adjust_points('1a7348b7-be5b-5519-bae1-0b2db3c20d7d', 10, 'Late delivery apology')$q$), 'ok:1', $q$FastBite owner: loyalty.manage adjusts points with a reason (BL-14.8)$q$);
+select is(tests.rls_exec('0e118346-c0ef-57d8-ace3-2fb7ce30ed26'::uuid, $q$select public.adjust_points('1a7348b7-be5b-5519-bae1-0b2db3c20d7d', 10, '  ')$q$), '22023', $q$FastBite owner: a points adjustment needs a reason (BL-14.8)$q$);
+select is(tests.rls_exec('0e118346-c0ef-57d8-ace3-2fb7ce30ed26'::uuid, $q$select public.adjust_points('1a7348b7-be5b-5519-bae1-0b2db3c20d7d', -1000000, 'Too much')$q$), '23514', $q$FastBite owner: points can't go below 0$q$);
+select is(tests.rls_exec('f250a141-bd68-5365-9622-bf694f6f0627'::uuid, $q$select public.adjust_points('1a7348b7-be5b-5519-bae1-0b2db3c20d7d', 10, 'X')$q$), '42501', $q$Kain Express admin: another tenant's admin can't adjust FastBite points$q$);
+select is(tests.rls_exec('002764a3-0962-51ad-8fe9-2770d6c6ddbe'::uuid, $q$select public.adjust_points('1a7348b7-be5b-5519-bae1-0b2db3c20d7d', 10, 'X')$q$), '42501', $q$FastBite customer with a live order: a customer can't adjust their own points$q$);
+select is(tests.rls_exec('0446c162-fde8-52af-8e0c-176c6145129d'::uuid, $q$select public.adjust_points((select id from public.customers where tenant_id = '785074bd-2bd0-52bb-9e63-d54b1bdf8370' limit 1), 1, 'X')$q$), '42501', $q$Pasabuy (suspended) owner: a suspended business can't adjust points (BL-10.8)$q$);
+select is(tests.rls_exec('0e118346-c0ef-57d8-ace3-2fb7ce30ed26'::uuid, $q$insert into storage.objects (bucket_id, name) values ('tenant-logos', 'c4a259d0-1f1b-5ad3-91ea-3f12de964763' || '/logo-test.png')$q$), 'ok:1', $q$FastBite owner: settings.business uploads a logo to its own folder$q$);
+select is(tests.rls_exec('f250a141-bd68-5365-9622-bf694f6f0627'::uuid, $q$insert into storage.objects (bucket_id, name) values ('tenant-logos', 'c4a259d0-1f1b-5ad3-91ea-3f12de964763' || '/logo-x.png')$q$), '42501', $q$Kain Express admin: another tenant's admin can't upload into FastBite's logo folder$q$);
+select is(tests.rls_exec('0e118346-c0ef-57d8-ace3-2fb7ce30ed26'::uuid, $q$insert into storage.objects (bucket_id, name) values ('tenant-logos', 'logo.png')$q$), '42501', $q$FastBite owner: a logo outside a tenant folder is refused$q$);
 select is(tests.rls_exec('0e118346-c0ef-57d8-ace3-2fb7ce30ed26'::uuid, $q$delete from public.staff_users where id = 'fd4f1061-a8a2-51a0-a3f4-28d6e977f0ab'$q$), 'ok:1', $q$FastBite owner: owner removes an admin; their history stays (BL-2.6)$q$);
 select is((select code from public.coupons where code = 'LOWER10'), 'LOWER10', 'coupon code was uppercased');
 select is((select status::text from public.staff_users where email = 'carla@fastbite.ph'), 'ACTIVE', 'accepted invite is ACTIVE');

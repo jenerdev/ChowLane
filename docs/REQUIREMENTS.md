@@ -37,43 +37,43 @@
 
 | ID | Requirement | Src | UI | BE |
 |---|---|---|---|---|
-| OWN-001 | Initial setup checklist after signup (branding, service area, pricing, rider pay, merchants, products, riders) | U | ✅ | ⬜ |
-| OWN-002 | Business profile & branding settings | U | ✅ | ⬜ |
-| OWN-003 | Merchants CRUD (name, address + map pin, photo, contact, open/closed) — **Owner or Admin** (`merchants.manage`); no merchant portal | U | ✅ | ⬜ |
-| OWN-004 | Products CRUD per merchant (name, category, price, photo, description, available toggle) — **Owner or Admin** (`products.manage`) | U | ✅ | ⬜ |
-| OWN-005 | Delivery fee (Owner **or Admin**): choose **PER_KM** (store → customer distance; base fee, rate/km, included km, min fee), **FIXED** (amount), or **PER_BARANGAY** | U | ✅ | ⬜ |
-| OWN-014 | Barangay price list: add / edit / deactivate barangays with a delivery fee each | U | ✅ | ⬜ |
-| OWN-006 | Rider income (Owner): **fixed DAILY** rate, **% of delivery fee**, or **fixed amount PER_DELIVERY** | U | ✅ | ⬜ |
+| OWN-001 | Initial setup checklist after signup (branding, service area, pricing, rider pay, merchants, products, riders) | U | ✅ | ✅ |
+| OWN-002 | Business profile & branding settings | U | ✅ | ✅ |
+| OWN-003 | Merchants CRUD (name, address + map pin, photo, contact, open/closed) — **Owner or Admin** (`merchants.manage`); no merchant portal | U | ✅ | ✅ |
+| OWN-004 | Products CRUD per merchant (name, category, price, photo, description, available toggle) — **Owner or Admin** (`products.manage`) | U | ✅ | ✅ |
+| OWN-005 | Delivery fee (Owner **or Admin**): choose **PER_KM** (store → customer distance; base fee, rate/km, included km, min fee), **FIXED** (amount), or **PER_BARANGAY** | U | ✅ | ✅ |
+| OWN-014 | Barangay price list: add / edit / deactivate barangays with a delivery fee each | U | ✅ | ✅ |
+| OWN-006 | Rider income (Owner): **fixed DAILY** rate, **% of delivery fee**, or **fixed amount PER_DELIVERY** | U | ✅ | ✅ |
 | OWN-007 | Admin users: invite, edit, deactivate, delete | U | ✅ | ✅ |
 | OWN-008 | Roles & permissions: create roles, toggle permissions per role, assign role to admin | U | ✅ | ✅ |
-| OWN-009 | Owner has every permission; owner's access can't be restricted | U | ✅ | ⬜ |
-| OWN-010 | Service area (center + radius) — orders outside are blocked | P | ✅ | ⬜ |
-| OWN-011 | Order approval setting: auto-approve orders from verified customers (on/off) | P | ✅ | ⬜ |
-| OWN-013 | Setting: maximum order subtotal (rider cash limit) | P | ✅ | ⬜ |
-| OWN-015 | Setting: accepted ID types (on/off per type) | P | ✅ | ⬜ |
-| OWN-016 | Owner sees own ChowLane billing plan & statements (read-only) | P | ✅ | ⬜ |
-| OWN-017 | **Coupons**: create / edit / deactivate — code, type **% off** or **free delivery**, **max usage**, **validity period** (+ optional cap, minimum order, uses per customer) | U | ✅ | ⬜ |
-| OWN-018 | Coupon list with status (active / scheduled / expired / used up) and usage history | P | ✅ | ⬜ |
-| OWN-019 | **Loyalty program settings**: master on/off; rules each on/off + config — free delivery after N orders, **free gift after X orders**, points (earn mode, point value, min redeem, max %) | U | ✅ | ⬜ |
+| OWN-009 | Owner has every permission; owner's access can't be restricted | U | ✅ | ✅ |
+| OWN-010 | Service area (center + radius) — orders outside are blocked | P | ✅ | ✅ |
+| OWN-011 | Order approval setting: auto-approve orders from verified customers (on/off) | P | ✅ | ✅ |
+| OWN-013 | Setting: maximum order subtotal (rider cash limit) | P | ✅ | ✅ |
+| OWN-015 | Setting: accepted ID types (on/off per type) | P | ✅ | ✅ |
+| OWN-016 | Owner sees own ChowLane billing plan & statements (read-only) | P | ✅ | ✅ |
+| OWN-017 | **Coupons**: create / edit / deactivate — code, type **% off** or **free delivery**, **max usage**, **validity period** (+ optional cap, minimum order, uses per customer) | U | ✅ | ✅ |
+| OWN-018 | Coupon list with status (active / scheduled / expired / used up) and usage history | P | ✅ | ✅ |
+| OWN-019 | **Loyalty program settings**: master on/off; rules each on/off + config — free delivery after N orders, **free gift after X orders**, points (earn mode, point value, min redeem, max %) | U | ✅ | ✅ |
 | OWN-012 | Rider pay summary / payroll report per rider per period | P | ✅ | ⬜ |
 
 ## ADM — Admin (console; each gated by a permission)
 
 | ID | Requirement | Src | UI | BE |
 |---|---|---|---|---|
-| ADM-001 | Customer verification queue: view ID + **selfie with ID** side by side (+ Facebook photo, previous submissions), **approve / reject** first-time customers (reject needs reason) | U | ✅ | ⬜ |
+| ADM-001 | Customer verification queue: view ID + **selfie with ID** side by side (+ Facebook photo, previous submissions), **approve / reject** first-time customers (reject needs reason) | U | ✅ | 🟨 |
 | ADM-002 | **Approve / reject orders** (reject needs reason) | U | ✅ | ⬜ |
 | ADM-003 | **Monitor orders**: list with status filters, order detail with timeline | U | ✅ | ⬜ |
 | ADM-004 | **Manually assign / reassign** an order to an online rider; "Needs rider" list of rejected/unassigned orders | U | ✅ | ⬜ |
-| ADM-010 | **Dispatch mode** switch AUTO / MANUAL (Owner or Admin) | U | ✅ | ⬜ |
+| ADM-010 | **Dispatch mode** switch AUTO / MANUAL (Owner or Admin) | U | ✅ | ✅ |
 | ADM-011 | Order assignment history (offers, accepts, rejects + reasons) on order detail | P | ✅ | ⬜ |
-| ADM-013 | Customer loyalty: balances, progress, history; manual points adjustment (reason) | P | ✅ | ⬜ |
+| ADM-013 | Customer loyalty: balances, progress, history; manual points adjustment (reason) | P | ✅ | ✅ |
 | ADM-012 | **Cash remittances**: list of shifts with expected cash; record amount received; flag short / over | U | ✅ | ⬜ |
 | ADM-005 | **Monitor riders**: timed-in/out status, current order, location on map | U | ✅ | 🟨 |
 | ADM-006 | **Riders CRUD** (name, phone, vehicle, plate, pay override, active/inactive) | U | ✅ | ✅ |
 | ADM-007 | Cancel an order with reason | P | ✅ | ⬜ |
-| ADM-008 | Dashboard overview (pending approvals, active orders, riders on shift) | P | ✅ | ⬜ |
-| ADM-009 | Customers list & detail | P | ✅ | ⬜ |
+| ADM-008 | Dashboard overview (pending approvals, active orders, riders on shift) | P | ✅ | ✅ |
+| ADM-009 | Customers list & detail | P | ✅ | ✅ |
 
 ## RID — Rider app
 
@@ -132,4 +132,4 @@
 
 **Totals:** 89 requirements (FND 13 · LND 4 · OWN 19 · ADM 13 · RID 15 · CUS 15 · PLT 10) — 88 have a Phase 1 UI part (FND-013 is backend only)
 
-**Backend (Phase 2):** 11 ✅ · 1 🟨 after Milestone 2.3 (logins, signup, tenant branding & manifests, admins/roles, riders CRUD on Supabase).
+**Backend (Phase 2):** 31 ✅ · 2 🟨 after Milestone 2.4 (2.3: logins, signup, tenant branding & manifests, admins/roles, riders CRUD; 2.4: console settings, merchants & menus, barangay fees, coupons, loyalty settings + points adjustment, customers, verification queue view, billing view, home). ADM-001 approve/reject and ADM-010 auto-dispatch behaviour come with ordering (2.5) and dispatch (2.6).

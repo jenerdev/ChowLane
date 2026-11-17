@@ -5,12 +5,14 @@ import { ChevronRight } from "lucide-react";
 import type { PermissionKey } from "@chowlane/types";
 import { Settings } from "lucide-react";
 import { EmptyState, PageHeader } from "@chowlane/ui";
+import { useSettings } from "@/lib/settings";
 import { useConsole } from "@/lib/use-console";
 
 type Entry = { href: string; title: string; description: string; perm: PermissionKey | "owner" };
 
 export default function SettingsIndex() {
-  const { base, can, isOwner, settings } = useConsole();
+  const { base, can, isOwner } = useConsole();
+  const settings = useSettings().data;
   const groups: { title: string; items: Entry[] }[] = [
     {
       title: "Business",
@@ -38,7 +40,7 @@ export default function SettingsIndex() {
           description: "Per km, fixed or per barangay",
           perm: "settings.pricing",
         },
-        ...(settings.deliveryFee?.mode === "PER_BARANGAY"
+        ...(settings?.deliveryFee?.mode === "PER_BARANGAY"
           ? [
               {
                 href: "pricing/barangays",
