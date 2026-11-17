@@ -6,7 +6,7 @@
 **Phase 2 — Supabase backend** 🟨 (plan: `docs/PHASE-2-PLAN.md`) · Phase 1 UI prototype ✅ signed off 2026-11-15
 
 ## Current state
-- **Milestone 2.4 Console on real data ✅ (2026-11-18)** — D-065, D-066 · uncommitted on `phase-2`:
+- **Milestone 2.4 Console on real data ✅ (2026-11-18)** — D-065, D-066 · committed on `phase-2` (`5846fb1`):
   - On Supabase now: console home (setup checklist + counters), every settings screen (business + logo upload to
     the `tenant-logos` bucket, area, delivery fee, barangays, rider income, loyalty, billing view), dispatch-mode
     switch, merchants + menus, coupons (+ uses), customers + points adjustment (`adjust_points`), verification queue
@@ -35,7 +35,7 @@
 - Q-36 answered (D-065): email confirmation for new owners is added before launch.
 
 ## Resume here (next session)
-State on 2026-11-18: branch `phase-2`; 2.1–2.3 committed (`3e2132a`, `0c51996`, `73a8f30`), **2.4 not committed yet**;
+State on 2026-11-18: branch `phase-2`; 2.1–2.4 committed (`3e2132a`, `0c51996`, `73a8f30`, `5846fb1`);
 nothing pushed, migrations not applied to the hosted project.
 
 1. Start Docker Desktop, then `pnpm db:start` (local Supabase on 553xx; `pnpm db:reset` reloads demo data and the
@@ -43,10 +43,10 @@ nothing pushed, migrations not applied to the hosted project.
 2. If ports 3000–3004 are busy, stop leftover Node dev servers first (Next allows one dev server per app).
 3. `pnpm dev` → console http://localhost:3001/fastbite (`marco@fastbite.ph` / `demo1234`), rider :3002, customer
    :3003, platform :3004 (`owner@chowlane.app`), landing :3000. Invite emails: http://127.0.0.1:55324.
-4. Review 2.4, ask Claude to commit, then say "go" for **Milestone 2.5**.
+4. Say "go" for **Milestone 2.5**.
 
 ## Next up (in order)
-1. **You**: review Milestone 2.4 (console on Supabase) → commit.
+1. **You**: say "go" for Milestone 2.5.
 2. Claude: **Milestone 2.5 Ordering** — customer catalog, cart, checkout → `place_order`, ID upload (`id-documents`
    bucket) + verify / reject (incl. the console approve/reject buttons), tracking, cancel, rewards.
 3. **You** (by 2.8): connect Vercel to the repo (needs a GitHub remote); email sender for owner confirmation (D-065).

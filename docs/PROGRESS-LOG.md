@@ -34,7 +34,7 @@ fee → fixed persists, loyalty save, billing view, logo upload → Storage URL 
 BUSINESS-LOGIC (BL-14.8 note), DATA-MODEL (logo storage mapping), USER-FLOWS (2.4 note), ROADMAP (2.4 ✅),
 PHASE-2-PLAN, STATUS.
 
-**Stopped at / Next:** Uncommitted on `phase-2`. Next: Milestone 2.5 Ordering (waiting for the user's go).
+**Stopped at / Next:** Committed on `phase-2` (`5846fb1`). Next: Milestone 2.5 Ordering (waiting for the user's go).
 
 ---
 
