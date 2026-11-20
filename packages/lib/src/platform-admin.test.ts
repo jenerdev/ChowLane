@@ -137,6 +137,14 @@ describe("billing", () => {
     });
     expect(trial).toMatchObject({ amountDue: 0, status: "WAIVED", note: "Free trial" });
     expect(hasStatementFor([st], "t", period)).toBe(true);
+    // the database returns "+00:00" instead of ".000Z" — same instant
+    expect(
+      hasStatementFor(
+        [{ ...st, periodStart: period.start.replace(".000Z", "+00:00") }],
+        "t",
+        period,
+      ),
+    ).toBe(true);
     expect(
       isOnTrial({ ...base, trialEndsAt: "2026-12-01T00:00:00Z" }, "2026-11-15T00:00:00Z"),
     ).toBe(true);

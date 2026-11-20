@@ -2,7 +2,7 @@
 -- Run: pnpm db:test (local Supabase with the seed loaded: pnpm db:reset).
 begin;
 create extension if not exists pgtap with schema extensions;
-select plan(367);
+select plan(382);
 
 create schema if not exists tests;
 
@@ -871,8 +871,30 @@ select is(tests.rls_exec('0d9ada38-4399-54f9-9859-50d2a3255df2'::uuid, $q$update
 select is(tests.rls_exec('0e118346-c0ef-57d8-ace3-2fb7ce30ed26'::uuid, $q$insert into public.loyalty_transactions (tenant_id, customer_id, kind, points) values ('c4a259d0-1f1b-5ad3-91ea-3f12de964763', '1a7348b7-be5b-5519-bae1-0b2db3c20d7d', 'POINTS_EARNED', 999)$q$, false), '42501', $q$FastBite owner: staff can't write the loyalty ledger directly$q$);
 select is(tests.rls_exec(null::uuid, $q$insert into public.merchants (tenant_id, name, category, phone, address, location_lat, location_lng)
           values ('c4a259d0-1f1b-5ad3-91ea-3f12de964763', 'Anon', 'X', '+639170000000', 'X', 14.5, 121.0)$q$, false), '42501', $q$anonymous: anonymous can't write anything$q$);
-select is(tests.rls_exec('0e118346-c0ef-57d8-ace3-2fb7ce30ed26'::uuid, $q$update public.tenant_billing set model = 'FREE' where tenant_id = 'c4a259d0-1f1b-5ad3-91ea-3f12de964763'$q$, false), 'ok:0', $q$FastBite owner: owner can't change their own billing plan (BL-10.3)$q$);
-select is(tests.rls_exec('1e8b48fb-748f-502a-8bae-84a02f6f4b6d'::uuid, $q$update public.tenant_billing set model = 'FREE', monthly_fee = null, per_order_fee = null where tenant_id = 'aab2c268-2e7a-5365-8156-7f1cdb262693'$q$, false), 'ok:1', $q$platform admin: platform admin changes a tenant's billing$q$);
+select is(tests.rls_exec('0e118346-c0ef-57d8-ace3-2fb7ce30ed26'::uuid, $q$update public.tenant_billing set model = 'FREE' where tenant_id = 'c4a259d0-1f1b-5ad3-91ea-3f12de964763'$q$, false), '42501', $q$FastBite owner: owner can't change their own billing plan (BL-10.3)$q$);
+select is(tests.rls_exec('0e118346-c0ef-57d8-ace3-2fb7ce30ed26'::uuid, $q$select public.set_tenant_billing('c4a259d0-1f1b-5ad3-91ea-3f12de964763', 'FREE')$q$, true), '42501', $q$FastBite owner: owner can't call the billing function either$q$);
+select is(tests.rls_exec('1e8b48fb-748f-502a-8bae-84a02f6f4b6d'::uuid, $q$update public.tenant_billing set model = 'FREE' where tenant_id = 'aab2c268-2e7a-5365-8156-7f1cdb262693'$q$, false), '42501', $q$platform admin: billing changes only through set_tenant_billing (2.7)$q$);
+select is(tests.rls_exec('1e8b48fb-748f-502a-8bae-84a02f6f4b6d'::uuid, $q$select public.set_tenant_billing('aab2c268-2e7a-5365-8156-7f1cdb262693', 'PER_ORDER')$q$, true), '22023', $q$platform admin: a paid plan needs its fees (PLT-007)$q$);
+select is(tests.rls_exec('1e8b48fb-748f-502a-8bae-84a02f6f4b6d'::uuid, $q$select public.set_tenant_billing('aab2c268-2e7a-5365-8156-7f1cdb262693', 'FREE', 50000, 800, now() + interval '30 days')$q$, false), 'ok:1', $q$platform admin: platform admin changes a tenant's billing (PLT-007)$q$);
+select is(tests.rls_exec('1e8b48fb-748f-502a-8bae-84a02f6f4b6d'::uuid, $q$select 1 from public.tenant_billing where tenant_id = 'aab2c268-2e7a-5365-8156-7f1cdb262693' and model = 'FREE' and monthly_fee is null
+          and per_order_fee is null and trial_ends_at is null and updated_by is not null
+          and effective_from > now() - interval '1 minute'$q$, false), 'ok:1', $q$platform admin: FREE keeps no fees and no trial; who and when are recorded (BL-10.13)$q$);
+select is(tests.rls_exec('1e8b48fb-748f-502a-8bae-84a02f6f4b6d'::uuid, $q$select public.set_tenant_status('aab2c268-2e7a-5365-8156-7f1cdb262693', 'SUSPENDED', ' ')$q$, true), '22023', $q$platform admin: suspending needs a reason (PLT-009)$q$);
+select is(tests.rls_exec('1e8b48fb-748f-502a-8bae-84a02f6f4b6d'::uuid, $q$select public.set_tenant_status('aab2c268-2e7a-5365-8156-7f1cdb262693', 'SUSPENDED', 'Unpaid statements')$q$, true), 'ok:1', $q$platform admin: platform admin suspends a tenant with a reason (PLT-009)$q$);
+select is(tests.rls_exec('0e118346-c0ef-57d8-ace3-2fb7ce30ed26'::uuid, $q$select public.set_tenant_status('c4a259d0-1f1b-5ad3-91ea-3f12de964763', 'ACTIVE')$q$, true), '42501', $q$FastBite owner: an owner can't change their business's status$q$);
+select is(tests.rls_exec('1e8b48fb-748f-502a-8bae-84a02f6f4b6d'::uuid, $q$select public.generate_billing_statement('c4a259d0-1f1b-5ad3-91ea-3f12de964763', '2026-10-15T00:00:00+08')$q$, true), 'P0001', $q$platform admin: one statement per tenant per month (BL-10.10)$q$);
+select is(tests.rls_exec('1e8b48fb-748f-502a-8bae-84a02f6f4b6d'::uuid, $q$select public.generate_billing_statement('c4a259d0-1f1b-5ad3-91ea-3f12de964763')$q$, false), 'ok:1', $q$platform admin: platform admin creates this month's statement (PLT-008)$q$);
+select is(tests.rls_exec('1e8b48fb-748f-502a-8bae-84a02f6f4b6d'::uuid, $q$select 1 from public.billing_statements s
+          where s.tenant_id = 'c4a259d0-1f1b-5ad3-91ea-3f12de964763' and s.period_start = (select period_start from private.manila_month(now()))
+            and s.status = 'UNPAID' and s.amount_due = 99900 + 500 * s.delivered_orders
+            and s.delivered_orders = (select count(*) from public.orders o where o.tenant_id = 'c4a259d0-1f1b-5ad3-91ea-3f12de964763'
+              and o.status = 'DELIVERED' and o.created_at >= s.period_start)$q$, false), 'ok:1', $q$platform admin: the amount follows the plan: ₱999 + ₱5 per delivered order (BL-10.4, BL-10.9)$q$);
+select is(tests.rls_exec('0e118346-c0ef-57d8-ace3-2fb7ce30ed26'::uuid, $q$select public.settle_statement((select id from public.billing_statements where tenant_id = 'c4a259d0-1f1b-5ad3-91ea-3f12de964763' and status = 'UNPAID' limit 1), 'PAID')$q$, true), '42501', $q$FastBite owner: the owner sees their statement but can't settle it$q$);
+select is(tests.rls_exec('1e8b48fb-748f-502a-8bae-84a02f6f4b6d'::uuid, $q$select public.settle_statement((select id from public.billing_statements where tenant_id = 'c4a259d0-1f1b-5ad3-91ea-3f12de964763' and status = 'UNPAID' limit 1), 'WAIVED')$q$, true), '22023', $q$platform admin: waiving needs a reason (BL-10.12)$q$);
+select is(tests.rls_exec('1e8b48fb-748f-502a-8bae-84a02f6f4b6d'::uuid, $q$select public.settle_statement((select id from public.billing_statements where tenant_id = 'c4a259d0-1f1b-5ad3-91ea-3f12de964763'
+          and period_start = (select period_start from private.manila_month(now()))), 'PAID', 'GCash ref 123')$q$, false), 'ok:1', $q$platform admin: platform admin marks a statement paid (PLT-008)$q$);
+select is(tests.rls_exec('1e8b48fb-748f-502a-8bae-84a02f6f4b6d'::uuid, $q$select public.settle_statement((select id from public.billing_statements where tenant_id = 'c4a259d0-1f1b-5ad3-91ea-3f12de964763'
+          and period_start = (select period_start from private.manila_month(now()))), 'WAIVED', 'oops')$q$, true), 'P0001', $q$platform admin: a paid statement is final (BL-10.12)$q$);
 select is(tests.rls_exec('1e8b48fb-748f-502a-8bae-84a02f6f4b6d'::uuid, $q$insert into public.merchants (tenant_id, name, category, phone, address, location_lat, location_lng)
           values ('c4a259d0-1f1b-5ad3-91ea-3f12de964763', 'Platform', 'X', '+639170000000', 'X', 14.5, 121.0)$q$, false), '42501', $q$platform admin: platform admin can't edit tenant records (read-only, BL-10.3)$q$);
 select is(tests.rls_exec('5a33ac1d-1ccb-5f35-be0a-efe50d70f234'::uuid, $q$select 1 where public.has_permission('c4a259d0-1f1b-5ad3-91ea-3f12de964763', 'admins.manage')$q$, false), 'ok:0', $q$FastBite dispatcher: has_permission says no to a missing permission$q$);
@@ -962,6 +984,7 @@ select is(tests.rls_exec('aec19468-1e39-5272-be8d-d29ff62c14d7'::uuid, $q$select
 select is(tests.rls_exec('0e118346-c0ef-57d8-ace3-2fb7ce30ed26'::uuid, $q$select 1 from public.orders where id = '41bf32e6-3565-5241-9e61-741bfa8f5c8c' and status = 'APPROVED' and offer_rider_id is null$q$, false), 'ok:1', $q$FastBite owner: nobody else free → the order needs a rider (BL-5.8)$q$);
 select is(tests.rls_exec('0e118346-c0ef-57d8-ace3-2fb7ce30ed26'::uuid, $q$delete from public.staff_users where id = 'fd4f1061-a8a2-51a0-a3f4-28d6e977f0ab'$q$, false), 'ok:1', $q$FastBite owner: owner removes an admin; their history stays (BL-2.6)$q$);
 select is((select code from public.coupons where code = 'LOWER10'), 'LOWER10', 'coupon code was uppercased');
+select is(private.generate_monthly_statements(), 0, 'monthly job: last month already has every statement (idempotent)');
 select is((select status::text from public.staff_users where email = 'carla@fastbite.ph'), 'ACTIVE', 'accepted invite is ACTIVE');
 select is((select count(*) from public.customers where tenant_id = 'aab2c268-2e7a-5365-8156-7f1cdb262693' and auth_user_id = '65d6130d-c8eb-5ff8-996b-952310de7c97'), 1::bigint, 'one customer row in the new business');
 

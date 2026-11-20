@@ -3,24 +3,13 @@
 import { useState } from "react";
 import Link from "next/link";
 import { describeBilling, formatDate, formatPeso, isOnTrial, tenantStats } from "@chowlane/lib";
-import {
-  Button,
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-  ConfirmSheet,
-  Stat,
-  toast,
-} from "@chowlane/ui";
+import { Button, Card, CardContent, CardHeader, CardTitle, ConfirmSheet, Stat } from "@chowlane/ui";
 import { NoteSheet } from "@/components/note-sheet";
-import { useMockStore } from "@/lib/store";
 import { useTenantRecords } from "@/lib/use-tenant";
 
 /** S-503 — tenant overview: stats, owner, plan, suspend / reactivate (PLT-004, PLT-009, BL-10.8). */
 export default function TenantOverview() {
   const r = useTenantRecords();
-  const patch = useMockStore((s) => s.patch);
   const [suspend, setSuspend] = useState(false);
   const [reactivate, setReactivate] = useState(false);
   if (!r.tenant) return null;
@@ -134,10 +123,9 @@ export default function TenantOverview() {
         required
         confirmLabel="Suspend business"
         destructive
-        onSubmit={(reason) => {
-          patch("tenants", t.id, { status: "SUSPENDED", suspendReason: reason });
-          toast(`${t.businessName} suspended`);
-        }}
+        onSubmit={(reason) =>
+          void r.ops.setStatus(t.id, "SUSPENDED", reason, `${t.businessName} suspended`)
+        }
       />
       <ConfirmSheet
         open={reactivate}
@@ -145,10 +133,9 @@ export default function TenantOverview() {
         title={`Reactivate ${t.businessName}?`}
         description="Their apps work again right away."
         confirmLabel="Reactivate"
-        onConfirm={() => {
-          patch("tenants", t.id, { status: "ACTIVE", suspendReason: undefined });
-          toast(`${t.businessName} is active again`);
-        }}
+        onConfirm={() =>
+          void r.ops.setStatus(t.id, "ACTIVE", undefined, `${t.businessName} is active again`)
+        }
       />
     </>
   );

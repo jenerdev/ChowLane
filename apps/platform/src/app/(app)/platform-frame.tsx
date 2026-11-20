@@ -15,8 +15,8 @@ const NAV: NavItem[] = [
 /** ChowLane-branded shell for signed-in platform pages; redirects to /login when signed out (PLT-001). */
 export function PlatformFrame({ children }: { children: ReactNode }) {
   const router = useRouter();
-  const { me, ready, signOut } = usePlatform();
-  const signedIn = ready && Boolean(me);
+  const { me, ready, loaded, signOut } = usePlatform();
+  const signedIn = ready && Boolean(me) && loaded;
 
   useEffect(() => {
     if (ready && !me) router.replace("/login");

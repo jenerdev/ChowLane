@@ -125,12 +125,16 @@ Checklist on console home; each item links to its screen:
 4. When a new version is deployed → "New version available — Reload" banner
 
 ## F-11 Platform Admin monitors tenants  🟨 (clickable)  *(ChowLane owner, `apps/platform`)*
+> **Phase 2.7:** on Supabase — every tenant's records (read-only) and suspend / reactivate (a suspended business's
+> customer and rider apps show "temporarily unavailable" at once).
 1. Log in → **Overview**: total tenants (active / suspended), orders today & this month, riders online, billing due
 2. **Tenants** list → search / filter → open a tenant
 3. Tenant detail tabs: **Overview stats · Riders · Orders · Customers · Merchants & products · Admins & settings · Billing** (all read-only except billing & status)
 4. **Suspend** (reason) / **Reactivate** a tenant
 
 ## F-12 Platform Admin sets a tenant's billing  🟨 (clickable)
+> **Phase 2.7:** on Supabase. Besides "Create statement", a daily job creates last month's missing statements on
+> the 1st (Manila time) with the same rule.
 1. Tenant → **Billing** → choose model: FREE / MONTHLY / PER_ORDER / MONTHLY + PER_ORDER → amounts → optional trial end date → Save
 2. Monthly statement is computed (delivered orders × per-order fee + monthly fee)
 3. After the tenant pays (outside the app) → **Mark as paid** (note)

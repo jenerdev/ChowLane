@@ -100,6 +100,9 @@
 | S-310 | Rewards (points, progress, free delivery / free gift) | `/[tenant]/rewards` | CUS-014 | ✅ |
 
 ## apps/platform (Platform Admin — ChowLane-branded, not a tenant PWA)
+> **Live on Supabase since 2.7:** every screen reads all tenants through RLS; suspend / reactivate, billing plan,
+> create / pay / waive statements are Postgres functions. No mock data left in this app.
+
 | # | Screen | Route | Reqs | Status |
 |---|---|---|---|---|
 | S-500 | Login | `/login` | PLT-001 | ✅ |

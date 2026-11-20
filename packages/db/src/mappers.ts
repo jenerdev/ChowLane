@@ -21,6 +21,7 @@ import type {
   Role,
   Shift,
   StaffUser,
+  Tenant,
   TenantBilling,
   TenantSettings,
   Verification,
@@ -28,6 +29,7 @@ import type {
 import type { Database, Json } from "./database.types";
 
 type Tables = Database["public"]["Tables"];
+export type TenantRow = Tables["tenants"]["Row"];
 export type StaffRow = Tables["staff_users"]["Row"];
 export type RoleRow = Tables["roles"]["Row"];
 export type RiderRow = Tables["riders"]["Row"];
@@ -54,6 +56,26 @@ export type PublicSettingsRow = Database["public"]["Views"]["tenant_settings_pub
 const u = <T>(v: T | null): T | undefined => (v === null ? undefined : v);
 const latLng = (lat: number | null, lng: number | null) =>
   lat === null || lng === null ? undefined : { lat, lng };
+
+/** A full tenant row (platform admin, 2.7). Branding for the tenant apps comes from `tenants_public`. */
+export function toTenant(r: TenantRow): Tenant {
+  return {
+    id: r.id,
+    slug: r.slug,
+    businessName: r.business_name,
+    shortName: r.short_name,
+    logoUrl: r.logo_url,
+    primaryColor: r.primary_color,
+    backgroundColor: r.background_color,
+    currency: "PHP",
+    timezone: "Asia/Manila",
+    pwaIcons: (r.pwa_icons ?? {}) as Tenant["pwaIcons"],
+    status: r.status,
+    suspendReason: u(r.suspend_reason),
+    ownerId: r.owner_id ?? "",
+    createdAt: r.created_at,
+  };
+}
 
 export function toStaffUser(r: StaffRow): StaffUser {
   return {

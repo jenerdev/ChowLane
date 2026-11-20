@@ -6,7 +6,12 @@
 **Phase 2 — Supabase backend** 🟨 (plan: `docs/PHASE-2-PLAN.md`) · Phase 1 UI prototype ✅ signed off 2026-11-15
 
 ## Current state
-- **Milestone 2.6 Dispatch & delivery ✅ (2026-11-20)** — D-068 · **not committed yet**:
+- **Milestone 2.7 Platform & billing ✅ (2026-11-20)** — D-069 · **not committed yet**:
+  - Platform app fully on Supabase (no mock data): overview, tenants, read-only records, suspend / reactivate, billing
+    plan, create / pay / waive statements — each change one Postgres function checking the platform admin.
+  - Monthly statements: daily pg_cron job creates last month's missing statements (same rule as the button / lib).
+  - Tests: 92 unit + **382 RLS** (on fresh seed); browser-tested (see PROGRESS-LOG).
+- **Milestone 2.6 Dispatch & delivery ✅ (2026-11-20)** — D-068 · committed (`7a2b36d`):
   - Server: AUTO offer on approval (nearest free rider), manual assign / reassign, accept / decline, offer expiry
     (pg_cron every 15 s), shifts with cash summary, store → items unavailable → pickup (receipt photo) → delivered
     (proof, rider earning, points / rewards), cash remittance, `delivery-photos` bucket, Realtime.
@@ -52,22 +57,22 @@
 - Q-36 answered (D-065): email confirmation for new owners is added before launch.
 
 ## Resume here (next session)
-State on 2026-11-20: branch `phase-2`; 2.1–2.5 committed (`3e2132a`, `0c51996`, `73a8f30`, `5846fb1`, `dee74ac`);
-**2.6 done but uncommitted** in the working tree; nothing pushed, migrations not applied to the hosted project.
+State on 2026-11-20: branch `phase-2`; 2.1–2.6 committed (… `dee74ac`, `7a2b36d`); **2.7 done but uncommitted**;
+nothing pushed, migrations not applied to the hosted project.
 
-1. Start Docker Desktop, then `pnpm db:start`, `pnpm db:reset` (demo data + all migrations incl. `dispatch.sql`),
-   `pnpm db:env` (rider now gets the server-only key too).
+1. Start Docker Desktop, then `pnpm db:start`, `pnpm db:reset` (demo data + all migrations), `pnpm db:env`.
 2. If ports 3000–3004 are busy, stop leftover Node dev servers first.
 3. `pnpm dev` → console http://localhost:3001/fastbite (`marco@fastbite.ph` / `demo1234`), rider :3002
-   (`09201230003` / `demo1234` = Arnel, free on shift), customer :3003, platform :3004, landing :3000.
-4. Say "go" for **Milestone 2.7**.
+   (`09201230003` / `demo1234`), customer :3003, platform :3004 (`owner@chowlane.app` / `demo1234`), landing :3000.
+4. `pnpm db:test` needs a fresh `pnpm db:reset` (it checks the seeded data).
 
 ## Next up (in order)
-1. **You**: say "commit" for 2.6, then "go" for 2.7.
-2. Claude: **Milestone 2.7 Platform & billing** — platform admin on real data, suspend, billing config, monthly
-   statement job.
-3. **You** (by 2.8): connect Vercel to the repo (needs a GitHub remote); email sender for owner confirmation (D-065);
-   enable pg_cron on the hosted project before pushing migrations.
+1. **You**: say "commit" for 2.7.
+2. **You**: for **Milestone 2.8 Deploy & exit** — push the repo to GitHub (remote), connect Vercel (5 projects, one per
+   app), enable `pg_cron` on the hosted Supabase project, choose an email sender for owner confirmation (D-065).
+3. Claude: **2.8** — push migrations to the hosted project, Vercel env vars, HTTPS previews, PWA install test on
+   Android + iPhone (F-10), remove prototype helpers (DEV toolbar, demo login lists), Playwright e2e for the main
+   flows, exit review.
 
 ## Blockers
 - None.
@@ -77,9 +82,9 @@ State on 2026-11-20: branch `phase-2`; 2.1–2.5 committed (`3e2132a`, `0c51996`
 |---|---|
 | Phase 1 screens (SCREENS.md) | 65 / 65 ✅ (+ S-125 invite page in 2.3) |
 | Requirements — UI (REQUIREMENTS.md) | 88 / 88 ✅ |
-| Requirements — backend (REQUIREMENTS.md) | 66 ✅ · 3 🟨 |
-| Phase 2 milestones (ROADMAP.md) | 6 / 8 (2.1–2.6 ✅) |
-| Tests | 92 unit (lib 62 · mocks 16 · db 14) + 367 RLS (pgTAP) |
+| Requirements — backend (REQUIREMENTS.md) | 75 ✅ · 3 🟨 |
+| Phase 2 milestones (ROADMAP.md) | 7 / 8 (2.1–2.7 ✅) |
+| Tests | 92 unit (lib 62 · mocks 16 · db 14) + 382 RLS (pgTAP) |
 | Flows signed off (USER-FLOWS.md) | 7 / 17 walked ✅ · 10 skipped (Phase 1 signed off) |
-| Decisions logged (DECISIONS.md) | 69 (D-000…D-068; D-011, D-039 superseded) |
+| Decisions logged (DECISIONS.md) | 70 (D-000…D-069; D-011, D-039 superseded) |
 | Open questions answered | 36 / 36 |

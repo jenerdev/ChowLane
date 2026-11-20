@@ -170,7 +170,9 @@ order in each status) so every screen can be reviewed. Live cross-app sync comes
 - Realtime (2.6): `orders`, `assignment_attempts`, `riders`, `shifts`, `customers` are in the `supabase_realtime`
   publication; `useRealtimeReload` (`@chowlane/db/react`) reloads a screen on a change (RLS decides who gets which
   row), on window focus and once a minute as a fallback.
-- pg_cron (2.6): job `expire-rider-offers` runs `expire_offers()` every 15 s (BL-5.6). Enable the `pg_cron` extension on
+- pg_cron (2.6–2.7): job `expire-rider-offers` runs `expire_offers()` every 15 s (BL-5.6); job
+  `monthly-billing-statements` runs `private.generate_monthly_statements()` daily at 00:05 Manila (16:05 UTC) and
+  creates last month's missing statements (BL-10.5). Enable the `pg_cron` extension on
   the hosted project before pushing migrations (the migration creates it).
 - Customer Facebook login (hosted): `signInWithOAuth` → `/[tenant]/auth/callback` (code exchange). Add each app's
   callback / invite URLs to Supabase Auth → URL configuration when deploying (2.8).

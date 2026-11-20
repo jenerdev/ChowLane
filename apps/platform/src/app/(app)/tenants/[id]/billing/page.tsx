@@ -11,7 +11,6 @@ import {
   formatMonth,
   formatPeso,
   fromManilaInput,
-  generateStatement,
   hasStatementFor,
   manilaMonthRange,
   normalizeBilling,
@@ -28,20 +27,24 @@ import {
   Input,
   MoneyInput,
   RadioCards,
-  toast,
 } from "@chowlane/ui";
 import { NoteSheet } from "@/components/note-sheet";
 import { StatementStatusBadge } from "@/components/statement-status-badge";
-import { useMockStore } from "@/lib/store";
-import { newId } from "@/lib/use-platform";
 import { useTenantRecords } from "@/lib/use-tenant";
 
-/** S-509 — billing config + statements for one tenant (PLT-007, PLT-008, BL-10.4…10.9). */
+/**
+ * S-509 — billing config + statements for one tenant (PLT-007, PLT-008, BL-10.4…10.13). Live since 2.7: saving,
+ * creating and settling statements are Postgres functions (the monthly job uses the same statement rule).
+ */
 export default function TenantBillingPage() {
   const r = useTenantRecords();
-  const setTenantRow = useMockStore((s) => s.setTenantRow);
-  const insert = useMockStore((s) => s.insert);
-  const patch = useMockStore((s) => s.patch);
+  // the form starts from the saved plan → render it once the data is there
+  if (!r.tenant || !r.me || !r.billing) return null;
+  return <BillingForm key={`${r.tenant.id}:${r.billing.effectiveFrom}`} />;
+}
+
+function BillingForm() {
+  const r = useTenantRecords();
   const [model, setModel] = useState<BillingModel>(r.billing?.model ?? "FREE");
   const [monthlyFee, setMonthlyFee] = useState<Centavos | undefined>(r.billing?.monthlyFee);
   const [perOrderFee, setPerOrderFee] = useState<Centavos | undefined>(r.billing?.perOrderFee);
@@ -65,13 +68,7 @@ export default function TenantBillingPage() {
   function save() {
     setShowErrors(true);
     if (Object.keys(errors).length) return;
-    setTenantRow("tenantBilling", {
-      tenantId: t.id,
-      ...normalizeBilling(draft),
-      effectiveFrom: r.now,
-      updatedBy: r.me!.id,
-    });
-    toast("Billing saved");
+    void r.ops.setBilling(t.id, normalizeBilling(draft));
   }
 
   return (
@@ -187,21 +184,9 @@ export default function TenantBillingPage() {
             variant="outline"
             disabled={generated || !current}
             title={generated ? "Already generated for this month" : undefined}
-            onClick={() => {
-              if (!current) return;
-              insert(
-                "billingStatements",
-                generateStatement({
-                  id: newId("bs"),
-                  tenantId: t.id,
-                  billing: current,
-                  orders: r.orders,
-                  period: month,
-                  now: r.now,
-                }),
-              );
-              toast(`Statement for ${formatMonth(r.now)} created`);
-            }}
+            onClick={() =>
+              void r.ops.generateStatement(t.id, `Statement for ${formatMonth(r.now)} created`)
+            }
           >
             {generated ? "Statement created" : "Create statement"}
           </Button>
@@ -253,13 +238,8 @@ export default function TenantBillingPage() {
         hint="Optional, e.g. “GCash ref 4021”"
         confirmLabel="Mark as paid"
         onSubmit={(note) => {
-          if (!paying) return;
-          patch("billingStatements", paying.id, {
-            status: "PAID",
-            paidAt: new Date().toISOString(),
-            note: note || paying.note,
-          });
-          toast("Marked as paid");
+          if (paying)
+            void r.ops.settleStatement(paying.id, "PAID", note || paying.note, "Marked as paid");
         }}
       />
       <NoteSheet
@@ -272,9 +252,7 @@ export default function TenantBillingPage() {
         confirmLabel="Waive statement"
         destructive
         onSubmit={(note) => {
-          if (!waiving) return;
-          patch("billingStatements", waiving.id, { status: "WAIVED", note });
-          toast("Statement waived");
+          if (waiving) void r.ops.settleStatement(waiving.id, "WAIVED", note, "Statement waived");
         }}
       />
     </>

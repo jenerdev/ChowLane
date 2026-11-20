@@ -1,23 +1,23 @@
 "use client";
 
 import type { ReactNode } from "react";
-import { DevToolbar, MockStoreHydrator } from "@chowlane/mocks/react";
+import { DevToolbar } from "@chowlane/mocks/react";
 import { Toaster } from "@chowlane/ui";
-import { useMockStore } from "@/lib/store";
 import { PlatformIdentityProvider } from "@/lib/identity";
+import { PlatformDataProvider } from "@/lib/platform-data";
 
 /**
- * App-wide pieces for every page (incl. login): Supabase session, mock store (screens not yet on Supabase), toasts,
- * DEV switcher (no fake logins since 2.3). Shell lives in (app)/.
+ * App-wide pieces for every page (incl. login): Supabase session + every tenant's records (2.7), toasts, DEV app
+ * switcher. Shell lives in (app)/.
  */
 export function PlatformRoot({ children }: { children: ReactNode }) {
-  const reset = useMockStore((s) => s.reset);
   return (
     <PlatformIdentityProvider>
-      {children}
-      <Toaster />
-      <MockStoreHydrator store={useMockStore} />
-      <DevToolbar app="platform" onReset={reset} />
+      <PlatformDataProvider>
+        {children}
+        <Toaster />
+        <DevToolbar app="platform" />
+      </PlatformDataProvider>
     </PlatformIdentityProvider>
   );
 }

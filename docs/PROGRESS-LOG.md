@@ -12,6 +12,35 @@
 
 ---
 
+## 2026-11-20 — Milestone 2.7 Platform & billing ✅
+
+**Done:** User said "commit and go": 2.6 committed (`7a2b36d`). Migration `platform.sql` (D-069):
+`private.require_platform_admin`, `private.manila_month`, `private.create_statement` (BL-10.4/10.9/10.11, same rule as
+lib), `set_tenant_status`, `set_tenant_billing` (BL-10.13), `generate_billing_statement`, `settle_statement`
+(BL-10.12), `private.generate_monthly_statements` + daily pg_cron job; direct writes to `tenant_billing` /
+`billing_statements` removed. `@chowlane/db`: `toTenant`. Platform app: `PlatformDataProvider` (all tenants via RLS,
+Realtime), `usePlatform().ops` for status / billing / statements; billing form renders after the data loads; mock store
+removed. Lib: `hasStatementFor` compares instants (the database writes `+00:00`, lib `.000Z`).
+
+**Found & fixed while testing:** statement status CASE returned text, not the enum (42804); the "Create statement"
+button stayed enabled after creating one (string compare of timestamps → `hasStatementFor` fix + test).
+
+**Verified:** build ✅ lint ✅ typecheck ✅ tests ✅ (92 unit) RLS ✅ (382 pgTAP on fresh seed: billing only through the
+functions, fees required, FREE clears fees/trial and records who, suspend needs a reason, one statement per month,
+₱999 + ₱5 × delivered, owner can't settle, waive needs a reason, paid is final, monthly job idempotent) format ✅.
+Browser: platform login → overview (live counts) → FastBite billing: ₱6 per order saved → statement ₱1,005 created →
+button "Statement created" → marked paid with a note → Kain Express suspended with a reason (its customer app shows
+"temporarily unavailable") → reactivated → billing overview → read-only orders, riders, customers, admins & settings.
+No console errors.
+
+**Changed docs:** DECISIONS (D-069), REQUIREMENTS (BE: 75 ✅ · 3 🟨), SCREENS, BUSINESS-LOGIC (change log), TECH-STACK
+(cron job), USER-FLOWS, ROADMAP, PHASE-2-PLAN, STATUS.
+
+**Stopped at / Next:** Not committed — waiting for the user's "commit". Next: Milestone 2.8 Deploy & exit (needs the
+user's Vercel + GitHub remote).
+
+---
+
 ## 2026-11-20 — Milestone 2.6 Dispatch & delivery ✅
 
 **Done:** User said go. Migration `dispatch.sql` (D-068): helpers (`distance_km`, `my_rider`, `my_delivery`,

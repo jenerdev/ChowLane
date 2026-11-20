@@ -392,14 +392,115 @@ const WRITES: Write[] = [
   {
     who: "fbOwner",
     label: "owner can't change their own billing plan (BL-10.3)",
-    expect: "ok:0",
+    expect: "42501",
     sql: `update public.tenant_billing set model = 'FREE' where tenant_id = ${FB}`,
   },
   {
+    who: "fbOwner",
+    label: "owner can't call the billing function either",
+    undo: true,
+    expect: "42501",
+    sql: `select public.set_tenant_billing(${FB}, 'FREE')`,
+  },
+  {
     who: "platform",
-    label: "platform admin changes a tenant's billing",
+    label: "billing changes only through set_tenant_billing (2.7)",
+    expect: "42501",
+    sql: `update public.tenant_billing set model = 'FREE' where tenant_id = ${KE}`,
+  },
+  {
+    who: "platform",
+    label: "a paid plan needs its fees (PLT-007)",
+    undo: true,
+    expect: "22023",
+    sql: `select public.set_tenant_billing(${KE}, 'PER_ORDER')`,
+  },
+  {
+    who: "platform",
+    label: "platform admin changes a tenant's billing (PLT-007)",
     expect: "ok:1",
-    sql: `update public.tenant_billing set model = 'FREE', monthly_fee = null, per_order_fee = null where tenant_id = ${KE}`,
+    sql: `select public.set_tenant_billing(${KE}, 'FREE', 50000, 800, now() + interval '30 days')`,
+  },
+  {
+    who: "platform",
+    label: "FREE keeps no fees and no trial; who and when are recorded (BL-10.13)",
+    expect: "ok:1",
+    sql: `select 1 from public.tenant_billing where tenant_id = ${KE} and model = 'FREE' and monthly_fee is null
+          and per_order_fee is null and trial_ends_at is null and updated_by is not null
+          and effective_from > now() - interval '1 minute'`,
+  },
+  {
+    who: "platform",
+    label: "suspending needs a reason (PLT-009)",
+    undo: true,
+    expect: "22023",
+    sql: `select public.set_tenant_status(${KE}, 'SUSPENDED', ' ')`,
+  },
+  {
+    who: "platform",
+    label: "platform admin suspends a tenant with a reason (PLT-009)",
+    undo: true,
+    expect: "ok:1",
+    sql: `select public.set_tenant_status(${KE}, 'SUSPENDED', 'Unpaid statements')`,
+  },
+  {
+    who: "fbOwner",
+    label: "an owner can't change their business's status",
+    undo: true,
+    expect: "42501",
+    sql: `select public.set_tenant_status(${FB}, 'ACTIVE')`,
+  },
+  {
+    who: "platform",
+    label: "one statement per tenant per month (BL-10.10)",
+    undo: true,
+    expect: "P0001",
+    sql: `select public.generate_billing_statement(${FB}, '2026-10-15T00:00:00+08')`,
+  },
+  {
+    who: "platform",
+    label: "platform admin creates this month's statement (PLT-008)",
+    expect: "ok:1",
+    sql: `select public.generate_billing_statement(${FB})`,
+  },
+  {
+    who: "platform",
+    label: "the amount follows the plan: ₱999 + ₱5 per delivered order (BL-10.4, BL-10.9)",
+    expect: "ok:1",
+    sql: `select 1 from public.billing_statements s
+          where s.tenant_id = ${FB} and s.period_start = (select period_start from private.manila_month(now()))
+            and s.status = 'UNPAID' and s.amount_due = 99900 + 500 * s.delivered_orders
+            and s.delivered_orders = (select count(*) from public.orders o where o.tenant_id = ${FB}
+              and o.status = 'DELIVERED' and o.created_at >= s.period_start)`,
+  },
+  {
+    who: "fbOwner",
+    label: "the owner sees their statement but can't settle it",
+    undo: true,
+    expect: "42501",
+    sql: `select public.settle_statement((select id from public.billing_statements where tenant_id = ${FB} and status = 'UNPAID' limit 1), 'PAID')`,
+  },
+  {
+    who: "platform",
+    label: "waiving needs a reason (BL-10.12)",
+    undo: true,
+    expect: "22023",
+    sql: `select public.settle_statement((select id from public.billing_statements where tenant_id = ${FB} and status = 'UNPAID' limit 1), 'WAIVED')`,
+  },
+  {
+    who: "platform",
+    label: "platform admin marks a statement paid (PLT-008)",
+    expect: "ok:1",
+    sql: `select public.settle_statement((select id from public.billing_statements where tenant_id = ${FB}
+          and period_start = (select period_start from private.manila_month(now()))), 'PAID', 'GCash ref 123')`,
+  },
+  {
+    who: "platform",
+    label: "a paid statement is final (BL-10.12)",
+    undo: true,
+    expect: "P0001",
+    sql: `select public.settle_statement((select id from public.billing_statements where tenant_id = ${FB}
+          and period_start = (select period_start from private.manila_month(now()))), 'WAIVED', 'oops')`,
   },
   {
     who: "platform",
@@ -966,6 +1067,10 @@ for (const w of WRITES) {
 count++;
 lines.push(
   `select is((select code from public.coupons where code = 'LOWER10'), 'LOWER10', 'coupon code was uppercased');`,
+);
+count++;
+lines.push(
+  `select is(private.generate_monthly_statements(), 0, 'monthly job: last month already has every statement (idempotent)');`,
 );
 count++;
 lines.push(

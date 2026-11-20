@@ -202,13 +202,15 @@ export function generateStatement(args: {
   };
 }
 
-/** A statement already exists for this tenant + month. */
+/** A statement already exists for this tenant + month (times compared as instants: the database writes +00:00). */
 export function hasStatementFor(
   statements: BillingStatement[],
   tenantId: ID,
   period: PeriodRange,
 ): boolean {
-  return statements.some((s) => s.tenantId === tenantId && s.periodStart === period.start);
+  return statements.some(
+    (s) => s.tenantId === tenantId && Date.parse(s.periodStart) === Date.parse(period.start),
+  );
 }
 
 export type StatementTotals = {

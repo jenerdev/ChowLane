@@ -1714,6 +1714,7 @@ export type Database = {
       };
       ensure_customer: { Args: { p_tenant: string }; Returns: string };
       expire_offers: { Args: Record<PropertyKey, never>; Returns: number };
+      generate_billing_statement: { Args: { p_at?: string; p_tenant: string }; Returns: string };
       has_permission: {
         Args: { p_perm: Database["public"]["Enums"]["permission_key"]; p_tenant: string };
         Returns: boolean;
@@ -1749,6 +1750,32 @@ export type Database = {
       };
       rider_time_out: { Args: { p_lat?: number; p_lng?: number; p_tenant: string }; Returns: Json };
       set_items_unavailable: { Args: { p: Json }; Returns: undefined };
+      set_tenant_billing: {
+        Args: {
+          p_model: Database["public"]["Enums"]["billing_model"];
+          p_monthly_fee?: number;
+          p_per_order_fee?: number;
+          p_tenant: string;
+          p_trial_ends_at?: string;
+        };
+        Returns: undefined;
+      };
+      set_tenant_status: {
+        Args: {
+          p_reason?: string;
+          p_status: Database["public"]["Enums"]["tenant_status"];
+          p_tenant: string;
+        };
+        Returns: undefined;
+      };
+      settle_statement: {
+        Args: {
+          p_note?: string;
+          p_statement: string;
+          p_status: Database["public"]["Enums"]["statement_status"];
+        };
+        Returns: undefined;
+      };
       submit_verification: {
         Args: {
           p_id_front_url: string;

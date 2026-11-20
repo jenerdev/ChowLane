@@ -1,6 +1,6 @@
 # ChowLane — Functional Requirements
 
-> Last updated: 2026-11-20 (Milestone 2.6 statuses) · v1 rebuilt 2026-11-15 from user requirements; v0 draft IDs retired before any implementation
+> Last updated: 2026-11-20 (Milestone 2.7 statuses) · v1 rebuilt 2026-11-15 from user requirements; v0 draft IDs retired before any implementation
 > ID format: `<AREA>-<NNN>`. From now on never reuse or renumber an ID; mark dropped ones ❌.
 > Status: ⬜ Not started · 🟨 In progress · ✅ Done · ⏸️ Blocked · ❌ Dropped
 > **UI** = Phase 1 (mock). **BE** = Phase 2+ (Supabase).
@@ -120,16 +120,16 @@
 | ID | Requirement | Src | UI | BE |
 |---|---|---|---|---|
 | PLT-001 | Platform Admin login | P | ✅ | ✅ |
-| PLT-002 | Overview: stats across all tenants (tenants active/suspended, orders today/month, delivered, riders online, billing due) | U | ✅ | ⬜ |
-| PLT-003 | Tenants list: name, slug, status, billing model, orders this month, riders, created date; search & filter | U | ✅ | ⬜ |
-| PLT-004 | Tenant detail: stats (orders, delivered, cancelled, revenue from delivery fees, active customers, riders online) | U | ✅ | ⬜ |
-| PLT-005 | Tenant **riders**: list, on-shift status, deliveries, shifts (read-only) | U | ✅ | ⬜ |
-| PLT-006 | Tenant **records** (read-only): orders + detail, customers (+ verification), merchants & products, admins & roles, settings | U | ✅ | ⬜ |
-| PLT-007 | **Billing config per tenant**: FREE / MONTHLY / PER_ORDER / MONTHLY_PLUS_PER_ORDER, amounts, trial end date | U | ✅ | ⬜ |
-| PLT-008 | Monthly billing statements per tenant (computed amount); mark PAID with note | P | ✅ | ⬜ |
-| PLT-009 | Suspend / reactivate a tenant (reason required) | P | ✅ | ⬜ |
-| PLT-010 | Billing overview: all tenants' amounts due / paid this month | P | ✅ | ⬜ |
+| PLT-002 | Overview: stats across all tenants (tenants active/suspended, orders today/month, delivered, riders online, billing due) | U | ✅ | ✅ |
+| PLT-003 | Tenants list: name, slug, status, billing model, orders this month, riders, created date; search & filter | U | ✅ | ✅ |
+| PLT-004 | Tenant detail: stats (orders, delivered, cancelled, revenue from delivery fees, active customers, riders online) | U | ✅ | ✅ |
+| PLT-005 | Tenant **riders**: list, on-shift status, deliveries, shifts (read-only) | U | ✅ | ✅ |
+| PLT-006 | Tenant **records** (read-only): orders + detail, customers (+ verification), merchants & products, admins & roles, settings | U | ✅ | ✅ |
+| PLT-007 | **Billing config per tenant**: FREE / MONTHLY / PER_ORDER / MONTHLY_PLUS_PER_ORDER, amounts, trial end date | U | ✅ | ✅ |
+| PLT-008 | Monthly billing statements per tenant (computed amount); mark PAID with note | P | ✅ | ✅ |
+| PLT-009 | Suspend / reactivate a tenant (reason required) | P | ✅ | ✅ |
+| PLT-010 | Billing overview: all tenants' amounts due / paid this month | P | ✅ | ✅ |
 
 **Totals:** 89 requirements (FND 13 · LND 4 · OWN 19 · ADM 13 · RID 15 · CUS 15 · PLT 10) — 88 have a Phase 1 UI part (FND-013 is backend only)
 
-**Backend (Phase 2):** 66 ✅ · 3 🟨 after Milestone 2.6 (2.6: dispatch & delivery — AUTO offers on approval, manual assign / reassign, rider app on Supabase with offers, accept / decline, store → pickup → delivered, offer expiry job, shifts with cash summary, cash remittance, rider pay report, Realtime in all three apps. 🟨 ADM-005 / CUS-008: rider position is the time-in / time-out location until live GPS (Phase 3). Earlier: 2.3 logins, signup, branding, admins/roles, riders; 2.4 console settings, merchants, coupons, loyalty, customers; 2.5 ordering, ID review, approve / reject / cancel).
+**Backend (Phase 2):** 75 ✅ · 3 🟨 after Milestone 2.7 (2.7: platform admin on Supabase — overview, tenants, read-only records, suspend / reactivate, billing config, statements created / paid / waived, monthly statement job. 2.6: dispatch & delivery — AUTO offers on approval, manual assign / reassign, rider app on Supabase with offers, accept / decline, store → pickup → delivered, offer expiry job, shifts with cash summary, cash remittance, rider pay report, Realtime in all three apps. 🟨 ADM-005 / CUS-008: rider position is the time-in / time-out location until live GPS (Phase 3). Earlier: 2.3 logins, signup, branding, admins/roles, riders; 2.4 console settings, merchants, coupons, loyalty, customers; 2.5 ordering, ID review, approve / reject / cancel).

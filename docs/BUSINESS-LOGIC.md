@@ -297,6 +297,7 @@ PENDING_APPROVAL ──admin approves──▶ APPROVED ──offered (auto/manu
 ## Change log
 | Date | Rule | Change |
 |---|---|---|
+| 2026-11-20 | — (no rule change) | Milestone 2.7: BL-10.3, 10.5, 10.8, 10.10–10.13 enforced server-side as written (D-069); statements are created on the 1st (Manila) for last month by a daily job, and by the platform admin's "Create statement" any time |
 | 2026-11-20 | BL-5.8, BL-5.14, BL-5.15 (notes) | Milestone 2.6: dispatch, shifts, delivery and cash enforced server-side as written (D-068). Offer expiry runs on the server every 15 s (BL-5.14). AUTO retry also when a rider is freed by a cancellation (same idea as BL-5.8). BL-5.15 area only from the barangay entry |
 | 2026-11-18 | — (no rule change) | Milestone 2.5: ordering rules enforced server-side as written — BL-3.3/3.5/3.6/3.7, BL-4.1/4.2/4.6, BL-11.5, BL-13.3/13.4/13.7, BL-14.7 (`place_order` and order functions, D-067) |
 | 2026-11-18 | BL-14.8 (note) | Milestone 2.4: points adjustment runs server-side (`adjust_points`) with the existing rules — reason required, balance never below 0; no rule change |
