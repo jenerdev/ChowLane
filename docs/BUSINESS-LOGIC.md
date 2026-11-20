@@ -1,6 +1,6 @@
 # ChowLane — Business Logic
 
-> Last updated: 2026-11-17
+> Last updated: 2026-11-20
 > Each rule is tagged **[CONFIRMED]** (stated/approved by user) or **[PROPOSED]** (Claude's default — needs OK).
 > When a rule changes: edit it here + add a line to the change log at the bottom.
 
@@ -119,7 +119,7 @@ PENDING_APPROVAL ──admin approves──▶ APPROVED ──offered (auto/manu
 - BL-5.9 **[PROPOSED]** Even in AUTO mode, Owner/Admin (`orders.assign`) can manually assign or reassign any order until `PICKED_UP`.
 - BL-5.10 **[CONFIRMED]** A rider holds **one active order** at a time, so only riders without an active order get offers.
 - BL-5.11 **[PROPOSED]** Order is `ASSIGNED` only after the rider **accepts**; while waiting for a response the order stays `APPROVED` with a pending offer.
-- BL-5.15 **[PROPOSED]** Before accepting, the offer shows only the drop-off area (barangay, city) — full address and customer phone appear after accepting.
+- BL-5.15 **[PROPOSED]** Before accepting, the offer shows only the drop-off area (barangay, city) — full address and customer phone appear after accepting. **Phase 2.6:** the area is shown only when the order has a barangay (PER_BARANGAY mode); otherwise the offer shows the distance only, because the typed address can't be split safely.
 - BL-5.12 **[PROPOSED]** A rider who holds an open offer can't get a second one (counts as busy for auto and manual assign). A new offer on the same order withdraws the previous one.
 - BL-5.13 **[PROPOSED]** Reassigning an `ASSIGNED` / `AT_MERCHANT` order puts it back to `APPROVED` until the new rider accepts; the previous rider is freed.
 - BL-5.14 **[PROPOSED]** Offer expiry (BL-5.6) runs on the server from Phase 2/3. In the Phase 1 prototype an expired offer is labelled and an admin marks it "no response", which triggers the next auto offer.
@@ -297,6 +297,7 @@ PENDING_APPROVAL ──admin approves──▶ APPROVED ──offered (auto/manu
 ## Change log
 | Date | Rule | Change |
 |---|---|---|
+| 2026-11-20 | BL-5.8, BL-5.14, BL-5.15 (notes) | Milestone 2.6: dispatch, shifts, delivery and cash enforced server-side as written (D-068). Offer expiry runs on the server every 15 s (BL-5.14). AUTO retry also when a rider is freed by a cancellation (same idea as BL-5.8). BL-5.15 area only from the barangay entry |
 | 2026-11-18 | — (no rule change) | Milestone 2.5: ordering rules enforced server-side as written — BL-3.3/3.5/3.6/3.7, BL-4.1/4.2/4.6, BL-11.5, BL-13.3/13.4/13.7, BL-14.7 (`place_order` and order functions, D-067) |
 | 2026-11-18 | BL-14.8 (note) | Milestone 2.4: points adjustment runs server-side (`adjust_points`) with the existing rules — reason required, balance never below 0; no rule change |
 | 2026-11-17 | BL-2.9, BL-6.7, BL-7.12, BL-15.6, BL-15.7 (new) | Milestone 2.3 auth: invites, rider password login, new business starts without fee / pay (D-061), short name + tint, signup rollback |

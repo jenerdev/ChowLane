@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import type { AppSupabase } from "@chowlane/db/react";
+import { useRealtimeReload, type AppSupabase } from "@chowlane/db/react";
 import { useConsole } from "./use-console";
 
 /**
@@ -44,15 +44,25 @@ export function must<T>(res: { data: T | null; error: { message: string } | null
   return res.data as T;
 }
 
-/** Reloads a live screen every `ms` and when the window regains focus (until Realtime arrives in 2.6). */
-export function useAutoReload(reload: () => Promise<void>, ms = 20_000) {
-  useEffect(() => {
-    const run = () => void reload();
-    window.addEventListener("focus", run);
-    const t = window.setInterval(run, ms);
-    return () => {
-      window.removeEventListener("focus", run);
-      window.clearInterval(t);
-    };
-  }, [reload, ms]);
+/**
+ * Keeps a live screen fresh with Supabase Realtime (2.6): reloads when an order, rider offer, rider, shift or customer
+ * of this business changes (only rows the staff member may read — RLS), when the window regains focus, and once a
+ * minute as a safety net.
+ */
+export function useAutoReload(reload: () => Promise<void>) {
+  const { supabase, live, ready } = useConsole();
+  const filter = `tenant_id=eq.${live.id}`;
+  useRealtimeReload(
+    supabase,
+    `console:${live.id}`,
+    [
+      { table: "orders", filter },
+      { table: "assignment_attempts", filter },
+      { table: "riders", filter },
+      { table: "shifts", filter },
+      { table: "customers", filter },
+    ],
+    () => void reload(),
+    { enabled: ready },
+  );
 }

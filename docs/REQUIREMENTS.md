@@ -1,6 +1,6 @@
 # ChowLane — Functional Requirements
 
-> Last updated: 2026-11-15 (v1 — rebuilt from user requirements; v0 draft IDs retired before any implementation)
+> Last updated: 2026-11-20 (Milestone 2.6 statuses) · v1 rebuilt 2026-11-15 from user requirements; v0 draft IDs retired before any implementation
 > ID format: `<AREA>-<NNN>`. From now on never reuse or renumber an ID; mark dropped ones ❌.
 > Status: ⬜ Not started · 🟨 In progress · ✅ Done · ⏸️ Blocked · ❌ Dropped
 > **UI** = Phase 1 (mock). **BE** = Phase 2+ (Supabase).
@@ -55,7 +55,7 @@
 | OWN-017 | **Coupons**: create / edit / deactivate — code, type **% off** or **free delivery**, **max usage**, **validity period** (+ optional cap, minimum order, uses per customer) | U | ✅ | ✅ |
 | OWN-018 | Coupon list with status (active / scheduled / expired / used up) and usage history | P | ✅ | ✅ |
 | OWN-019 | **Loyalty program settings**: master on/off; rules each on/off + config — free delivery after N orders, **free gift after X orders**, points (earn mode, point value, min redeem, max %) | U | ✅ | ✅ |
-| OWN-012 | Rider pay summary / payroll report per rider per period | P | ✅ | ⬜ |
+| OWN-012 | Rider pay summary / payroll report per rider per period | P | ✅ | ✅ |
 
 ## ADM — Admin (console; each gated by a permission)
 
@@ -64,11 +64,11 @@
 | ADM-001 | Customer verification queue: view ID + **selfie with ID** side by side (+ Facebook photo, previous submissions), **approve / reject** first-time customers (reject needs reason) | U | ✅ | ✅ |
 | ADM-002 | **Approve / reject orders** (reject needs reason) | U | ✅ | ✅ |
 | ADM-003 | **Monitor orders**: list with status filters, order detail with timeline | U | ✅ | ✅ |
-| ADM-004 | **Manually assign / reassign** an order to an online rider; "Needs rider" list of rejected/unassigned orders | U | ✅ | ⬜ |
+| ADM-004 | **Manually assign / reassign** an order to an online rider; "Needs rider" list of rejected/unassigned orders | U | ✅ | ✅ |
 | ADM-010 | **Dispatch mode** switch AUTO / MANUAL (Owner or Admin) | U | ✅ | ✅ |
-| ADM-011 | Order assignment history (offers, accepts, rejects + reasons) on order detail | P | ✅ | 🟨 |
+| ADM-011 | Order assignment history (offers, accepts, rejects + reasons) on order detail | P | ✅ | ✅ |
 | ADM-013 | Customer loyalty: balances, progress, history; manual points adjustment (reason) | P | ✅ | ✅ |
-| ADM-012 | **Cash remittances**: list of shifts with expected cash; record amount received; flag short / over | U | ✅ | ⬜ |
+| ADM-012 | **Cash remittances**: list of shifts with expected cash; record amount received; flag short / over | U | ✅ | ✅ |
 | ADM-005 | **Monitor riders**: timed-in/out status, current order, location on map | U | ✅ | 🟨 |
 | ADM-006 | **Riders CRUD** (name, phone, vehicle, plate, pay override, active/inactive) | U | ✅ | ✅ |
 | ADM-007 | Cancel an order with reason | P | ✅ | ✅ |
@@ -80,20 +80,20 @@
 | ID | Requirement | Src | UI | BE |
 |---|---|---|---|---|
 | RID-001 | Rider login (account created by Owner/Admin) | P | ✅ | ✅ |
-| RID-002 | **Time in / time out** | U | ✅ | ⬜ |
-| RID-003 | Only online (timed-in) riders receive orders | U | ✅ | ⬜ |
-| RID-004 | **Incoming order offer** (auto or admin-assigned): details + countdown → **Accept** / **Reject (reason)** | U | ✅ | ⬜ |
-| RID-005 | Delivery steps: Going to merchant → Picked up → Delivered | P | ✅ | ⬜ |
-| RID-006 | Map + "open in navigation" link; call customer | P | ✅ | ⬜ |
-| RID-007 | Proof of delivery (photo and/or note) | P | ✅ | ⬜ |
-| RID-008 | Shift history & earnings (by pay mode) | P | ✅ | ⬜ |
-| RID-015 | Order shows discounts (amount to collect = discounted total) and any **free gift** item to buy | P | ✅ | ⬜ |
-| RID-014 | **Time out cash summary**: collected, paid at stores, amount to remit; remittance status per shift | U | ✅ | ⬜ |
-| RID-009 | Profile | P | ✅ | ⬜ |
-| RID-011 | Order card shows **"Cash needed at store ₱X"** before accepting | P | ✅ | ⬜ |
-| RID-012 | At store: order at counter → record **amount paid** + **receipt photo** → Picked up | U | ✅ | ⬜ |
-| RID-013 | Mark items unavailable at store → total recalculated | P | ✅ | ⬜ |
-| RID-010 | Show amount to collect (+ change needed); confirm **"Cash collected"** before Delivered | P | ✅ | ⬜ |
+| RID-002 | **Time in / time out** | U | ✅ | ✅ |
+| RID-003 | Only online (timed-in) riders receive orders | U | ✅ | ✅ |
+| RID-004 | **Incoming order offer** (auto or admin-assigned): details + countdown → **Accept** / **Reject (reason)** | U | ✅ | ✅ |
+| RID-005 | Delivery steps: Going to merchant → Picked up → Delivered | P | ✅ | ✅ |
+| RID-006 | Map + "open in navigation" link; call customer | P | ✅ | ✅ |
+| RID-007 | Proof of delivery (photo and/or note) | P | ✅ | ✅ |
+| RID-008 | Shift history & earnings (by pay mode) | P | ✅ | ✅ |
+| RID-015 | Order shows discounts (amount to collect = discounted total) and any **free gift** item to buy | P | ✅ | ✅ |
+| RID-014 | **Time out cash summary**: collected, paid at stores, amount to remit; remittance status per shift | U | ✅ | ✅ |
+| RID-009 | Profile | P | ✅ | ✅ |
+| RID-011 | Order card shows **"Cash needed at store ₱X"** before accepting | P | ✅ | ✅ |
+| RID-012 | At store: order at counter → record **amount paid** + **receipt photo** → Picked up | U | ✅ | ✅ |
+| RID-013 | Mark items unavailable at store → total recalculated | P | ✅ | ✅ |
+| RID-010 | Show amount to collect (+ change needed); confirm **"Cash collected"** before Delivered | P | ✅ | ✅ |
 
 ## CUS — Customer app (branded per tenant)
 
@@ -108,7 +108,7 @@
 | CUS-007 | "Waiting for approval" state for verification + order approval; rejection message | P | ✅ | ✅ |
 | CUS-008 | **Track order status** (timeline + rider on map) | U | ✅ | 🟨 |
 | CUS-009 | Order history | P | ✅ | ✅ |
-| CUS-011 | Tracking shows updated total if rider marks items unavailable | P | ✅ | 🟨 |
+| CUS-011 | Tracking shows updated total if rider marks items unavailable | P | ✅ | ✅ |
 | CUS-013 | Checkout: enter **coupon code** → validation message or discount line | U | ✅ | ✅ |
 | CUS-014 | **Rewards**: see points, progress to free delivery / free gift; use free-delivery reward, claim free gift, pay with points at checkout | U | ✅ | ✅ |
 | CUS-015 | Order details & tracking show discount lines and points earned | P | ✅ | ✅ |
@@ -132,4 +132,4 @@
 
 **Totals:** 89 requirements (FND 13 · LND 4 · OWN 19 · ADM 13 · RID 15 · CUS 15 · PLT 10) — 88 have a Phase 1 UI part (FND-013 is backend only)
 
-**Backend (Phase 2):** 47 ✅ · 5 🟨 after Milestone 2.5 (2.5: customer app on Supabase — menu, cart, checkout via `place_order`, ID upload + review, tracking, cancel, rewards, profile; console orders with approve / reject / cancel. Earlier: 2.3: logins, signup, tenant branding & manifests, admins/roles, riders CRUD; 2.4: console settings, merchants & menus, barangay fees, coupons, loyalty settings + points adjustment, customers, verification queue view, billing view, home).. Rider assignment, AUTO offers, rider steps, live rider map and Realtime come with dispatch (2.6).
+**Backend (Phase 2):** 66 ✅ · 3 🟨 after Milestone 2.6 (2.6: dispatch & delivery — AUTO offers on approval, manual assign / reassign, rider app on Supabase with offers, accept / decline, store → pickup → delivered, offer expiry job, shifts with cash summary, cash remittance, rider pay report, Realtime in all three apps. 🟨 ADM-005 / CUS-008: rider position is the time-in / time-out location until live GPS (Phase 3). Earlier: 2.3 logins, signup, branding, admins/roles, riders; 2.4 console settings, merchants, coupons, loyalty, customers; 2.5 ordering, ID review, approve / reject / cancel).

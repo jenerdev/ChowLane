@@ -161,8 +161,17 @@ order in each status) so every screen can be reviewed. Live cross-app sync comes
 - `@chowlane/db/mappers` → DB rows → `@chowlane/types` shapes.
 - Server actions with the Auth admin API: `apps/landing/src/lib/signup-actions.ts` (signup),
   `apps/console/src/lib/team-actions.ts` (invites, rider logins) check `has_permission` first;
-  `apps/customer/src/lib/order-actions.ts` (place order, 2.5) takes the customer from the session.
-- Storage buckets (2.4–2.5): `tenant-logos` (public), `id-documents` (private, signed URLs).
+  `apps/customer/src/lib/order-actions.ts` (place order, 2.5) takes the customer from the session;
+  `apps/rider/src/lib/delivery-actions.ts` (items unavailable, delivered — 2.6) takes the rider from the session.
+  `pnpm db:env` gives the service key to landing, console, rider and customer (server actions only).
+- Storage buckets (2.4–2.6): `tenant-logos` (public), `id-documents` (private, signed URLs), `delivery-photos`
+  (private: receipts and proof under `<tenant>/<order>/`, written by the order's rider, read by the rider and staff
+  with `orders.view` / `cash.manage`).
+- Realtime (2.6): `orders`, `assignment_attempts`, `riders`, `shifts`, `customers` are in the `supabase_realtime`
+  publication; `useRealtimeReload` (`@chowlane/db/react`) reloads a screen on a change (RLS decides who gets which
+  row), on window focus and once a minute as a fallback.
+- pg_cron (2.6): job `expire-rider-offers` runs `expire_offers()` every 15 s (BL-5.6). Enable the `pg_cron` extension on
+  the hosted project before pushing migrations (the migration creates it).
 - Customer Facebook login (hosted): `signInWithOAuth` → `/[tenant]/auth/callback` (code exchange). Add each app's
   callback / invite URLs to Supabase Auth → URL configuration when deploying (2.8).
 

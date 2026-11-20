@@ -79,7 +79,7 @@ export default function CompleteDelivery() {
       <Button
         size="lg"
         disabled={!ready}
-        onClick={() => actions.deliver(order, { photoUrl: photo, note }, cash)}
+        onClick={() => void actions.deliver(order, { photoUrl: photo, note }, cash)}
       >
         Mark as delivered
       </Button>

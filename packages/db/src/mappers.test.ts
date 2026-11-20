@@ -3,7 +3,9 @@ import {
   fromCoupon,
   fromTenantSettings,
   toCustomer,
+  toOfferOrder,
   type CustomerRow,
+  type OfferJson,
   type VerificationRow,
 } from "./mappers";
 
@@ -83,5 +85,58 @@ describe("row mappers", () => {
       isActive: true,
     });
     expect(row).toMatchObject({ percent_off: null, max_discount: null, description: null });
+  });
+
+  it("builds an offer the rider can see before accepting — area only, no address (BL-5.15)", () => {
+    const base: OfferJson = {
+      id: "o1",
+      tenant_id: "t1",
+      order_number: "FB-10240",
+      merchant_id: "m1",
+      distance_km: 2.4,
+      drop_off_area: "Poblacion, Makati City",
+      subtotal: 30000,
+      delivery_fee: 5900,
+      discount_total: 0,
+      total: 35900,
+      change_for: null,
+      created_at: "2026-11-20T01:00:00Z",
+      offer_offered_at: "2026-11-20T01:01:00Z",
+      offer_expires_at: "2026-11-20T01:02:00Z",
+      offer_by: "AUTO",
+      items: [
+        {
+          line_no: 2,
+          name: "Fries",
+          qty: 1,
+          unit_price: 9000,
+          store_unit_price: 8000,
+          line_total: 9000,
+          is_free_gift: false,
+        },
+        {
+          line_no: 1,
+          name: "Burger",
+          qty: 1,
+          unit_price: 21000,
+          store_unit_price: null,
+          line_total: 21000,
+          is_free_gift: false,
+        },
+      ],
+    };
+    const o = toOfferOrder(base, "r1");
+    // dropOffArea (lib) shows what follows the first comma
+    expect(o.deliveryAddressText.split(",").slice(1).join(",").trim()).toBe(
+      "Poblacion, Makati City",
+    );
+    expect(o.items.map((i) => i.name)).toEqual(["Burger", "Fries"]);
+    expect(o.items[0]!.storeUnitPrice).toBeUndefined();
+    expect(o.status).toBe("APPROVED");
+    // no barangay entry → no area, and no comma for dropOffArea to split
+    expect(toOfferOrder({ ...base, drop_off_area: null }, "r1").deliveryAddressText).toBe(
+      "Address shown after you accept",
+    );
+    expect(o.pendingOffer).toMatchObject({ riderId: "r1", expiresAt: "2026-11-20T01:02:00Z" });
   });
 });

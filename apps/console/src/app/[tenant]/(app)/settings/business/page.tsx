@@ -20,7 +20,6 @@ import {
 import { LiveGate } from "@/components/live-gate";
 import { RequirePermission } from "@/components/require-permission";
 import { useSaveSettings, useSettings } from "@/lib/settings";
-import { useMockStore } from "@/lib/store";
 import { useConsole } from "@/lib/use-console";
 
 /** Resize an image file to a small square PNG for the logo. */
@@ -53,8 +52,7 @@ function Business() {
 /** Live since 2.4: branding on `tenants`, accepted IDs on `tenant_settings`, logo in the tenant-logos bucket. */
 function BusinessForm({ settings }: { settings: TenantSettings }) {
   const router = useRouter();
-  const { live: tenant, base, supabase, hasMockData, tenant: mockTenant } = useConsole();
-  const patch = useMockStore((s) => s.patch);
+  const { live: tenant, base, supabase } = useConsole();
   const saveSettings = useSaveSettings();
   const [name, setName] = useState(tenant.businessName);
   const [shortName, setShortName] = useState(tenant.shortName);
@@ -101,7 +99,6 @@ function BusinessForm({ settings }: { settings: TenantSettings }) {
       if (error) return toast(`Couldn't save: ${error.message}`);
       const idError = await saveSettings({ acceptedIdTypes: ids });
       if (idError) return toast(`Couldn't save accepted IDs: ${idError}`);
-      if (hasMockData) patch("tenants", mockTenant.id, branding);
       setLogo(logoUrl);
       setLogoFile(undefined);
       toast("Business settings saved");

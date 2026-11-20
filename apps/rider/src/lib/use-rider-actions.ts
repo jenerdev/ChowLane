@@ -1,211 +1,177 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import type { Coupon, Order, RiderRejectReason } from "@chowlane/types";
-import {
-  applyDeliveredOrder,
-  arriveAtStore,
-  cancelAllUnavailable,
-  completeDelivery,
-  endShift,
-  formatPeso,
-  offerOrder,
-  orderFoodPaid,
-  pickUpOrder,
-  respondToOffer,
-  setItemsUnavailable,
-  startShift,
-  type DeliveryProof,
-  type RiderResult,
-  couponRelease,
-  promoRefunds,
-} from "@chowlane/lib";
+import type { Order, RiderRejectReason } from "@chowlane/types";
+import { formatPeso, type DeliveryProof } from "@chowlane/lib";
 import { toast } from "@chowlane/ui";
+import { completeDeliveryAction, setItemsUnavailableAction } from "./delivery-actions";
 import { getLocation } from "./device";
-import { useMockStore } from "./store";
-import { newId, useRider } from "./use-rider";
+import { useRider } from "./use-rider";
 
 /**
- * Rider actions = pure rules from @chowlane/lib + side effects on this app's mock store.
- * (The console runs on another origin with its own storage in Phase 1 — D-008.)
+ * Rider actions on Supabase (2.6): each is one Postgres function that checks who the rider is, the order's status
+ * and the rules (BL-5, BL-6, BL-11, BL-12). The two money steps go through server actions priced by packages/lib.
+ * After each action the data reloads (Realtime also pushes the change).
  */
 export function useRiderActions() {
   const router = useRouter();
-  const { db, me, settings, tenant, base, rule, shift } = useRider();
-  const patch = useMockStore((s) => s.patch);
-  const insert = useMockStore((s) => s.insert);
-  const now = () => new Date().toISOString();
-  const couponOf = (o: Order): Coupon | undefined => db.coupons.find((c) => c.id === o.couponId);
+  const { me, base, rule, supabase, reload, tenant } = useRider();
 
-  const fail = (r: RiderResult<unknown>) => {
-    if (!r.ok) toast(r.reason, "error");
-    return !r.ok;
+  /** Runs a call; shows its error. Returns true when it worked. */
+  const run = async (
+    fn: () => PromiseLike<{ error: { message: string } | null }>,
+    message?: string,
+  ): Promise<boolean> => {
+    const { error } = await fn();
+    await reload();
+    if (error) {
+      toast(error.message, "error");
+      return false;
+    }
+    if (message) toast(message);
+    return true;
   };
 
-  /** Give back coupon use, points and rewards of a rejected/cancelled order (BL-13.7, BL-14.7). */
-  const releasePromos = (order: Order) => {
-    const rel = couponRelease(order, db.coupons, db.couponRedemptions);
-    if (rel) {
-      patch("coupons", rel.couponId, { usedCount: rel.usedCount });
-      if (rel.redemptionId) patch("couponRedemptions", rel.redemptionId, { released: true });
-    }
-    const customer = db.customers.find((c) => c.id === order.customerId);
-    if (!customer) return;
-    const refund = promoRefunds(order, customer, now());
-    for (const t of refund.transactions) insert("loyaltyTransactions", { id: newId("lt"), ...t });
-    patch("customers", customer.id, { loyalty: refund.loyalty });
+  /** Receipt / proof photo (resized data URL) → private delivery-photos bucket, <tenant>/<order>/… */
+  const uploadPhoto = async (order: Order, dataUrl: string, kind: "receipt" | "proof") => {
+    if (!dataUrl.startsWith("data:")) return dataUrl; // already uploaded (a storage path)
+    const blob = await (await fetch(dataUrl)).blob();
+    const ext = blob.type === "image/png" ? "png" : blob.type === "image/webp" ? "webp" : "jpg";
+    const path = `${order.tenantId}/${order.id}/${kind}-${Date.now()}.${ext}`;
+    const { error } = await supabase.storage
+      .from("delivery-photos")
+      .upload(path, blob, { contentType: blob.type || "image/jpeg" });
+    if (error) throw new Error(`Couldn't upload the photo: ${error.message}`);
+    return path;
   };
 
   return {
     async timeIn() {
       if (!me) return;
       const location = await getLocation();
-      const r = startShift(me, newId("sh"), now(), location);
-      if (fail(r) || !r.ok) return;
-      insert("shifts", r.value.shift);
-      patch("riders", me.id, r.value.rider);
-      toast(
+      await run(
+        () =>
+          supabase.rpc("rider_time_in", {
+            p_tenant: tenant.id,
+            p_lat: location?.lat,
+            p_lng: location?.lng,
+          }),
         location ? "You're on shift" : "You're on shift — turn on location so dispatch can see you",
       );
     },
 
     async timeOut() {
-      if (!me || !shift) return;
+      if (!me) return;
       const location = await getLocation();
-      const r = endShift(me, shift, db.orders, now(), location);
-      if (fail(r) || !r.ok) return;
-      patch("shifts", shift.id, r.value.shift);
-      patch("riders", me.id, r.value.rider);
-      toast(`Shift ended — hand over ${formatPeso(r.value.shift.expectedRemit)} to your admin`);
+      const { data, error } = await supabase.rpc("rider_time_out", {
+        p_tenant: tenant.id,
+        p_lat: location?.lat,
+        p_lng: location?.lng,
+      });
+      await reload();
+      if (error) return void toast(error.message, "error");
+      const sum = data as { expected_remit: number };
+      toast(`Shift ended — hand over ${formatPeso(sum.expected_remit)} to your admin`);
       router.replace(base);
     },
 
-    accept(order: Order) {
-      if (!me) return;
-      if (me.activeOrderId) return void toast("Finish your current delivery first.", "error");
-      const r = respondToOffer(order, "ACCEPTED", now());
-      if (!r.ok) return void toast(r.reason, "error");
-      patch("orders", order.id, r.order);
-      patch("riders", me.id, { activeOrderId: order.id });
+    async accept(order: Order) {
+      const { data, error } = await supabase.rpc("respond_to_offer", {
+        p_order: order.id,
+        p_accept: true,
+      });
+      await reload();
+      if (error) return void toast(error.message, "error");
+      if (data === "EXPIRED") return void toast("Too late — the offer expired", "error");
       toast("Order accepted — head to the store");
       router.push(`${base}/active`);
     },
 
-    reject(order: Order, reason: RiderRejectReason, note?: string) {
-      const r = respondToOffer(order, "REJECTED", now(), reason, note);
-      if (!r.ok) return void toast(r.reason, "error");
-      patch("orders", order.id, r.order);
-      toast("Offer declined");
+    async reject(order: Order, reason: RiderRejectReason, note?: string) {
+      await run(
+        () =>
+          supabase.rpc("respond_to_offer", {
+            p_order: order.id,
+            p_accept: false,
+            p_reason: reason,
+            p_note: note,
+          }),
+        "Offer declined",
+      );
     },
 
-    /** Countdown reached 0 (BL-5.6). */
-    expire(order: Order) {
-      const r = respondToOffer(order, "TIMED_OUT", now());
-      if (!r.ok) return;
-      patch("orders", order.id, r.order);
+    /** Countdown reached 0 (BL-5.6): the server times it out (the job also does every 15 s). */
+    async expire() {
+      await supabase.rpc("expire_offers");
+      await reload();
       toast("The offer expired", "error");
     },
 
-    /** Prototype only: take an approved order that has no rider and offer it to me. */
-    simulateOffer() {
-      if (!me) return;
-      const candidate = db.orders.find(
-        (o) => o.tenantId === tenant.id && o.status === "APPROVED" && !o.pendingOffer && !o.riderId,
+    async arrive(order: Order) {
+      await run(() => supabase.rpc("arrive_at_store", { p_order: order.id }));
+    },
+
+    async setUnavailable(order: Order, idx: number[]) {
+      const r = await setItemsUnavailableAction(order.id, idx);
+      await reload();
+      if (!r.ok) toast(r.error, "error");
+    },
+
+    async cancelUnavailable(order: Order) {
+      const ok = await run(
+        () => supabase.rpc("cancel_unavailable", { p_order: order.id }),
+        "Order cancelled — nothing was available",
       );
-      if (!candidate) return void toast("No approved orders are waiting for a rider", "error");
-      const r = offerOrder(
-        candidate,
-        me.id,
-        "AUTO",
-        undefined,
-        now(),
-        settings.riderResponseTimeoutSec,
-      );
-      if (!r.ok) return void toast(r.reason, "error");
-      patch("orders", candidate.id, r.order);
+      if (ok) router.replace(base);
     },
 
-    arrive(order: Order) {
-      if (!me) return;
-      const r = arriveAtStore(order, me.id, now());
-      if (fail(r) || !r.ok) return;
-      patch("orders", order.id, r.value);
-    },
-
-    setUnavailable(order: Order, idx: number[]) {
-      patch("orders", order.id, setItemsUnavailable(order, idx, couponOf(order)));
-    },
-
-    cancelUnavailable(order: Order) {
-      if (!me) return;
-      const r = cancelAllUnavailable(order, me.id, now());
-      if (fail(r) || !r.ok) return;
-      patch("orders", order.id, r.value);
-      patch("riders", me.id, { activeOrderId: undefined });
-      releasePromos(order);
-      toast("Order cancelled — nothing was available");
-      router.replace(base);
-    },
-
-    pickUp(order: Order, amount: number | undefined, receipt: string | undefined) {
-      if (!me) return false;
-      const r = pickUpOrder(order, me.id, amount, receipt, now());
-      if (fail(r) || !r.ok) return false;
-      patch("orders", order.id, r.value);
-      toast("Picked up — head to the customer");
-      return true;
-    },
-
-    deliver(order: Order, proof: DeliveryProof, cashCollected: boolean) {
-      if (!me) return;
-      const at = now();
-      const customer = db.customers.find((c) => c.id === order.customerId);
-      const loyalty = customer
-        ? applyDeliveredOrder(
-            customer.loyalty,
-            settings.loyalty,
-            orderFoodPaid(order, couponOf(order)),
-          )
-        : undefined;
-      const r = completeDelivery(
-        order,
-        me.id,
-        rule,
-        proof,
-        cashCollected,
-        loyalty?.pointsEarned ?? 0,
-        at,
-      );
-      if (fail(r) || !r.ok) return;
-      patch("orders", order.id, r.value);
-      patch("riders", me.id, { activeOrderId: undefined });
-      if (customer && loyalty) {
-        patch("customers", customer.id, { loyalty: loyalty.loyalty });
-        const log = (
-          kind: "POINTS_EARNED" | "FREE_DELIVERY_EARNED" | "FREE_GIFT_EARNED",
-          points: number,
-          rewards: number,
-        ) =>
-          insert("loyaltyTransactions", {
-            id: newId("lt"),
-            tenantId: order.tenantId,
-            customerId: customer.id,
-            orderId: order.id,
-            kind,
-            points,
-            rewards,
-            at,
-          });
-        if (loyalty.pointsEarned > 0) log("POINTS_EARNED", loyalty.pointsEarned, 0);
-        if (loyalty.freeDeliveryEarned) log("FREE_DELIVERY_EARNED", 0, 1);
-        if (loyalty.freeGiftEarned) log("FREE_GIFT_EARNED", 0, 1);
+    async pickUp(order: Order, amount: number | undefined, receipt: string | undefined) {
+      if (!amount || amount <= 0) {
+        toast("Enter the amount you paid at the store.", "error");
+        return false;
       }
-      toast(
-        !rule || rule.mode === "DAILY"
-          ? "Delivered — nice work!"
-          : `Delivered — you earned ${formatPeso(r.value.riderEarning ?? 0)}`,
-      );
-      router.replace(base);
+      if (!receipt) {
+        toast("Add a photo of the receipt.", "error");
+        return false;
+      }
+      try {
+        const path = await uploadPhoto(order, receipt, "receipt");
+        return await run(
+          () =>
+            supabase.rpc("pick_up_order", {
+              p_order: order.id,
+              p_store_amount: amount,
+              p_receipt_path: path,
+            }),
+          "Picked up — head to the customer",
+        );
+      } catch (e) {
+        toast(e instanceof Error ? e.message : String(e), "error");
+        return false;
+      }
+    },
+
+    async deliver(order: Order, proof: DeliveryProof, cashCollected: boolean) {
+      try {
+        const photoPath = proof.photoUrl
+          ? await uploadPhoto(order, proof.photoUrl, "proof")
+          : undefined;
+        const r = await completeDeliveryAction(
+          order.id,
+          { photoPath, note: proof.note },
+          cashCollected,
+        );
+        await reload();
+        if (!r.ok) return void toast(r.error, "error");
+        toast(
+          !rule || rule.mode === "DAILY"
+            ? "Delivered — nice work!"
+            : `Delivered — you earned ${formatPeso(r.riderEarning ?? 0)}`,
+        );
+        router.replace(base);
+      } catch (e) {
+        toast(e instanceof Error ? e.message : String(e), "error");
+      }
     },
   };
 }

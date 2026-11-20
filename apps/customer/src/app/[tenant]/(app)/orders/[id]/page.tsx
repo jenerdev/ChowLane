@@ -26,7 +26,7 @@ import {
 import { PriceLines } from "@/components/price-lines";
 import { useCustomer } from "@/lib/use-customer";
 
-/** S-307 — order status & tracking (CUS-007, CUS-008, CUS-015). Refreshes every 20 s (Realtime in 2.6). */
+/** S-307 — order status & tracking (CUS-007, CUS-008, CUS-015). Live via Realtime (2.6). */
 export default function OrderTrackingPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
   const { db, me, tenant, base, supabase, reload } = useCustomer();

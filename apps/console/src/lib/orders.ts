@@ -83,8 +83,9 @@ export async function loadOrderDetail(sb: AppSupabase, tenantId: string, id: str
 }
 
 /**
- * Order and ID decisions on Supabase (2.5): each is one Postgres function that checks the permission, the status
- * and gives back coupon uses / points itself (BL-3.5, BL-4, BL-13.7, BL-14.7). Returns true when it worked.
+ * Order, dispatch, cash and ID decisions on Supabase (2.5, 2.6): each is one Postgres function that checks the
+ * permission and the status and does the follow-ups itself — coupon uses / points back (BL-13.7, BL-14.7), the AUTO
+ * offer after approval (BL-5.5), freeing riders. Returns true when it worked.
  */
 export function useOrderOps() {
   const { supabase } = useConsole();
@@ -115,6 +116,23 @@ export function useOrderOps() {
       ),
     verifyCustomer: (customerId: string, name: string) =>
       run(() => supabase.rpc("verify_customer", { p_customer: customerId }), `${name} verified`),
+    /** Offer to a rider (ADM-004, BL-5.9): the rider must be free; reassigning frees the previous rider. */
+    assign: (orderId: string, riderId: string, riderName: string) =>
+      run(
+        () => supabase.rpc("assign_order", { p_order: orderId, p_rider: riderId }),
+        `Sent to ${riderName} — waiting for them to accept`,
+      ),
+    /** Cash handed over after a shift (ADM-012, BL-12.4); a different amount needs a note. */
+    recordRemittance: (shiftId: string, amount: number, note: string) =>
+      run(
+        () =>
+          supabase.rpc("record_remittance", {
+            p_shift: shiftId,
+            p_amount: amount,
+            p_note: note.trim() || undefined,
+          }),
+        "Cash recorded",
+      ),
     rejectCustomer: (customerId: string, name: string, reason: string) =>
       run(
         () => supabase.rpc("reject_customer", { p_customer: customerId, p_reason: reason }),

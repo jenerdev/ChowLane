@@ -28,8 +28,9 @@
 ## apps/console (Owner & Admin)
 > **Live on Supabase (Phase 2):** S-118, S-119, S-107–S-109 (2.3); **2.4:** S-101 home, S-104/S-105 verification
 > (view), S-106 customers (+ points adjust), S-111–S-117, S-122, S-123, S-125–S-128, and the dispatch-mode switch on
-> S-121; **2.5:** S-102/S-103 orders (approve / reject / cancel; assigning riders in 2.6), ID approve / reject on S-105.
-> Still on mock data: dispatch lists, map, cash, rider pay report (2.6).
+> S-121; **2.5:** S-102/S-103 orders (approve / reject / cancel), ID approve / reject on S-105; **2.6:** S-121 dispatch
+> lists + assign sheet, assign / reassign on S-103, S-110 live map, S-124 cash, S-120 rider pay report. Orders, dispatch,
+> map and cash update via Realtime. **No mock data left in the console** (the mock store and its settings mirror are gone).
 
 | # | Screen | Route | Reqs | Perm | Status |
 |---|---|---|---|---|---|
@@ -65,6 +66,10 @@
 | S-120 | Rider pay report | `/[tenant]/reports/rider-pay` | OWN-012 | `reports.view` | ✅ |
 
 ## apps/rider
+> **Live on Supabase since 2.6:** every screen — time in / out (`rider_time_in` / `rider_time_out` with cash summary),
+> offers (`my_offer`: area only before accepting), accept / decline, store → items unavailable → pickup with receipt
+> photo → delivered with proof, history, earnings, profile; Realtime pushes new offers. No mock data left in this app.
+> The "Simulate a new offer" prototype button is gone (real offers now).
 | # | Screen | Route | Reqs | Status |
 |---|---|---|---|---|
 | S-200 | Login (mobile number + password since 2.3, Q-30) | `/[tenant]/login` | RID-001 | ✅ |
@@ -78,7 +83,7 @@
 
 ## apps/customer (branded per tenant)
 > **Live on Supabase since 2.5:** every screen (menu, cart, checkout → `place_order`, ID upload to private Storage,
-> tracking with 20-second refresh, cancel, rewards, profile). No mock data left in this app.
+> tracking — live via Realtime since 2.6 — cancel, rewards, profile). No mock data left in this app.
 
 | # | Screen | Route | Reqs | Status |
 |---|---|---|---|---|

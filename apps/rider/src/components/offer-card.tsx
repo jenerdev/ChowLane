@@ -33,7 +33,7 @@ export function OfferCard({ order, full = false }: { order: Order; full?: boolea
     me?.lastLocation && merchant ? haversineKm(me.lastLocation, merchant.location) : undefined;
 
   useEffect(() => {
-    if (secondsLeft === 0 && order.pendingOffer) actions.expire(order);
+    if (secondsLeft === 0 && order.pendingOffer) void actions.expire();
     // eslint-disable-next-line react-hooks/exhaustive-deps -- fire once when the countdown reaches 0
   }, [secondsLeft === 0, order.id]);
 
@@ -114,7 +114,7 @@ export function OfferCard({ order, full = false }: { order: Order; full?: boolea
           <Button variant="outline" size="lg" className="flex-1" onClick={() => setRejecting(true)}>
             Decline
           </Button>
-          <Button size="lg" className="flex-1" onClick={() => actions.accept(order)}>
+          <Button size="lg" className="flex-1" onClick={() => void actions.accept(order)}>
             Accept
           </Button>
         </div>
@@ -122,7 +122,7 @@ export function OfferCard({ order, full = false }: { order: Order; full?: boolea
       <RejectSheet
         open={rejecting}
         onOpenChange={setRejecting}
-        onSubmit={(r, n) => actions.reject(order, r, n)}
+        onSubmit={(r, n) => void actions.reject(order, r, n)}
       />
     </Card>
   );

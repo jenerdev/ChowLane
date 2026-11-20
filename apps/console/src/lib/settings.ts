@@ -3,7 +3,6 @@
 import { useCallback } from "react";
 import type { TenantSettings } from "@chowlane/types";
 import { fromTenantSettings, toTenantSettings } from "@chowlane/db/mappers";
-import { useMockStore } from "./store";
 import { useConsole } from "./use-console";
 import { must, useLive } from "./use-live";
 
@@ -18,13 +17,11 @@ export function useSettings() {
 }
 
 /**
- * Saves one settings group to Supabase (RLS + the per-permission guard decide). Until orders, dispatch and cash move
- * to Supabase (2.5–2.6), the change is mirrored into the mock store of a demo business so those screens agree.
- * Returns an error message, or null when saved.
+ * Saves one settings group to Supabase (RLS + the per-permission guard decide). Returns an error message, or null
+ * when saved.
  */
 export function useSaveSettings() {
-  const { live, supabase, hasMockData, settings: mockSettings } = useConsole();
-  const setTenantRow = useMockStore((s) => s.setTenantRow);
+  const { live, supabase } = useConsole();
   return useCallback(
     async (patch: Partial<TenantSettings>): Promise<string | null> => {
       const { data, error } = await supabase
@@ -34,9 +31,8 @@ export function useSaveSettings() {
         .select("tenant_id");
       if (error) return error.message;
       if (!data?.length) return "You can't change settings right now.";
-      if (hasMockData) setTenantRow("tenantSettings", { ...mockSettings, ...patch });
       return null;
     },
-    [supabase, live.id, hasMockData, mockSettings, setTenantRow],
+    [supabase, live.id],
   );
 }

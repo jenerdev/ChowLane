@@ -1,11 +1,17 @@
 "use client";
 
 import Link from "next/link";
-import { Avatar, Badge, MapPicker, PageHeader } from "@chowlane/ui";
+import { MapPinned } from "lucide-react";
+import { Avatar, Badge, EmptyState, MapPicker, PageHeader } from "@chowlane/ui";
 import { RequirePermission } from "@/components/require-permission";
+import { loadDispatch } from "@/lib/dispatch";
 import { useConsole } from "@/lib/use-console";
+import { useAutoReload, useLive } from "@/lib/use-live";
 
-/** S-110 — riders on shift and stores with active orders on one map (ADM-005). Phase 3: live via Realtime. */
+/**
+ * S-110 — riders on shift and stores with active orders on one map (ADM-005). Live since 2.6 (updates via Realtime);
+ * a rider's position is where they last timed in / out — live GPS comes in Phase 3.
+ */
 export default function LiveMapPage() {
   return (
     <RequirePermission perm="riders.view">
@@ -15,14 +21,16 @@ export default function LiveMapPage() {
 }
 
 function LiveMap() {
-  const { db, tenant, base, settings } = useConsole();
-  const riders = db.riders.filter((r) => r.tenantId === tenant.id && r.isOnShift);
-  const activeOrders = db.orders.filter(
-    (o) =>
-      o.tenantId === tenant.id &&
-      ["APPROVED", "ASSIGNED", "AT_MERCHANT", "PICKED_UP"].includes(o.status),
-  );
-  const stores = db.merchants.filter((m) => activeOrders.some((o) => o.merchantId === m.id));
+  const { live: tenant, base } = useConsole();
+  const data = useLive(`map:${tenant.id}`, (sb) => loadDispatch(sb, tenant.id));
+  useAutoReload(data.reload);
+  if (!data.data)
+    return data.loading ? null : (
+      <EmptyState icon={<MapPinned />} title="Couldn't load the map" description={data.error} />
+    );
+  const { settings, orders: activeOrders, merchants } = data.data;
+  const riders = data.data.riders.filter((r) => r.isOnShift);
+  const stores = merchants.filter((m) => activeOrders.some((o) => o.merchantId === m.id));
   const markers = [
     ...riders
       .filter((r) => r.lastLocation)
@@ -39,7 +47,7 @@ function LiveMap() {
       <PageHeader
         back={{ href: `${base}/riders`, label: "Riders" }}
         title="Live map"
-        description="Locations update while riders have the app open."
+        description="Riders show where they last timed in or out. Live GPS comes later."
       />
       <MapPicker
         center={settings.serviceArea.center}

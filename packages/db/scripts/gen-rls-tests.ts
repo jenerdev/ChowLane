@@ -29,6 +29,9 @@ const R1 = `'${uuidFor("rd-fb-1")}'`;
 const R3 = `'${uuidFor("rd-fb-3")}'`;
 const C1 = `'${uuidFor("c-fb-1")}'`;
 const C2 = `'${uuidFor("c-fb-2")}'`;
+const O2 = `'${uuidFor("o-fb-2")}'`; // FB-10232: verified customer, waiting for approval
+const O3 = `'${uuidFor("o-fb-3")}'`; // FB-10229: approved, offer to rd-fb-3 (expires) → needs rider
+const O9 = `'${uuidFor("o-fb-9")}'`; // FB-10228: approved, needs rider
 
 type Persona = { key: string; label: string; auth: string | null };
 const P = {
@@ -186,7 +189,8 @@ const VIEWS: { view: string; base: string; where: string }[] = [
 
 // ------------------------------------------------------------------ writes
 /** `undo`: roll the statement back after checking it, so later checks see the seeded data (2.5 order functions). */
-type Write = { who: Key; sql: string; expect: string; label: string; undo?: boolean };
+/** `service`: run as the apps' server actions (service role), e.g. complete_delivery. */
+type Write = { who: Key | "service"; sql: string; expect: string; label: string; undo?: boolean };
 const WRITES: Write[] = [
   // settings: column groups need their own permission (trigger tenant_settings_guard)
   {
@@ -652,6 +656,244 @@ const WRITES: Write[] = [
     sql: `select 1 from public.orders where customer_id = ${C2} and status = 'REJECTED'
           and reject_reason = 'Customer verification rejected' limit 1`,
   },
+  // dispatch & delivery (2.6) — one order through the whole flow, each step by the person who does it
+  {
+    who: "fbOwner",
+    label: "expired offers time out (BL-5.6; the 15 s job does the same)",
+    expect: "ok:1",
+    sql: `select public.expire_offers()`,
+  },
+  {
+    who: "keAdmin",
+    label: "another tenant's admin can't assign FastBite orders",
+    undo: true,
+    expect: "42501",
+    sql: `select public.assign_order(${O9}, ${R3})`,
+  },
+  {
+    who: "fbDispatch",
+    label: "a rider with an active order can't get another (BL-5.10)",
+    undo: true,
+    expect: "P0001",
+    sql: `select public.assign_order(${O3}, ${R1})`,
+  },
+  {
+    who: "fbDispatch",
+    label: "orders.assign offers a waiting order to a free rider (ADM-004)",
+    expect: "ok:1",
+    sql: `select public.assign_order(${O9}, ${R3})`,
+  },
+  {
+    who: "fbDispatch",
+    label: "a rider holding an offer can't get a second one (BL-5.12)",
+    undo: true,
+    expect: "P0001",
+    sql: `select public.assign_order(${O3}, ${R3})`,
+  },
+  {
+    who: "rider3",
+    label: "the offer shows the drop-off area, not the address (BL-5.15)",
+    expect: "ok:1",
+    sql: `select 1 from (select public.my_offer(${FB}) j) x
+          where j ->> 'order_number' = 'FB-10228' and not (j ? 'delivery_address_text') and not (j ? 'customer_id')`,
+  },
+  {
+    who: "rider3",
+    label: "an offered order isn't readable before accepting (BL-5.15)",
+    expect: "ok:0",
+    sql: `select 1 from public.orders where id = ${O9}`,
+  },
+  {
+    who: "cust1",
+    label: "customers can't read rider offers",
+    undo: true,
+    expect: "42501",
+    sql: `select public.my_offer(${FB})`,
+  },
+  {
+    who: "rider1",
+    label: "a rider can't answer someone else's offer",
+    undo: true,
+    expect: "P0001",
+    sql: `select public.respond_to_offer(${O9}, true)`,
+  },
+  {
+    who: "rider3",
+    label: "declining needs a reason (BL-5.7)",
+    undo: true,
+    expect: "22023",
+    sql: `select public.respond_to_offer(${O9}, false)`,
+  },
+  {
+    who: "rider3",
+    label: "the rider accepts the offer → ASSIGNED (BL-5.11)",
+    expect: "ok:1",
+    sql: `select 1 where public.respond_to_offer(${O9}, true) = 'ASSIGNED'`,
+  },
+  {
+    who: "rider3",
+    label: "the accepted order is now readable",
+    expect: "ok:1",
+    sql: `select 1 from public.orders where id = ${O9} and status = 'ASSIGNED'`,
+  },
+  {
+    who: "rider3",
+    label: "a rider can't time out with an active order (BL-6.3)",
+    undo: true,
+    expect: "P0001",
+    sql: `select public.rider_time_out(${FB})`,
+  },
+  {
+    who: "rider1",
+    label: "another rider can't move this delivery",
+    undo: true,
+    expect: "42501",
+    sql: `select public.arrive_at_store(${O9})`,
+  },
+  {
+    who: "rider3",
+    label: "arrived & ordered → AT_MERCHANT (BL-4.4)",
+    expect: "ok:1",
+    sql: `select public.arrive_at_store(${O9})`,
+  },
+  {
+    who: "rider3",
+    label: "the rider uploads the receipt into the order's folder",
+    expect: "ok:1",
+    sql: `insert into storage.objects (bucket_id, name) values ('delivery-photos', ${FB} || '/' || ${O9} || '/receipt.jpg')`,
+  },
+  {
+    who: "rider1",
+    label: "another rider can't upload into this order's folder",
+    undo: true,
+    expect: "42501",
+    sql: `insert into storage.objects (bucket_id, name) values ('delivery-photos', ${FB} || '/' || ${O9} || '/x.jpg')`,
+  },
+  {
+    who: "rider3",
+    label: "pickup needs a receipt photo (BL-11.6)",
+    undo: true,
+    expect: "22023",
+    sql: `select public.pick_up_order(${O9}, 30000, null)`,
+  },
+  {
+    who: "rider3",
+    label: "paid at the store with a receipt → PICKED_UP (BL-11.6)",
+    expect: "ok:1",
+    sql: `select public.pick_up_order(${O9}, 30000, ${FB} || '/' || ${O9} || '/receipt.jpg')`,
+  },
+  {
+    who: "rider3",
+    label: "riders can't call complete_delivery directly (server action only)",
+    undo: true,
+    expect: "42501",
+    sql: `select public.complete_delivery('{}'::jsonb)`,
+  },
+  {
+    who: "service",
+    label: "loyalty counters that changed meanwhile are refused (the action retries)",
+    undo: true,
+    expect: "40001",
+    sql: `select public.complete_delivery(jsonb_build_object('order_id', ${O9}, 'rider_id', ${R3},
+          'cash_collected', true, 'proof_note', 'Lobby', 'rider_earning', 4000,
+          'loyalty', jsonb_build_object('base_delivered_orders', -1, 'orders_toward_free_delivery', 0,
+            'orders_toward_free_gift', 0, 'points_earned', 25)))`,
+  },
+  {
+    who: "service",
+    label: "delivered without proof is refused (BL-11.12)",
+    undo: true,
+    expect: "22023",
+    sql: `select public.complete_delivery(jsonb_build_object('order_id', ${O9}, 'rider_id', ${R3},
+          'cash_collected', true, 'rider_earning', 4000, 'loyalty', '{}'::jsonb))`,
+  },
+  {
+    who: "service",
+    label: "cash collected + proof → DELIVERED, loyalty credited (BL-14.12)",
+    expect: "ok:1",
+    sql: `select public.complete_delivery(jsonb_build_object('order_id', ${O9}, 'rider_id', ${R3},
+          'cash_collected', true, 'proof_note', 'Lobby', 'rider_earning', 4000,
+          'loyalty', jsonb_build_object(
+            'base_delivered_orders', (select loyalty_delivered_orders from public.customers where id = ${C1}),
+            'orders_toward_free_delivery', 0, 'orders_toward_free_gift', 0, 'points_earned', 25,
+            'free_delivery_earned', true, 'free_gift_earned', false)))`,
+  },
+  {
+    who: "cust1",
+    label: "the customer sees the points earned on the delivered order",
+    expect: "ok:1",
+    sql: `select 1 from public.loyalty_transactions where order_id = ${O9} and kind = 'POINTS_EARNED' and points = 25`,
+  },
+  {
+    who: "rider3",
+    label: "time out → cash summary, remittance PENDING (BL-12.2, BL-12.3)",
+    expect: "ok:1",
+    sql: `select 1 from (select public.rider_time_out(${FB}) j) x where (j ->> 'deliveries')::int = 1
+          and (j ->> 'expected_remit')::int = (select total from public.orders where id = ${O9}) - 30000`,
+  },
+  {
+    who: "fbDispatch",
+    label: "recording cash needs cash.manage",
+    undo: true,
+    expect: "42501",
+    sql: `select public.record_remittance((select id from public.shifts where rider_id = ${R3} and remit_status = 'PENDING'), 0)`,
+  },
+  {
+    who: "fbOwner",
+    label: "a short remittance needs a note (BL-12.4)",
+    undo: true,
+    expect: "22023",
+    sql: `select public.record_remittance((select id from public.shifts where rider_id = ${R3} and remit_status = 'PENDING'), 0)`,
+  },
+  {
+    who: "fbOwner",
+    label: "cash.manage records a short remittance with a note → SHORT (BL-12.4)",
+    expect: "ok:1",
+    sql: `select 1 where public.record_remittance((select id from public.shifts where rider_id = ${R3} and remit_status = 'PENDING'), 0, 'Brings the rest tomorrow') = 'SHORT'`,
+  },
+  {
+    who: "anon",
+    label: "anonymous can't time in",
+    undo: true,
+    expect: "42501",
+    sql: `select public.rider_time_in(${FB})`,
+  },
+  {
+    who: "rider3",
+    label: "the rider times in again with a location (BL-6.4, BL-12.6)",
+    expect: "ok:1",
+    sql: `select public.rider_time_in(${FB}, 14.5995, 120.9842)`,
+  },
+  {
+    who: "fbOwner",
+    label: "dispatch mode back to AUTO (an earlier check switched it to MANUAL)",
+    expect: "ok:1",
+    sql: `update public.tenant_settings set dispatch_mode = 'AUTO' where tenant_id = ${FB}`,
+  },
+  {
+    who: "fbOwner",
+    label: "approving in AUTO mode offers the order right away (BL-4.5, BL-5.5)",
+    expect: "ok:1",
+    sql: `select public.approve_order(${O2})`,
+  },
+  {
+    who: "fbOwner",
+    label: "the approved order has an open offer for the free rider",
+    expect: "ok:1",
+    sql: `select 1 from public.orders where id = ${O2} and offer_rider_id = ${R3}`,
+  },
+  {
+    who: "rider3",
+    label: "declining in AUTO mode passes the order on (BL-5.4)",
+    expect: "ok:1",
+    sql: `select 1 where public.respond_to_offer(${O2}, false, 'TOO_FAR') = 'DECLINED'`,
+  },
+  {
+    who: "fbOwner",
+    label: "nobody else free → the order needs a rider (BL-5.8)",
+    expect: "ok:1",
+    sql: `select 1 from public.orders where id = ${O2} and status = 'APPROVED' and offer_rider_id is null`,
+  },
   {
     who: "fbOwner",
     label: "owner removes an admin; their history stays (BL-2.6)",
@@ -710,11 +952,15 @@ for (const [key, table] of nonEmpty) {
 lines.push("", "-- ---------------------------------------------------------------- writes");
 for (const w of WRITES) {
   count++;
-  const result = `tests.rls_exec(${as(P[w.who])}, ${lit(w.sql)}, ${w.undo ? "true" : "false"})`;
+  const who = w.who === "service" ? "server action (service role)" : P[w.who].label;
+  const result =
+    w.who === "service"
+      ? `tests.svc_exec(${lit(w.sql)}, ${w.undo ? "true" : "false"})`
+      : `tests.rls_exec(${as(P[w.who])}, ${lit(w.sql)}, ${w.undo ? "true" : "false"})`;
   if (w.expect === "ok:>0") {
-    lines.push(`select matches(${result}, '^ok:[1-9]', ${lit(`${P[w.who].label}: ${w.label}`)});`);
+    lines.push(`select matches(${result}, '^ok:[1-9]', ${lit(`${who}: ${w.label}`)});`);
   } else {
-    lines.push(`select is(${result}, '${w.expect}', ${lit(`${P[w.who].label}: ${w.label}`)});`);
+    lines.push(`select is(${result}, '${w.expect}', ${lit(`${who}: ${w.label}`)});`);
   }
 }
 count++;
@@ -789,8 +1035,33 @@ begin
   return r;
 end
 $fn$;
-grant usage on schema tests to anon, authenticated;
-grant execute on all functions in schema tests to anon, authenticated;
+-- Same as rls_exec, but as the apps' server actions (service role).
+create or replace function tests.svc_exec(p_sql text, p_undo boolean default false) returns text
+language plpgsql as $fn$
+declare n bigint; r text;
+begin
+  perform set_config('request.jwt.claims', '{"role":"service_role"}', true);
+  perform set_config('role', 'service_role', true);
+  begin
+    begin
+      execute p_sql;
+      get diagnostics n = row_count;
+      r := 'ok:' || n;
+      if p_undo then
+        raise exception 'undo' using errcode = 'TSTUN';
+      end if;
+    exception when sqlstate 'TSTUN' then
+      null;
+    end;
+  exception when others then
+    r := sqlstate;
+  end;
+  reset role;
+  return r;
+end
+$fn$;
+grant usage on schema tests to anon, authenticated, service_role;
+grant execute on all functions in schema tests to anon, authenticated, service_role;
 
 -- ---------------------------------------------------------------- reads (persona × table)
 ${lines.join("\n")}

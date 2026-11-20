@@ -536,3 +536,87 @@ export function toPlaceOrderPayload(o: Order, verification?: VerificationUpload)
       : null,
   };
 }
+
+/** What `my_offer` returns: the order a rider is offered, without address, notes or customer (BL-5.15). */
+export type OfferJson = {
+  id: string;
+  tenant_id: string;
+  order_number: string;
+  merchant_id: string;
+  distance_km: number;
+  /** "Barangay, City" when the order has a barangay price entry; null otherwise. */
+  drop_off_area: string | null;
+  subtotal: number;
+  delivery_fee: number;
+  discount_total: number;
+  total: number;
+  change_for: number | null;
+  created_at: string;
+  offer_offered_at: string;
+  offer_expires_at: string;
+  offer_by: "AUTO" | "ADMIN";
+  items: {
+    line_no: number;
+    name: string;
+    qty: number;
+    unit_price: number;
+    store_unit_price: number | null;
+    line_total: number;
+    is_free_gift: boolean;
+  }[];
+};
+
+/**
+ * `my_offer` → an APPROVED Order with a pending offer for `riderId`, so the offer card works like before. The street
+ * address isn't sent before accepting: `deliveryAddressText` says so and ends with the area (when known), which
+ * `dropOffArea` shows; without an area there is no comma and `dropOffArea` shows the whole sentence.
+ */
+export function toOfferOrder(j: OfferJson, riderId: string): Order {
+  return {
+    id: j.id,
+    tenantId: j.tenant_id,
+    orderNumber: j.order_number,
+    customerId: "",
+    merchantId: j.merchant_id,
+    status: "APPROVED",
+    items: [...j.items]
+      .sort((a, b) => a.line_no - b.line_no)
+      .map((i) => ({
+        productId: "",
+        name: i.name,
+        unitPrice: i.unit_price,
+        storeUnitPrice: u(i.store_unit_price),
+        qty: i.qty,
+        lineTotal: i.line_total,
+        isFreeGift: i.is_free_gift || undefined,
+      })),
+    deliveryLocation: { lat: 0, lng: 0 },
+    deliveryAddressText: j.drop_off_area
+      ? `Address shown after you accept, ${j.drop_off_area}`
+      : "Address shown after you accept",
+    distanceKm: Number(j.distance_km),
+    subtotal: j.subtotal,
+    deliveryFee: j.delivery_fee,
+    couponDiscount: 0,
+    usedFreeDeliveryReward: false,
+    usedFreeGiftReward: false,
+    freeDeliveryDiscount: 0,
+    pointsRedeemed: 0,
+    pointsDiscount: 0,
+    discountTotal: j.discount_total,
+    total: j.total,
+    deliveryFeeSnapshot: { mode: "FIXED", amount: j.delivery_fee },
+    paymentMethod: "COD",
+    paymentStatus: "UNPAID",
+    changeFor: u(j.change_for),
+    pendingOffer: {
+      riderId,
+      offeredAt: j.offer_offered_at,
+      expiresAt: j.offer_expires_at,
+      by: j.offer_by,
+    },
+    assignmentAttempts: [],
+    timeline: [],
+    createdAt: j.created_at,
+  };
+}

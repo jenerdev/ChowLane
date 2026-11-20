@@ -32,9 +32,7 @@ export default function ActiveDelivery() {
   const actions = useRiderActions();
   // Follows the expected store cost (which changes when items are marked unavailable) until the rider edits it.
   const [paidEdit, setPaidEdit] = useState<{ value: number | undefined } | null>(null);
-  const [receipt, setReceipt] = useState<string | undefined>(
-    order?.storeReceiptPhotoUrl || undefined,
-  );
+  const [receipt, setReceipt] = useState<string | undefined>();
   const [confirmCancel, setConfirmCancel] = useState(false);
 
   if (!me || !order) {
@@ -61,7 +59,7 @@ export default function ActiveDelivery() {
   const target = step < 2 ? store.location : order.deliveryLocation;
   const unavailable = order.items.flatMap((i, idx) => (i.isUnavailable ? [idx] : []));
   const toggle = (idx: number, off: boolean) =>
-    actions.setUnavailable(
+    void actions.setUnavailable(
       order,
       off ? [...unavailable, idx] : unavailable.filter((x) => x !== idx),
     );
@@ -191,7 +189,7 @@ export default function ActiveDelivery() {
       </Card>
 
       {step === 0 ? (
-        <Button size="lg" onClick={() => actions.arrive(order)}>
+        <Button size="lg" onClick={() => void actions.arrive(order)}>
           I&apos;m at the store & ordered
         </Button>
       ) : step === 1 ? (
@@ -209,7 +207,7 @@ export default function ActiveDelivery() {
               <MoneyInput id="paid" value={paid} onChange={setPaid} />
             </Field>
             <PhotoInput id="receipt" label="Receipt photo" value={receipt} onChange={setReceipt} />
-            <Button size="lg" onClick={() => actions.pickUp(order, paid, receipt)}>
+            <Button size="lg" onClick={() => void actions.pickUp(order, paid, receipt)}>
               Picked up
             </Button>
           </div>
@@ -227,7 +225,7 @@ export default function ActiveDelivery() {
         description="The store has none of the items. The customer is told and gets their coupon and points back."
         confirmLabel="Cancel order"
         destructive
-        onConfirm={() => actions.cancelUnavailable(order)}
+        onConfirm={() => void actions.cancelUnavailable(order)}
       />
     </div>
   );

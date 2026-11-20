@@ -9,7 +9,7 @@ import { join } from "node:path";
 
 const APPS = ["landing", "console", "rider", "customer", "platform"];
 // Only apps whose server actions use the Auth admin API (signup, invites, rider passwords). Never NEXT_PUBLIC_.
-const SERVICE_APPS = ["landing", "console", "customer"];
+const SERVICE_APPS = ["landing", "console", "rider", "customer"];
 const MANAGED = [
   "NEXT_PUBLIC_SUPABASE_URL",
   "NEXT_PUBLIC_SUPABASE_ANON_KEY",

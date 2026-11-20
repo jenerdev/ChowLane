@@ -1662,6 +1662,8 @@ export type Database = {
         Returns: number;
       };
       approve_order: { Args: { p_order: string }; Returns: undefined };
+      arrive_at_store: { Args: { p_order: string }; Returns: undefined };
+      assign_order: { Args: { p_order: string; p_rider: string }; Returns: undefined };
       auth_login_status: {
         Args: { p_email: string };
         Returns: {
@@ -1671,6 +1673,7 @@ export type Database = {
       };
       cancel_order: { Args: { p_order: string; p_reason: string }; Returns: undefined };
       cancel_order_by_customer: { Args: { p_order: string }; Returns: undefined };
+      cancel_unavailable: { Args: { p_order: string }; Returns: undefined };
       check_coupon: {
         Args: { p_code: string; p_tenant: string };
         Returns: {
@@ -1690,6 +1693,7 @@ export type Database = {
           valid_until: string;
         }[];
       };
+      complete_delivery: { Args: { p: Json }; Returns: undefined };
       create_tenant: {
         Args: {
           p_admin_permissions: Database["public"]["Enums"]["permission_key"][];
@@ -1709,6 +1713,7 @@ export type Database = {
         Returns: string;
       };
       ensure_customer: { Args: { p_tenant: string }; Returns: string };
+      expire_offers: { Args: Record<PropertyKey, never>; Returns: number };
       has_permission: {
         Args: { p_perm: Database["public"]["Enums"]["permission_key"]; p_tenant: string };
         Returns: boolean;
@@ -1717,9 +1722,33 @@ export type Database = {
       is_valid_delivery_fee: { Args: { r: Json }; Returns: boolean };
       is_valid_loyalty: { Args: { l: Json }; Returns: boolean };
       is_valid_rider_pay: { Args: { r: Json }; Returns: boolean };
+      my_offer: { Args: { p_tenant: string }; Returns: Json };
+      pick_up_order: {
+        Args: { p_order: string; p_receipt_path: string; p_store_amount: number };
+        Returns: undefined;
+      };
       place_order: { Args: { p: Json }; Returns: Json };
+      record_remittance: {
+        Args: { p_amount: number; p_note?: string; p_shift: string };
+        Returns: Database["public"]["Enums"]["remit_status"];
+      };
       reject_customer: { Args: { p_customer: string; p_reason: string }; Returns: undefined };
       reject_order: { Args: { p_order: string; p_reason: string }; Returns: undefined };
+      respond_to_offer: {
+        Args: {
+          p_accept: boolean;
+          p_note?: string;
+          p_order: string;
+          p_reason?: Database["public"]["Enums"]["rider_reject_reason"];
+        };
+        Returns: string;
+      };
+      rider_time_in: {
+        Args: { p_lat?: number; p_lng?: number; p_tenant: string };
+        Returns: string;
+      };
+      rider_time_out: { Args: { p_lat?: number; p_lng?: number; p_tenant: string }; Returns: Json };
+      set_items_unavailable: { Args: { p: Json }; Returns: undefined };
       submit_verification: {
         Args: {
           p_id_front_url: string;

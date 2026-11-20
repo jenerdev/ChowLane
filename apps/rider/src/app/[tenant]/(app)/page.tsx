@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { ChevronRight, Clock, Sparkles } from "lucide-react";
+import { ChevronRight, Clock } from "lucide-react";
 import {
   canTimeOut,
   computeRiderPay,
@@ -47,7 +47,6 @@ export default function RiderHome() {
     shiftTimeIns: shiftsToday.map((s) => s.timeIn),
   });
   const store = active ? db.merchants.find((m) => m.id === active.merchantId) : undefined;
-  const devTools = process.env.NEXT_PUBLIC_DEV_TOOLS !== "0";
 
   return (
     <div className="flex flex-col gap-6">
@@ -102,13 +101,6 @@ export default function RiderHome() {
               title="Waiting for orders"
               description="New offers appear here. You'll have a short time to accept."
               className="py-8"
-              action={
-                devTools ? (
-                  <Button variant="outline" size="sm" onClick={actions.simulateOffer}>
-                    <Sparkles /> Simulate a new offer (prototype)
-                  </Button>
-                ) : undefined
-              }
             />
           </CardContent>
         </Card>

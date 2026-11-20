@@ -12,6 +12,49 @@
 
 ---
 
+## 2026-11-20 — Milestone 2.6 Dispatch & delivery ✅
+
+**Done:** User said go. Migration `dispatch.sql` (D-068): helpers (`distance_km`, `my_rider`, `my_delivery`,
+`rider_is_free`, `make_offer`, `auto_offer`, `auto_offer_waiting`, `time_out_offer`); `approve_order` and
+`place_order` (now a wrapper around `private.place_order_core`) offer in AUTO mode; `cancel_order` retries waiting
+orders when it frees a rider; new `assign_order`, `respond_to_offer`, `expire_offers` (+ pg_cron job every 15 s),
+`my_offer` (offer without address), `rider_time_in` / `rider_time_out` (cash summary), `arrive_at_store`,
+`set_items_unavailable` + `complete_delivery` (service role, priced by lib in rider server actions; loyalty with a
+40001 retry), `cancel_unavailable`, `pick_up_order`, `record_remittance`; private `delivery-photos` bucket; Realtime
+publication (orders, assignment_attempts, riders, shifts, customers). `@chowlane/db`: `useRealtimeReload`,
+`toOfferOrder`. Rider app fully on Supabase (`RiderDataProvider`, RPC actions, `delivery-actions.ts` server actions,
+photo uploads); "Simulate offer" removed; mock store removed. Console: Dispatch, live map, Cash, Rider pay report on
+Supabase; assign / reassign sheet self-loading and on order detail; Realtime replaces polling; mock store, settings
+mirror and the "moves to live data soon" gate removed. Customer tracking via Realtime. `db:env` gives the rider app the
+service key.
+
+**Found & fixed while testing:** an insert trigger for auto-approved orders would have handed out offers while the seed
+loaded → explicit `place_order` wrapper instead; an earlier RLS check leaves FastBite in MANUAL mode → the new checks
+switch it back; Realtime channels are unique per hook (supabase-js reuses channels by topic); the offer's drop-off area
+showed part of the typed street address ("Salcedo Tower, Bel-Air, Makati") → area only from the barangay entry.
+
+**Verified:** build ✅ lint ✅ typecheck ✅ tests ✅ (92 unit: lib 62 · mocks 16 · db 14) RLS ✅ (367 pgTAP, incl. one order
+through assign → offer → accept → arrive → receipt → pickup → delivered → time out → remittance, and AUTO approve →
+decline → needs rider) format ✅. All changed pages compile and serve (200). API run as the real users (owner + rider
+Arnel): approve → AUTO offer → accept → arrive → receipt upload (owner gets a signed URL) → pickup → delivered → time out
+(expected remit = collected − paid at store) → remittance RECEIVED. Realtime: the rider receives the new offer and each
+step instantly; the owner receives every order change. **Browser walk-through (all three apps side by side, no
+refreshes):** console approves FB-10232 (Andrea, WELCOME20) → Arnel gets the offer instantly ("Address shown after you
+accept", cash needed ₱320, countdown) and the customer sees "Order confirmed" → accept → customer sees the rider → at
+store, Chocolate Shake unavailable → food ₱260, coupon −₱52, collect ₱257 on both sides → receipt photo + ₱220 paid →
+picked up → cash collected + note → delivered: rider earned ₱39.20 (80% of the original ₱49 fee), customer "You earned 4
+points" → time out ₱257 − ₱220 = ₱37 → Cash records ₱30 as SHORT with a note → Rider pay shows Arnel ₱39.20 → live map.
+Then time in again → Dispatch assign sheet (busy riders greyed out) → offer → decline "Too far" → back under "Needs a
+rider". No console errors.
+
+**Changed docs:** DECISIONS (D-068), REQUIREMENTS (BE: 66 ✅ · 3 🟨), SCREENS, BUSINESS-LOGIC (BL-5.15 note + change
+log), DATA-MODEL (photo paths), TECH-STACK (Realtime, pg_cron, buckets, service key apps), USER-FLOWS, ROADMAP,
+PHASE-2-PLAN, STATUS.
+
+**Stopped at / Next:** Not committed — waiting for the user's "commit". Next: Milestone 2.7 Platform & billing.
+
+---
+
 ## 2026-11-18 — Milestone 2.5 Ordering ✅
 
 **Done:** Migration `ordering.sql`: `place_order` (service role; re-checks coupon limits under a row lock, balances,

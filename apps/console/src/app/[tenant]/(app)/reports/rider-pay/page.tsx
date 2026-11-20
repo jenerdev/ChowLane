@@ -12,7 +12,9 @@ import {
 } from "@chowlane/lib";
 import { Badge, EmptyState, PageHeader, Select, Stat, useNow } from "@chowlane/ui";
 import { RequirePermission } from "@/components/require-permission";
+import { loadRiderPay } from "@/lib/dispatch";
 import { useConsole } from "@/lib/use-console";
+import { useAutoReload, useLive } from "@/lib/use-live";
 
 type PeriodKey = "today" | "7d" | "month" | "lastMonth";
 
@@ -25,7 +27,7 @@ const ruleLabel = (r: RiderPayRule | undefined) =>
         ? `${r.percent}% of fee`
         : `${formatPeso(r.ratePerDelivery)} / delivery`;
 
-/** S-120 — what each rider earned in a period (OWN-012, BL-8). Payouts happen outside the app. */
+/** S-120 — what each rider earned in a period (OWN-012, BL-8). Payouts happen outside the app. Live since 2.6. */
 export default function RiderPayReportPage() {
   return (
     <RequirePermission perm="reports.view">
@@ -35,7 +37,7 @@ export default function RiderPayReportPage() {
 }
 
 function Report() {
-  const { db, tenant, settings, base } = useConsole();
+  const { live, base } = useConsole();
   const nowMs = useNow();
   const now = new Date(nowMs).toISOString();
   const [key, setKey] = useState<PeriodKey>("7d");
@@ -48,13 +50,20 @@ function Report() {
     month: { label: "This month", range: manilaMonthRange(now) },
     lastMonth: { label: "Last month", range: previousManilaMonth(now) },
   };
-  const rows = riderPayReport({
-    riders: db.riders.filter((r) => r.tenantId === tenant.id),
-    orders: db.orders.filter((o) => o.tenantId === tenant.id),
-    shifts: db.shifts.filter((s) => s.tenantId === tenant.id),
-    tenantRule: settings.riderPay,
-    period: periods[key].range,
-  });
+  // Load from the earliest period on offer (last month or 7 days ago) once; the periods filter it (lib).
+  const since = [periods.lastMonth.range.start, periods["7d"].range.start].sort()[0]!.slice(0, 10);
+  const data = useLive(`rider-pay:${live.id}:${since}`, (sb) => loadRiderPay(sb, live.id, since));
+  useAutoReload(data.reload);
+  const d = data.data;
+  const rows = d
+    ? riderPayReport({
+        riders: d.riders,
+        orders: d.orders,
+        shifts: d.shifts,
+        tenantRule: d.settings.riderPay,
+        period: periods[key].range,
+      })
+    : [];
   const total = rows.reduce((a, r) => a + r.earnings, 0);
   const deliveries = rows.reduce((a, r) => a + r.deliveries, 0);
 
@@ -84,7 +93,7 @@ function Report() {
         <Stat label="Deliveries" value={deliveries} />
         <Stat label="Riders who worked" value={rows.length} />
       </div>
-      {rows.length === 0 ? (
+      {!d ? null : rows.length === 0 ? (
         <EmptyState icon={<Wallet />} title="No rider activity in this period" />
       ) : (
         <div className="overflow-x-auto rounded-card border">

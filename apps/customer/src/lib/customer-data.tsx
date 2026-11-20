@@ -20,7 +20,7 @@ import {
   toPublicSettings,
   toRider,
 } from "@chowlane/db/mappers";
-import type { AppSupabase } from "@chowlane/db/react";
+import { useRealtimeReload, type AppSupabase } from "@chowlane/db/react";
 import { useCustomerIdentity } from "./identity";
 
 /**
@@ -117,7 +117,7 @@ async function load(sb: AppSupabase, tenantId: string, customerId?: string): Pro
   };
 }
 
-/** Loads the business's menu + the signed-in customer's data; reloads on sign-in and every 20 s with live orders. */
+/** Loads the business's menu + the signed-in customer's data; reloads on sign-in and via Realtime (2.6). */
 export function CustomerDataProvider({ children }: { children: ReactNode }) {
   const auth = useCustomerIdentity();
   const customerId = auth.identity?.customerId;
@@ -139,19 +139,17 @@ export function CustomerDataProvider({ children }: { children: ReactNode }) {
     if (auth.ready) void reload();
   }, [auth.ready, reload]);
 
-  // Tracking without Realtime yet (2.6): refresh while an order is in progress, and when the app comes back.
-  const hasLiveOrder = Boolean(
-    state.data?.orders.some((o) => !["DELIVERED", "REJECTED", "CANCELLED"].includes(o.status)),
+  // Tracking (2.6): the customer's own order and account rows (RLS) push changes — status, rider, total, points.
+  useRealtimeReload(
+    auth.supabase,
+    `customer:${customerId}`,
+    [
+      { table: "orders", filter: `customer_id=eq.${customerId}` },
+      { table: "customers", filter: `id=eq.${customerId}` },
+    ],
+    () => void reload(),
+    { enabled: Boolean(customerId) },
   );
-  useEffect(() => {
-    const onFocus = () => void reload();
-    window.addEventListener("focus", onFocus);
-    const timer = hasLiveOrder ? window.setInterval(onFocus, 20_000) : undefined;
-    return () => {
-      window.removeEventListener("focus", onFocus);
-      if (timer) window.clearInterval(timer);
-    };
-  }, [hasLiveOrder, reload]);
 
   return (
     <DataContext.Provider

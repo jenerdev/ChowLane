@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { CircleCheck } from "lucide-react";
+import { CircleCheck, Route } from "lucide-react";
 import type { DispatchMode, Order } from "@chowlane/types";
 import { cashNeededAtStore, formatPeso, isOfferExpired, needsRider, timeAgo } from "@chowlane/lib";
 import {
@@ -20,10 +20,12 @@ import {
 } from "@chowlane/ui";
 import { AssignRiderSheet } from "@/components/assign-rider-sheet";
 import { RequirePermission } from "@/components/require-permission";
+import { loadDispatch } from "@/lib/dispatch";
 import { useSaveSettings } from "@/lib/settings";
-import { useConsole } from "@/lib/use-console";
+import { useConsole, useNow } from "@/lib/use-console";
+import { useAutoReload, useLive } from "@/lib/use-live";
 
-/** S-121 — dispatch mode (AUTO / MANUAL) + orders that need a rider (ADM-004, ADM-010, BL-5). */
+/** S-121 — dispatch mode (AUTO / MANUAL) + orders that need a rider (ADM-004, ADM-010, BL-5). Live since 2.6. */
 export default function DispatchPage() {
   return (
     <RequirePermission perm="orders.assign">
@@ -33,20 +35,25 @@ export default function DispatchPage() {
 }
 
 function Dispatch() {
-  const { db, tenant, base, settings, can } = useConsole();
-  // Saved to Supabase and mirrored into this screen's mock data until dispatch moves (2.6).
+  const { live, base, can } = useConsole();
   const saveSettings = useSaveSettings();
   const [assigning, setAssigning] = useState<Order | null>(null);
-  const now = new Date().toISOString();
-  const orders = db.orders.filter((o) => o.tenantId === tenant.id);
+  const nowMs = useNow();
+  const data = useLive(`dispatch:${live.id}`, (sb) => loadDispatch(sb, live.id));
+  useAutoReload(data.reload);
+  if (!data.data)
+    return data.loading ? null : (
+      <EmptyState icon={<Route />} title="Couldn't load dispatch" description={data.error} />
+    );
+  const { orders, merchants, settings } = data.data;
+  const now = new Date(nowMs).toISOString();
   const needs = orders.filter(needsRider);
   const waiting = orders.filter((o) => o.status === "APPROVED" && o.pendingOffer);
-  const riders = db.riders.filter(
-    (r) => r.tenantId === tenant.id && r.status === "ACTIVE" && r.isOnShift,
-  );
-  const free = riders.filter((r) => !r.activeOrderId).length;
-  const store = (id: string) => db.merchants.find((m) => m.id === id)?.name ?? "Store";
-  const riderName = (id?: string) => db.riders.find((r) => r.id === id)?.name ?? "rider";
+  const riders = data.data.riders.filter((r) => r.status === "ACTIVE" && r.isOnShift);
+  const offered = new Set(orders.flatMap((o) => (o.pendingOffer ? [o.pendingOffer.riderId] : [])));
+  const free = riders.filter((r) => !r.activeOrderId && !offered.has(r.id)).length;
+  const store = (id: string) => merchants.find((m) => m.id === id)?.name ?? "Store";
+  const riderName = (id?: string) => data.data?.riders.find((r) => r.id === id)?.name ?? "rider";
 
   return (
     <>
@@ -69,6 +76,7 @@ function Dispatch() {
               value={settings.dispatchMode}
               onChange={async (m) => {
                 const error = await saveSettings({ dispatchMode: m });
+                await data.reload();
                 toast(
                   error
                     ? `Couldn't save: ${error}`
@@ -155,7 +163,12 @@ function Dispatch() {
       ) : null}
 
       {assigning ? (
-        <AssignRiderSheet order={assigning} open onOpenChange={(o) => !o && setAssigning(null)} />
+        <AssignRiderSheet
+          order={assigning}
+          open
+          onOpenChange={(o) => !o && setAssigning(null)}
+          onAssigned={() => void data.reload()}
+        />
       ) : null}
     </>
   );

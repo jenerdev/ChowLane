@@ -1,7 +1,7 @@
 "use client";
 
 import type { SupabaseClient, User } from "@supabase/supabase-js";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useId, useMemo, useRef, useState } from "react";
 import type { AuthApp } from "./auth";
 import { createBrowserSupabase } from "./browser";
 import type { Database } from "./database.types";
@@ -61,4 +61,54 @@ export function useAuthIdentity<T>(
   }, [supabase]);
 
   return { ...state, supabase, refresh, signOut };
+}
+
+/** A table to watch: changes the signed-in user may read (RLS) on `table`, optionally `filter`ed ("tenant_id=eq.…"). */
+export type RealtimeWatch = { table: string; filter?: string };
+
+/**
+ * Supabase Realtime (2.6): calls `onChange` (debounced) whenever a watched row changes, so a screen reloads its data
+ * instead of polling. Realtime only delivers rows the user may read (RLS). Also reloads when the window regains focus
+ * and every `fallbackMs` as a safety net for a dropped connection. `enabled: false` (e.g. signed out) stops it.
+ */
+export function useRealtimeReload(
+  supabase: AppSupabase,
+  channel: string,
+  watch: RealtimeWatch[],
+  onChange: () => void,
+  { enabled = true, fallbackMs = 60_000 }: { enabled?: boolean; fallbackMs?: number } = {},
+) {
+  const onChangeRef = useRef(onChange);
+  useEffect(() => {
+    onChangeRef.current = onChange;
+  }, [onChange]);
+  const key = JSON.stringify(watch);
+  // supabase-js reuses a channel with the same topic — each hook gets its own
+  const topic = `${channel}:${useId()}`;
+
+  useEffect(() => {
+    if (!enabled) return;
+    let timer: ReturnType<typeof setTimeout> | undefined;
+    const fire = () => {
+      clearTimeout(timer);
+      timer = setTimeout(() => onChangeRef.current(), 250);
+    };
+    let ch = supabase.channel(topic);
+    for (const w of JSON.parse(key) as RealtimeWatch[]) {
+      ch = ch.on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: w.table, ...(w.filter ? { filter: w.filter } : {}) },
+        fire,
+      );
+    }
+    ch.subscribe();
+    window.addEventListener("focus", fire);
+    const poll = setInterval(fire, fallbackMs);
+    return () => {
+      clearTimeout(timer);
+      clearInterval(poll);
+      window.removeEventListener("focus", fire);
+      void supabase.removeChannel(ch);
+    };
+  }, [supabase, topic, key, enabled, fallbackMs]);
 }

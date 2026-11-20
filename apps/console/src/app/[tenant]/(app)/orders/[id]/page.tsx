@@ -6,6 +6,7 @@ import { Gift, ReceiptText, ShieldAlert } from "lucide-react";
 import type { ActorType } from "@chowlane/types";
 import {
   canCancel,
+  canReassign,
   cashNeededAtStore,
   formatDateTime,
   formatPeso,
@@ -28,6 +29,7 @@ import {
   PageHeader,
   VerificationBadge,
 } from "@chowlane/ui";
+import { AssignRiderSheet } from "@/components/assign-rider-sheet";
 import { ReasonSheet } from "@/components/reason-sheet";
 import { RequirePermission } from "@/components/require-permission";
 import { loadOrderDetail, useOrderOps } from "@/lib/orders";
@@ -43,8 +45,8 @@ const ACTOR: Record<ActorType, string> = {
 };
 
 /**
- * S-103 — order detail with approve / reject / cancel, timeline and assignment history (ADM-002, ADM-003, ADM-007,
- * ADM-011). Live since 2.5; assigning riders moves with dispatch (2.6).
+ * S-103 — order detail with approve / reject / cancel, assign / reassign, timeline and assignment history (ADM-002,
+ * ADM-003, ADM-004, ADM-007, ADM-011). Live since 2.5; assigning riders since 2.6.
  */
 export default function OrderDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
@@ -81,6 +83,7 @@ function OrderDetail({ id }: { id: string }) {
   const ops = useOrderOps();
   const [reject, setReject] = useState(false);
   const [cancel, setCancel] = useState(false);
+  const [assign, setAssign] = useState(false);
   const nowMs = useNow();
   const data = useLive(`order:${id}`, (sb) => loadOrderDetail(sb, live.id, id));
   useAutoReload(data.reload);
@@ -97,6 +100,16 @@ function OrderDetail({ id }: { id: string }) {
   const act = async (done: Promise<boolean>) => {
     if (await done) await data.reload();
   };
+  const assignButton =
+    can("orders.assign") && canReassign(order.status) ? (
+      <Button variant={needsRider(order) ? "default" : "outline"} onClick={() => setAssign(true)}>
+        {needsRider(order)
+          ? "Assign rider"
+          : order.pendingOffer
+            ? "Send to another rider"
+            : "Reassign"}
+      </Button>
+    ) : null;
   const waitingVerification =
     order.status === "PENDING_APPROVAL" && customer.verificationStatus !== "VERIFIED";
 
@@ -144,26 +157,37 @@ function OrderDetail({ id }: { id: string }) {
               ) : null}
             </>
           ) : order.status === "APPROVED" && order.pendingOffer ? (
-            <div>
-              <p className="text-sm font-medium">
-                {isOfferExpired(order, now)
-                  ? `${offerRider?.name ?? "The rider"} didn't answer in time`
-                  : `Waiting for ${offerRider?.name ?? "the rider"} to accept`}
-              </p>
-              <p className="text-[13px] text-muted-foreground">
-                Offered {timeAgo(order.pendingOffer.offeredAt, now)} ·{" "}
-                {order.pendingOffer.by === "AUTO" ? "auto-assigned" : "assigned by admin"}
-              </p>
-            </div>
+            <>
+              <div>
+                <p className="text-sm font-medium">
+                  {isOfferExpired(order, now)
+                    ? `${offerRider?.name ?? "The rider"} didn't answer in time`
+                    : `Waiting for ${offerRider?.name ?? "the rider"} to accept`}
+                </p>
+                <p className="text-[13px] text-muted-foreground">
+                  Offered {timeAgo(order.pendingOffer.offeredAt, now)} ·{" "}
+                  {order.pendingOffer.by === "AUTO" ? "auto-assigned" : "assigned by admin"}
+                </p>
+              </div>
+              {assignButton}
+            </>
           ) : needsRider(order) ? (
-            <div>
-              <p className="text-sm font-medium">Needs a rider</p>
-              <p className="text-[13px] text-muted-foreground">
-                Assigning riders on live orders switches on with dispatch in the next update.
-              </p>
-            </div>
+            <>
+              <div>
+                <p className="text-sm font-medium">Needs a rider</p>
+                <p className="text-[13px] text-muted-foreground">
+                  {order.assignmentAttempts.length
+                    ? "Nobody accepted yet. Pick a rider who is on shift and free."
+                    : "Pick a rider who is on shift and free."}
+                </p>
+              </div>
+              {assignButton}
+            </>
           ) : (
-            <p className="text-sm">{ORDER_STATUS_LABELS[order.status]}.</p>
+            <>
+              <p className="text-sm">{ORDER_STATUS_LABELS[order.status]}.</p>
+              {assignButton}
+            </>
           )}
         </CardContent>
       </Card>
@@ -352,6 +376,14 @@ function OrderDetail({ id }: { id: string }) {
         </div>
       </div>
 
+      {assign ? (
+        <AssignRiderSheet
+          order={order}
+          open
+          onOpenChange={setAssign}
+          onAssigned={() => void data.reload()}
+        />
+      ) : null}
       <ReasonSheet
         open={reject}
         onOpenChange={setReject}

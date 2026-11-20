@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { Banknote } from "lucide-react";
 import type { Centavos, Shift } from "@chowlane/types";
-import { formatDateTime, formatPeso, remitStatusFor } from "@chowlane/lib";
+import { formatDateTime, formatPeso } from "@chowlane/lib";
 import {
   Avatar,
   Button,
@@ -18,15 +18,16 @@ import {
   Tabs,
   TabsList,
   TabsTrigger,
-  toast,
 } from "@chowlane/ui";
 import { RequirePermission } from "@/components/require-permission";
-import { useMockStore } from "@/lib/store";
+import { loadShifts } from "@/lib/dispatch";
+import { useOrderOps } from "@/lib/orders";
 import { useConsole } from "@/lib/use-console";
+import { useAutoReload, useLive } from "@/lib/use-live";
 
 type Tab = "todo" | "done" | "open";
 
-/** S-124 — record the cash riders hand over after each shift (ADM-012, BL-12). */
+/** S-124 — record the cash riders hand over after each shift (ADM-012, BL-12). Live since 2.6. */
 export default function CashPage() {
   return (
     <RequirePermission perm="cash.manage">
@@ -36,22 +37,22 @@ export default function CashPage() {
 }
 
 function Cash() {
-  const { db, tenant, me } = useConsole();
-  const patch = useMockStore((s) => s.patch);
+  const { live } = useConsole();
+  const ops = useOrderOps();
   const [tab, setTab] = useState<Tab>("todo");
   const [recording, setRecording] = useState<Shift | null>(null);
   const [amount, setAmount] = useState<Centavos | undefined>();
   const [note, setNote] = useState("");
+  const data = useLive(`cash:${live.id}`, (sb) => loadShifts(sb, live.id));
+  useAutoReload(data.reload);
 
-  const shifts = db.shifts
-    .filter((s) => s.tenantId === tenant.id)
-    .sort((a, b) => Date.parse(b.timeIn) - Date.parse(a.timeIn));
+  const shifts = data.data?.shifts ?? [];
   const groups: Record<Tab, Shift[]> = {
     todo: shifts.filter((s) => s.remitStatus === "PENDING"),
     done: shifts.filter((s) => ["RECEIVED", "SHORT", "OVER"].includes(s.remitStatus)),
     open: shifts.filter((s) => s.remitStatus === "OPEN"),
   };
-  const rider = (id: string) => db.riders.find((r) => r.id === id);
+  const rider = (id: string) => data.data?.riders.find((r) => r.id === id);
   const mismatch = recording && amount !== undefined && amount !== recording.expectedRemit;
 
   return (
@@ -67,7 +68,7 @@ function Cash() {
           <TabsTrigger value="open">On shift ({groups.open.length})</TabsTrigger>
         </TabsList>
       </Tabs>
-      {groups[tab].length === 0 ? (
+      {data.loading ? null : groups[tab].length === 0 ? (
         <EmptyState
           icon={<Banknote />}
           title={tab === "todo" ? "Nothing to record" : "Nothing here"}
@@ -136,23 +137,12 @@ function Cash() {
             </dl>
             <form
               className="flex flex-col gap-4"
-              onSubmit={(e) => {
+              onSubmit={async (e) => {
                 e.preventDefault();
                 if (amount === undefined || (mismatch && !note.trim())) return;
-                const status = remitStatusFor(recording.expectedRemit, amount);
-                patch("shifts", recording.id, {
-                  remittedAmount: amount,
-                  remitStatus: status,
-                  remitReceivedBy: me!.id,
-                  remitReceivedAt: new Date().toISOString(),
-                  remitNote: note.trim() || undefined,
-                });
-                toast(
-                  status === "RECEIVED"
-                    ? "Cash recorded"
-                    : `Recorded — ${status === "SHORT" ? "short" : "over"} by ${formatPeso(Math.abs(amount - recording.expectedRemit))}`,
-                );
-                setRecording(null);
+                // record_remittance sets RECEIVED / SHORT / OVER (BL-12.4)
+                if (await ops.recordRemittance(recording.id, amount, note)) setRecording(null);
+                await data.reload();
               }}
             >
               <Field

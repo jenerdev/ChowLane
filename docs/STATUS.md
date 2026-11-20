@@ -1,11 +1,19 @@
 # ChowLane — Current Status
 
-> **Read this first every session.** Last updated: 2026-11-18
+> **Read this first every session.** Last updated: 2026-11-20
 
 ## Current phase
 **Phase 2 — Supabase backend** 🟨 (plan: `docs/PHASE-2-PLAN.md`) · Phase 1 UI prototype ✅ signed off 2026-11-15
 
 ## Current state
+- **Milestone 2.6 Dispatch & delivery ✅ (2026-11-20)** — D-068 · **not committed yet**:
+  - Server: AUTO offer on approval (nearest free rider), manual assign / reassign, accept / decline, offer expiry
+    (pg_cron every 15 s), shifts with cash summary, store → items unavailable → pickup (receipt photo) → delivered
+    (proof, rider earning, points / rewards), cash remittance, `delivery-photos` bucket, Realtime.
+  - Rider app fully on Supabase (no mock data); console Dispatch, live map, Cash and Rider pay on Supabase — the
+    console has no mock data left; customer tracking live via Realtime.
+  - Tests: 92 unit + **367 RLS**; browser walk-through across console, rider and customer apps ✅ (see PROGRESS-LOG).
+  - Left for Phase 3: live rider GPS (map shows the time-in / time-out location — ADM-005, CUS-008 🟨).
 - **Milestone 2.5 Ordering ✅ (2026-11-18)** — D-067 · committed on `phase-2` (`dee74ac`):
   - Customer app fully on Supabase (no mock data): menu, cart, checkout → server action → `place_order`, first-order
     ID photos to the private `id-documents` bucket, tracking (refreshes every 20 s), cancel, ID re-submission,
@@ -44,23 +52,22 @@
 - Q-36 answered (D-065): email confirmation for new owners is added before launch.
 
 ## Resume here (next session)
-State on 2026-11-18: branch `phase-2`; 2.1–2.5 committed (`3e2132a`, `0c51996`, `73a8f30`, `5846fb1`, `dee74ac`);
-nothing pushed, migrations not applied to the hosted project.
+State on 2026-11-20: branch `phase-2`; 2.1–2.5 committed (`3e2132a`, `0c51996`, `73a8f30`, `5846fb1`, `dee74ac`);
+**2.6 done but uncommitted** in the working tree; nothing pushed, migrations not applied to the hosted project.
 
-1. Start Docker Desktop, then `pnpm db:start` (local Supabase on 553xx; `pnpm db:reset` reloads demo data and all
-   migrations), then `pnpm db:env` (the customer app now needs the server-only key too).
-2. If ports 3000–3004 are busy, stop leftover Node dev servers first (Next allows one dev server per app).
-3. `pnpm dev` → console http://localhost:3001/fastbite (`marco@fastbite.ph` / `demo1234`), rider :3002, customer
-   :3003 ("Continue with Facebook" → demo customer or "Someone new"), platform :3004 (`owner@chowlane.app`),
-   landing :3000. Invite emails: http://127.0.0.1:55324.
-4. Say "go" for **Milestone 2.6**.
+1. Start Docker Desktop, then `pnpm db:start`, `pnpm db:reset` (demo data + all migrations incl. `dispatch.sql`),
+   `pnpm db:env` (rider now gets the server-only key too).
+2. If ports 3000–3004 are busy, stop leftover Node dev servers first.
+3. `pnpm dev` → console http://localhost:3001/fastbite (`marco@fastbite.ph` / `demo1234`), rider :3002
+   (`09201230003` / `demo1234` = Arnel, free on shift), customer :3003, platform :3004, landing :3000.
+4. Say "go" for **Milestone 2.7**.
 
 ## Next up (in order)
-1. **You**: say "go" for Milestone 2.6.
-2. Claude: **Milestone 2.6 Dispatch & delivery** — assign / AUTO offer on approve, rider app on Supabase (offers,
-   accept / decline, store → pickup → delivered, cash, proof), offer expiry job (pg_cron), Realtime, points earned on
-   delivery, cash remittance, rider pay report.
-3. **You** (by 2.8): connect Vercel to the repo (needs a GitHub remote); email sender for owner confirmation (D-065).
+1. **You**: say "commit" for 2.6, then "go" for 2.7.
+2. Claude: **Milestone 2.7 Platform & billing** — platform admin on real data, suspend, billing config, monthly
+   statement job.
+3. **You** (by 2.8): connect Vercel to the repo (needs a GitHub remote); email sender for owner confirmation (D-065);
+   enable pg_cron on the hosted project before pushing migrations.
 
 ## Blockers
 - None.
@@ -70,9 +77,9 @@ nothing pushed, migrations not applied to the hosted project.
 |---|---|
 | Phase 1 screens (SCREENS.md) | 65 / 65 ✅ (+ S-125 invite page in 2.3) |
 | Requirements — UI (REQUIREMENTS.md) | 88 / 88 ✅ |
-| Requirements — backend (REQUIREMENTS.md) | 47 ✅ · 5 🟨 |
-| Phase 2 milestones (ROADMAP.md) | 5 / 8 (2.1 ✅ 2.2 ✅ 2.3 ✅ 2.4 ✅ 2.5 ✅) |
-| Tests | 91 unit (lib 62 · mocks 16 · db 13) + 332 RLS (pgTAP) |
+| Requirements — backend (REQUIREMENTS.md) | 66 ✅ · 3 🟨 |
+| Phase 2 milestones (ROADMAP.md) | 6 / 8 (2.1–2.6 ✅) |
+| Tests | 92 unit (lib 62 · mocks 16 · db 14) + 367 RLS (pgTAP) |
 | Flows signed off (USER-FLOWS.md) | 7 / 17 walked ✅ · 10 skipped (Phase 1 signed off) |
-| Decisions logged (DECISIONS.md) | 68 (D-000…D-067; D-011, D-039 superseded) |
+| Decisions logged (DECISIONS.md) | 69 (D-000…D-068; D-011, D-039 superseded) |
 | Open questions answered | 36 / 36 |

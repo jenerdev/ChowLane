@@ -2,7 +2,7 @@
 -- Run: pnpm db:test (local Supabase with the seed loaded: pnpm db:reset).
 begin;
 create extension if not exists pgtap with schema extensions;
-select plan(332);
+select plan(367);
 
 create schema if not exists tests;
 
@@ -57,8 +57,33 @@ begin
   return r;
 end
 $fn$;
-grant usage on schema tests to anon, authenticated;
-grant execute on all functions in schema tests to anon, authenticated;
+-- Same as rls_exec, but as the apps' server actions (service role).
+create or replace function tests.svc_exec(p_sql text, p_undo boolean default false) returns text
+language plpgsql as $fn$
+declare n bigint; r text;
+begin
+  perform set_config('request.jwt.claims', '{"role":"service_role"}', true);
+  perform set_config('role', 'service_role', true);
+  begin
+    begin
+      execute p_sql;
+      get diagnostics n = row_count;
+      r := 'ok:' || n;
+      if p_undo then
+        raise exception 'undo' using errcode = 'TSTUN';
+      end if;
+    exception when sqlstate 'TSTUN' then
+      null;
+    end;
+  exception when others then
+    r := sqlstate;
+  end;
+  reset role;
+  return r;
+end
+$fn$;
+grant usage on schema tests to anon, authenticated, service_role;
+grant execute on all functions in schema tests to anon, authenticated, service_role;
 
 -- ---------------------------------------------------------------- reads (persona × table)
 select is(tests.rls_count(null::uuid, 'public.platform_admins'), -1::bigint,
@@ -889,6 +914,52 @@ select is(tests.rls_exec('002764a3-0962-51ad-8fe9-2770d6c6ddbe'::uuid, $q$insert
 select is(tests.rls_exec('0e118346-c0ef-57d8-ace3-2fb7ce30ed26'::uuid, $q$select public.reject_customer('76c9a1f0-8b00-5942-89e2-428ab20f68a8', 'ID is expired')$q$, false), 'ok:1', $q$FastBite owner: customers.verify rejects a pending ID with a reason$q$);
 select is(tests.rls_exec('0e118346-c0ef-57d8-ace3-2fb7ce30ed26'::uuid, $q$select 1 from public.orders where customer_id = '76c9a1f0-8b00-5942-89e2-428ab20f68a8' and status = 'REJECTED'
           and reject_reason = 'Customer verification rejected' limit 1$q$, false), 'ok:1', $q$FastBite owner: rejecting the ID also rejected the waiting order (BL-3.5)$q$);
+select is(tests.rls_exec('0e118346-c0ef-57d8-ace3-2fb7ce30ed26'::uuid, $q$select public.expire_offers()$q$, false), 'ok:1', $q$FastBite owner: expired offers time out (BL-5.6; the 15 s job does the same)$q$);
+select is(tests.rls_exec('f250a141-bd68-5365-9622-bf694f6f0627'::uuid, $q$select public.assign_order('beb4fbba-160d-516b-a0d3-ab70d765ff99', '3d6fc33a-bf35-5170-8362-c0813c7fcf38')$q$, true), '42501', $q$Kain Express admin: another tenant's admin can't assign FastBite orders$q$);
+select is(tests.rls_exec('5a33ac1d-1ccb-5f35-be0a-efe50d70f234'::uuid, $q$select public.assign_order('93ebd9a9-87d4-594d-a662-e2c977ae561f', '3b6353ae-40b7-5928-ac07-1a1f7165863f')$q$, true), 'P0001', $q$FastBite dispatcher: a rider with an active order can't get another (BL-5.10)$q$);
+select is(tests.rls_exec('5a33ac1d-1ccb-5f35-be0a-efe50d70f234'::uuid, $q$select public.assign_order('beb4fbba-160d-516b-a0d3-ab70d765ff99', '3d6fc33a-bf35-5170-8362-c0813c7fcf38')$q$, false), 'ok:1', $q$FastBite dispatcher: orders.assign offers a waiting order to a free rider (ADM-004)$q$);
+select is(tests.rls_exec('5a33ac1d-1ccb-5f35-be0a-efe50d70f234'::uuid, $q$select public.assign_order('93ebd9a9-87d4-594d-a662-e2c977ae561f', '3d6fc33a-bf35-5170-8362-c0813c7fcf38')$q$, true), 'P0001', $q$FastBite dispatcher: a rider holding an offer can't get a second one (BL-5.12)$q$);
+select is(tests.rls_exec('aec19468-1e39-5272-be8d-d29ff62c14d7'::uuid, $q$select 1 from (select public.my_offer('c4a259d0-1f1b-5ad3-91ea-3f12de964763') j) x
+          where j ->> 'order_number' = 'FB-10228' and not (j ? 'delivery_address_text') and not (j ? 'customer_id')$q$, false), 'ok:1', $q$FastBite rider without orders: the offer shows the drop-off area, not the address (BL-5.15)$q$);
+select is(tests.rls_exec('aec19468-1e39-5272-be8d-d29ff62c14d7'::uuid, $q$select 1 from public.orders where id = 'beb4fbba-160d-516b-a0d3-ab70d765ff99'$q$, false), 'ok:0', $q$FastBite rider without orders: an offered order isn't readable before accepting (BL-5.15)$q$);
+select is(tests.rls_exec('002764a3-0962-51ad-8fe9-2770d6c6ddbe'::uuid, $q$select public.my_offer('c4a259d0-1f1b-5ad3-91ea-3f12de964763')$q$, true), '42501', $q$FastBite customer with a live order: customers can't read rider offers$q$);
+select is(tests.rls_exec('0d9ada38-4399-54f9-9859-50d2a3255df2'::uuid, $q$select public.respond_to_offer('beb4fbba-160d-516b-a0d3-ab70d765ff99', true)$q$, true), 'P0001', $q$FastBite rider with a live order: a rider can't answer someone else's offer$q$);
+select is(tests.rls_exec('aec19468-1e39-5272-be8d-d29ff62c14d7'::uuid, $q$select public.respond_to_offer('beb4fbba-160d-516b-a0d3-ab70d765ff99', false)$q$, true), '22023', $q$FastBite rider without orders: declining needs a reason (BL-5.7)$q$);
+select is(tests.rls_exec('aec19468-1e39-5272-be8d-d29ff62c14d7'::uuid, $q$select 1 where public.respond_to_offer('beb4fbba-160d-516b-a0d3-ab70d765ff99', true) = 'ASSIGNED'$q$, false), 'ok:1', $q$FastBite rider without orders: the rider accepts the offer → ASSIGNED (BL-5.11)$q$);
+select is(tests.rls_exec('aec19468-1e39-5272-be8d-d29ff62c14d7'::uuid, $q$select 1 from public.orders where id = 'beb4fbba-160d-516b-a0d3-ab70d765ff99' and status = 'ASSIGNED'$q$, false), 'ok:1', $q$FastBite rider without orders: the accepted order is now readable$q$);
+select is(tests.rls_exec('aec19468-1e39-5272-be8d-d29ff62c14d7'::uuid, $q$select public.rider_time_out('c4a259d0-1f1b-5ad3-91ea-3f12de964763')$q$, true), 'P0001', $q$FastBite rider without orders: a rider can't time out with an active order (BL-6.3)$q$);
+select is(tests.rls_exec('0d9ada38-4399-54f9-9859-50d2a3255df2'::uuid, $q$select public.arrive_at_store('beb4fbba-160d-516b-a0d3-ab70d765ff99')$q$, true), '42501', $q$FastBite rider with a live order: another rider can't move this delivery$q$);
+select is(tests.rls_exec('aec19468-1e39-5272-be8d-d29ff62c14d7'::uuid, $q$select public.arrive_at_store('beb4fbba-160d-516b-a0d3-ab70d765ff99')$q$, false), 'ok:1', $q$FastBite rider without orders: arrived & ordered → AT_MERCHANT (BL-4.4)$q$);
+select is(tests.rls_exec('aec19468-1e39-5272-be8d-d29ff62c14d7'::uuid, $q$insert into storage.objects (bucket_id, name) values ('delivery-photos', 'c4a259d0-1f1b-5ad3-91ea-3f12de964763' || '/' || 'beb4fbba-160d-516b-a0d3-ab70d765ff99' || '/receipt.jpg')$q$, false), 'ok:1', $q$FastBite rider without orders: the rider uploads the receipt into the order's folder$q$);
+select is(tests.rls_exec('0d9ada38-4399-54f9-9859-50d2a3255df2'::uuid, $q$insert into storage.objects (bucket_id, name) values ('delivery-photos', 'c4a259d0-1f1b-5ad3-91ea-3f12de964763' || '/' || 'beb4fbba-160d-516b-a0d3-ab70d765ff99' || '/x.jpg')$q$, true), '42501', $q$FastBite rider with a live order: another rider can't upload into this order's folder$q$);
+select is(tests.rls_exec('aec19468-1e39-5272-be8d-d29ff62c14d7'::uuid, $q$select public.pick_up_order('beb4fbba-160d-516b-a0d3-ab70d765ff99', 30000, null)$q$, true), '22023', $q$FastBite rider without orders: pickup needs a receipt photo (BL-11.6)$q$);
+select is(tests.rls_exec('aec19468-1e39-5272-be8d-d29ff62c14d7'::uuid, $q$select public.pick_up_order('beb4fbba-160d-516b-a0d3-ab70d765ff99', 30000, 'c4a259d0-1f1b-5ad3-91ea-3f12de964763' || '/' || 'beb4fbba-160d-516b-a0d3-ab70d765ff99' || '/receipt.jpg')$q$, false), 'ok:1', $q$FastBite rider without orders: paid at the store with a receipt → PICKED_UP (BL-11.6)$q$);
+select is(tests.rls_exec('aec19468-1e39-5272-be8d-d29ff62c14d7'::uuid, $q$select public.complete_delivery('{}'::jsonb)$q$, true), '42501', $q$FastBite rider without orders: riders can't call complete_delivery directly (server action only)$q$);
+select is(tests.svc_exec($q$select public.complete_delivery(jsonb_build_object('order_id', 'beb4fbba-160d-516b-a0d3-ab70d765ff99', 'rider_id', '3d6fc33a-bf35-5170-8362-c0813c7fcf38',
+          'cash_collected', true, 'proof_note', 'Lobby', 'rider_earning', 4000,
+          'loyalty', jsonb_build_object('base_delivered_orders', -1, 'orders_toward_free_delivery', 0,
+            'orders_toward_free_gift', 0, 'points_earned', 25)))$q$, true), '40001', $q$server action (service role): loyalty counters that changed meanwhile are refused (the action retries)$q$);
+select is(tests.svc_exec($q$select public.complete_delivery(jsonb_build_object('order_id', 'beb4fbba-160d-516b-a0d3-ab70d765ff99', 'rider_id', '3d6fc33a-bf35-5170-8362-c0813c7fcf38',
+          'cash_collected', true, 'rider_earning', 4000, 'loyalty', '{}'::jsonb))$q$, true), '22023', $q$server action (service role): delivered without proof is refused (BL-11.12)$q$);
+select is(tests.svc_exec($q$select public.complete_delivery(jsonb_build_object('order_id', 'beb4fbba-160d-516b-a0d3-ab70d765ff99', 'rider_id', '3d6fc33a-bf35-5170-8362-c0813c7fcf38',
+          'cash_collected', true, 'proof_note', 'Lobby', 'rider_earning', 4000,
+          'loyalty', jsonb_build_object(
+            'base_delivered_orders', (select loyalty_delivered_orders from public.customers where id = '1a7348b7-be5b-5519-bae1-0b2db3c20d7d'),
+            'orders_toward_free_delivery', 0, 'orders_toward_free_gift', 0, 'points_earned', 25,
+            'free_delivery_earned', true, 'free_gift_earned', false)))$q$, false), 'ok:1', $q$server action (service role): cash collected + proof → DELIVERED, loyalty credited (BL-14.12)$q$);
+select is(tests.rls_exec('002764a3-0962-51ad-8fe9-2770d6c6ddbe'::uuid, $q$select 1 from public.loyalty_transactions where order_id = 'beb4fbba-160d-516b-a0d3-ab70d765ff99' and kind = 'POINTS_EARNED' and points = 25$q$, false), 'ok:1', $q$FastBite customer with a live order: the customer sees the points earned on the delivered order$q$);
+select is(tests.rls_exec('aec19468-1e39-5272-be8d-d29ff62c14d7'::uuid, $q$select 1 from (select public.rider_time_out('c4a259d0-1f1b-5ad3-91ea-3f12de964763') j) x where (j ->> 'deliveries')::int = 1
+          and (j ->> 'expected_remit')::int = (select total from public.orders where id = 'beb4fbba-160d-516b-a0d3-ab70d765ff99') - 30000$q$, false), 'ok:1', $q$FastBite rider without orders: time out → cash summary, remittance PENDING (BL-12.2, BL-12.3)$q$);
+select is(tests.rls_exec('5a33ac1d-1ccb-5f35-be0a-efe50d70f234'::uuid, $q$select public.record_remittance((select id from public.shifts where rider_id = '3d6fc33a-bf35-5170-8362-c0813c7fcf38' and remit_status = 'PENDING'), 0)$q$, true), '42501', $q$FastBite dispatcher: recording cash needs cash.manage$q$);
+select is(tests.rls_exec('0e118346-c0ef-57d8-ace3-2fb7ce30ed26'::uuid, $q$select public.record_remittance((select id from public.shifts where rider_id = '3d6fc33a-bf35-5170-8362-c0813c7fcf38' and remit_status = 'PENDING'), 0)$q$, true), '22023', $q$FastBite owner: a short remittance needs a note (BL-12.4)$q$);
+select is(tests.rls_exec('0e118346-c0ef-57d8-ace3-2fb7ce30ed26'::uuid, $q$select 1 where public.record_remittance((select id from public.shifts where rider_id = '3d6fc33a-bf35-5170-8362-c0813c7fcf38' and remit_status = 'PENDING'), 0, 'Brings the rest tomorrow') = 'SHORT'$q$, false), 'ok:1', $q$FastBite owner: cash.manage records a short remittance with a note → SHORT (BL-12.4)$q$);
+select is(tests.rls_exec(null::uuid, $q$select public.rider_time_in('c4a259d0-1f1b-5ad3-91ea-3f12de964763')$q$, true), '42501', $q$anonymous: anonymous can't time in$q$);
+select is(tests.rls_exec('aec19468-1e39-5272-be8d-d29ff62c14d7'::uuid, $q$select public.rider_time_in('c4a259d0-1f1b-5ad3-91ea-3f12de964763', 14.5995, 120.9842)$q$, false), 'ok:1', $q$FastBite rider without orders: the rider times in again with a location (BL-6.4, BL-12.6)$q$);
+select is(tests.rls_exec('0e118346-c0ef-57d8-ace3-2fb7ce30ed26'::uuid, $q$update public.tenant_settings set dispatch_mode = 'AUTO' where tenant_id = 'c4a259d0-1f1b-5ad3-91ea-3f12de964763'$q$, false), 'ok:1', $q$FastBite owner: dispatch mode back to AUTO (an earlier check switched it to MANUAL)$q$);
+select is(tests.rls_exec('0e118346-c0ef-57d8-ace3-2fb7ce30ed26'::uuid, $q$select public.approve_order('41bf32e6-3565-5241-9e61-741bfa8f5c8c')$q$, false), 'ok:1', $q$FastBite owner: approving in AUTO mode offers the order right away (BL-4.5, BL-5.5)$q$);
+select is(tests.rls_exec('0e118346-c0ef-57d8-ace3-2fb7ce30ed26'::uuid, $q$select 1 from public.orders where id = '41bf32e6-3565-5241-9e61-741bfa8f5c8c' and offer_rider_id = '3d6fc33a-bf35-5170-8362-c0813c7fcf38'$q$, false), 'ok:1', $q$FastBite owner: the approved order has an open offer for the free rider$q$);
+select is(tests.rls_exec('aec19468-1e39-5272-be8d-d29ff62c14d7'::uuid, $q$select 1 where public.respond_to_offer('41bf32e6-3565-5241-9e61-741bfa8f5c8c', false, 'TOO_FAR') = 'DECLINED'$q$, false), 'ok:1', $q$FastBite rider without orders: declining in AUTO mode passes the order on (BL-5.4)$q$);
+select is(tests.rls_exec('0e118346-c0ef-57d8-ace3-2fb7ce30ed26'::uuid, $q$select 1 from public.orders where id = '41bf32e6-3565-5241-9e61-741bfa8f5c8c' and status = 'APPROVED' and offer_rider_id is null$q$, false), 'ok:1', $q$FastBite owner: nobody else free → the order needs a rider (BL-5.8)$q$);
 select is(tests.rls_exec('0e118346-c0ef-57d8-ace3-2fb7ce30ed26'::uuid, $q$delete from public.staff_users where id = 'fd4f1061-a8a2-51a0-a3f4-28d6e977f0ab'$q$, false), 'ok:1', $q$FastBite owner: owner removes an admin; their history stays (BL-2.6)$q$);
 select is((select code from public.coupons where code = 'LOWER10'), 'LOWER10', 'coupon code was uppercased');
 select is((select status::text from public.staff_users where email = 'carla@fastbite.ph'), 'ACTIVE', 'accepted invite is ACTIVE');

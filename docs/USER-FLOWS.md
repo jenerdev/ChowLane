@@ -28,7 +28,14 @@
 > **Phase 2.5:** F-06, F-07, the approve / reject / cancel steps of F-08 / F-09 and using rewards in F-15 run on
 > Supabase: a customer orders (first order with ID photos), the console reviews the ID and approves / rejects /
 > cancels the order, and the customer sees the change within ~20 s. Rejecting an ID rejects the waiting order and
-> gives back coupon uses and points. Sending a live order to a rider (and earning rewards on delivery) comes in 2.6.
+> gives back coupon uses and points.
+
+> **Phase 2.6:** the dispatch half of F-08 / F-09, the rider flows (time in → offer → accept / decline → store → pickup →
+> delivered → time out) and cash remittance run on Supabase. Approving in AUTO mode offers the order to the nearest free
+> rider; a decline or a timed-out offer (server job every 15 s) passes it on, and with nobody left it shows under "Needs
+> rider". A rider who times in or finishes a delivery picks up waiting orders. Changes reach the other apps through
+> Realtime (no refresh). Before accepting, the rider sees the barangay and city only when the order has a barangay price
+> entry; otherwise just the distance (the street address is free text — D-068).
 
 ## F-01b Owner / Admin logs in  ✅ Signed off 2026-11-15
 1. Console link `…/<slug>` while signed out → redirected to `/<slug>/login` (tenant-branded)

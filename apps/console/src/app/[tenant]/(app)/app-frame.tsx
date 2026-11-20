@@ -3,7 +3,6 @@
 import { useEffect, type ReactNode } from "react";
 import {
   Banknote,
-  Hourglass,
   Bike,
   LayoutDashboard,
   LogOut,
@@ -14,25 +13,18 @@ import {
   Ticket,
   Users,
 } from "lucide-react";
-import { usePathname, useRouter } from "next/navigation";
+import { useRouter } from "next/navigation";
 import type { PermissionKey } from "@chowlane/types";
 import type { PublicTenant } from "@chowlane/db";
-import { AppShell, EmptyState, TenantLogo, TenantTheme, TopBar, type NavItem } from "@chowlane/ui";
+import { AppShell, TenantLogo, TenantTheme, TopBar, type NavItem } from "@chowlane/ui";
 import { useConsole } from "@/lib/use-console";
 
 type Item = NavItem & { perm?: PermissionKey };
 
-/**
- * Screens already on Supabase — they work for a business that has no Phase 1 mock data (D-059). Since 2.4: home,
- * riders, customers, merchants, coupons and all settings; 2.5: orders. Dispatch, cash, map and reports follow in 2.6.
- */
-const LIVE_ROUTES = /^\/[^/]+(\/?$|\/(orders|riders|customers|merchants|coupons|settings)(\/|$))/;
-
 /** Shell + navigation for signed-in pages (redirects to /login when signed out — LND-004). */
 export function AppFrame({ tenant: t, children }: { tenant: PublicTenant; children: ReactNode }) {
   const router = useRouter();
-  const pathname = usePathname();
-  const { can, me, ready, signOut, hasMockData } = useConsole();
+  const { can, me, ready, signOut } = useConsole();
   const signedIn = ready && Boolean(me);
 
   useEffect(() => {
@@ -92,15 +84,7 @@ export function AppFrame({ tenant: t, children }: { tenant: PublicTenant; childr
           </div>
         }
       >
-        {!signedIn ? null : hasMockData || LIVE_ROUTES.test(pathname) ? (
-          children
-        ) : (
-          <EmptyState
-            icon={<Hourglass />}
-            title="This screen moves to live data soon"
-            description="Your business is set up. Dispatch, cash and reports switch to your live data in the next update."
-          />
-        )}
+        {signedIn ? children : null}
       </AppShell>
     </TenantTheme>
   );
